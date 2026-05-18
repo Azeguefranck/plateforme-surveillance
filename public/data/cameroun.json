@@ -1,0 +1,131 @@
+{
+  "Centre": {
+    "Mfoundi": [
+      "Yaoundé I",
+      "Yaoundé II",
+      "Yaoundé III",
+      "Yaoundé IV",
+      "Yaoundé V",
+      "Yaoundé VI",
+      "Yaoundé VII"
+    ],
+    "Lekié": [
+      "Monatélé",
+      "Obala",
+      "Sa'a",
+      "Okola",
+      "Elig-Mfomo",
+      "Ebebda"
+    ],
+    "Mbam-et-Inoubou": [
+      "Bafia",
+      "Bokito",
+      "Deuk",
+      "Kiiki",
+      "Kon-Yambetta"
+    ]
+  },
+
+  "Littoral": {
+    "Wouri": [
+      "Douala I",
+      "Douala II",
+      "Douala III",
+      "Douala IV",
+      "Douala V",
+      "Douala VI"
+    ],
+    "Moungo": [
+      "Nkongsamba I",
+      "Nkongsamba II",
+      "Nkongsamba III",
+      "Loum",
+      "Mbanga",
+      "Manjo",
+      "Penja"
+    ]
+  },
+
+  "Ouest": {
+    "Mifi": [
+      "Bafoussam I",
+      "Bafoussam II",
+      "Bafoussam III"
+    ],
+    "Noun": [
+      "Foumban",
+      "Koutaba",
+      "Massangam",
+      "Bangourain",
+      "Foumbot",
+      "Malantouen"
+    ]
+  },
+
+  "Nord": {
+    "Bénoué": [
+      "Garoua I",
+      "Garoua II",
+      "Garoua III",
+      "Bibémi",
+      "Lagdo"
+    ]
+  },
+
+  "Extrême-Nord": {
+    "Diamaré": [
+      "Maroua I",
+      "Maroua II",
+      "Maroua III",
+      "Bogo",
+      "Dargala"
+    ]
+  },
+
+  "Adamaoua": {
+    "Vina": [
+      "Ngaoundéré I",
+      "Ngaoundéré II",
+      "Ngaoundéré III"
+    ]
+  },
+
+  "Est": {
+    "Lom-et-Djérem": [
+      "Bertoua I",
+      "Bertoua II",
+      "Belabo",
+      "Diang"
+    ]
+  },
+
+  "Sud": {
+    "Mvila": [
+      "Ebolowa I",
+      "Ebolowa II",
+      "Mengong",
+      "Biwong-Bulu"
+    ]
+  },
+
+  "Nord-Ouest": {
+    "Mezam": [
+      "Bamenda I",
+      "Bamenda II",
+      "Bamenda III",
+      "Bali",
+      "Tubah"
+    ]
+  },
+
+  "Sud-Ouest": {
+    "Fako": [
+      "Buea",
+      "Tiko",
+      "Limbé I",
+      "Limbé II",
+      "Limbé III",
+      "Muyuka"
+    ]
+  }
+}
