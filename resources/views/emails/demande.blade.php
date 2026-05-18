@@ -104,7 +104,7 @@ padding:18px;
 
 <h2>Nouvelle demande inscription</h2>
 
-<p><b>Nom :</b> {{ $data['nom'] }}</p>
+<p><b>Nom :</b> {{ $data['name'] }}</p>
 
 <p><b>Prénom :</b> {{ $data['prenom'] }}</p>
 

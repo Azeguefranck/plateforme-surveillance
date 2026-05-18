@@ -68,7 +68,7 @@ margin-bottom:20px;
 <a href="/historique" class="menu">Historique</a>
 <a href="/scenarios" class="menu">Scénarios</a>
 <a href="/cameras" class="menu">Caméras IP</a>
-<a href="/utilisateurs" class="menu">Utilisateurs</a>
+<a href="/users" class="menu">Utilisateurs</a>
 <a href="/rapports" class="menu">Rapports</a>
 <a href="/parametres" class="menu">Paramètres</a>
 

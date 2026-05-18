@@ -140,7 +140,7 @@ SURVEILLANCE
 <a href="/sms">SMS GSM</a>
 <a href="/anomalies">Anomalies</a>
 <a href="/profil">Mon Profil</a>
-<a href="/utilisateurs">Utilisateurs</a>
+<a href="/users">Utilisateurs</a>
 <a href="/cameras-ip">Caméras IP</a>
 <a href="/salles">Salles Serveurs</a>
 <a href="/serveurs-web">Serveurs Web</a>

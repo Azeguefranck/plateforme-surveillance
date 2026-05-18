@@ -23,7 +23,7 @@ class DashboardController extends Controller
 
     public function profil(){ return view('profil'); }
 
-    public function utilisateurs(){ return view('utilisateurs'); }
+    public function users(){ return view('users'); }
 
     public function cameras(){ return view('cameras'); }
 

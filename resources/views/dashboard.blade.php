@@ -4,6 +4,19 @@
 
 <style>
 
+body{
+background:#0b1120;
+color:white;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+.dashboard-title{
+font-size:32px;
+font-weight:bold;
+margin-bottom:25px;
+color:#ffffff;
+}
+
 .gauges{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -16,16 +29,23 @@ background:#111c3d;
 padding:20px;
 border-radius:20px;
 text-align:center;
+box-shadow:0 0 15px rgba(0,0,0,0.3);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
 }
 
 .card h2{
-margin-bottom:15px;
-font-size:28px;
+margin-bottom:20px;
+font-size:22px;
+color:#c7d2ff;
 }
 
 .gauge{
-width:140px;
-height:140px;
+width:150px;
+height:150px;
 border-radius:50%;
 border:15px solid #2f437a;
 margin:auto;
@@ -35,13 +55,21 @@ align-items:center;
 font-size:28px;
 font-weight:bold;
 color:white;
+background:#18264d;
 }
 
 .chart-container{
 background:#111c3d;
-padding:20px;
+padding:25px;
 border-radius:20px;
 margin-top:30px;
+box-shadow:0 0 15px rgba(0,0,0,0.3);
+}
+
+.chart-title{
+margin-bottom:20px;
+font-size:24px;
+color:#ffffff;
 }
 
 canvas{
@@ -49,40 +77,105 @@ width:100% !important;
 height:350px !important;
 }
 
+.status-box{
+margin-top:30px;
+background:#111c3d;
+padding:20px;
+border-radius:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:15px;
+}
+
+.status-item{
+font-size:18px;
+}
+
+.online{
+color:#33ff88;
+font-weight:bold;
+}
+
+.alert{
+color:#ff5733;
+font-weight:bold;
+}
+
 </style>
+
+<div class="dashboard-title">
+Dashboard de Surveillance Temps Réel
+</div>
 
 <div class="gauges">
 
 <div class="card">
 <h2>TEMPÉRATURE</h2>
-<div class="gauge">32°C</div>
+<div class="gauge" id="temperature">
+0°C
+</div>
 </div>
 
 <div class="card">
 <h2>HUMIDITÉ</h2>
-<div class="gauge">70%</div>
+<div class="gauge" id="humidite">
+0%
+</div>
 </div>
 
 <div class="card">
 <h2>GAZ</h2>
-<div class="gauge">180</div>
+<div class="gauge" id="gaz">
+0
+</div>
 </div>
 
 <div class="card">
 <h2>COURANT</h2>
-<div class="gauge">12A</div>
+<div class="gauge" id="courant">
+0A
+</div>
 </div>
 
 <div class="card">
 <h2>PUISSANCE</h2>
-<div class="gauge">220W</div>
+<div class="gauge" id="puissance">
+0W
+</div>
+</div>
+
+</div>
+
+<div class="status-box">
+
+<div class="status-item">
+État système :
+<span class="online">
+EN LIGNE
+</span>
+</div>
+
+<div class="status-item">
+Alertes :
+<span id="alerte-status" class="online">
+AUCUNE
+</span>
+</div>
+
+<div class="status-item">
+Dernière mise à jour :
+<span id="last-update">
+--
+</span>
 </div>
 
 </div>
 
 <div class="chart-container">
 
-<h2 style="margin-bottom:20px;">
+<h2 class="chart-title">
 Température • Humidité • Gaz
 </h2>
 
@@ -92,7 +185,7 @@ Température • Humidité • Gaz
 
 <div class="chart-container">
 
-<h2 style="margin-bottom:20px;">
+<h2 class="chart-title">
 Courant • Puissance
 </h2>
 
@@ -104,30 +197,27 @@ Courant • Puissance
 
 <script>
 
-const heures = [
-"08h",
-"09h",
-"10h",
-"11h",
-"12h",
-"13h",
-"14h",
-"15h"
-];
+const labels = [];
 
-new Chart(document.getElementById('chart1'),{
+const temperatureData = [];
+const humiditeData = [];
+const gazData = [];
+const courantData = [];
+const puissanceData = [];
+
+const chart1 = new Chart(document.getElementById('chart1'),{
 
 type:'line',
 
 data:{
 
-labels:heures,
+labels:labels,
 
 datasets:[
 
 {
 label:'Température',
-data:[28,29,30,31,32,33,32,31],
+data:temperatureData,
 borderColor:'#ff5733',
 backgroundColor:'transparent',
 borderWidth:4,
@@ -136,7 +226,7 @@ tension:0.4
 
 {
 label:'Humidité',
-data:[60,62,64,66,68,70,69,67],
+data:humiditeData,
 borderColor:'#33b5ff',
 backgroundColor:'transparent',
 borderWidth:4,
@@ -145,7 +235,7 @@ tension:0.4
 
 {
 label:'Gaz',
-data:[100,120,130,140,150,180,170,160],
+data:gazData,
 borderColor:'#ffd633',
 backgroundColor:'transparent',
 borderWidth:4,
@@ -162,19 +252,19 @@ responsive:true
 
 });
 
-new Chart(document.getElementById('chart2'),{
+const chart2 = new Chart(document.getElementById('chart2'),{
 
 type:'line',
 
 data:{
 
-labels:heures,
+labels:labels,
 
 datasets:[
 
 {
 label:'Courant',
-data:[5,6,7,8,9,10,11,12],
+data:courantData,
 borderColor:'#33ff88',
 backgroundColor:'transparent',
 borderWidth:4,
@@ -183,7 +273,7 @@ tension:0.4
 
 {
 label:'Puissance',
-data:[100,120,140,160,180,200,220,240],
+data:puissanceData,
 borderColor:'#bb66ff',
 backgroundColor:'transparent',
 borderWidth:4,
@@ -199,6 +289,106 @@ responsive:true
 }
 
 });
+
+function ajouterValeur(tableau,valeur){
+
+tableau.push(valeur);
+
+if(tableau.length > 15){
+tableau.shift();
+}
+
+}
+
+function ajouterLabel(){
+
+const now = new Date();
+
+const heure =
+now.getHours() + ":" +
+now.getMinutes() + ":" +
+now.getSeconds();
+
+labels.push(heure);
+
+if(labels.length > 15){
+labels.shift();
+}
+
+}
+
+function verifierAlertes(data){
+
+let alerte = "AUCUNE";
+
+if(data.temperature >= 40){
+alerte = "TEMPÉRATURE ÉLEVÉE";
+}
+
+if(data.gaz >= 300){
+alerte = "GAZ DANGEREUX";
+}
+
+document.getElementById('alerte-status').innerHTML = alerte;
+
+if(alerte !== "AUCUNE"){
+document.getElementById('alerte-status')
+.className = "alert";
+}else{
+document.getElementById('alerte-status')
+.className = "online";
+}
+
+}
+
+setInterval(() => {
+
+fetch('/api/dashboard-data')
+
+.then(response => response.json())
+
+.then(data => {
+
+document.getElementById('temperature')
+.innerHTML = data.temperature + "°C";
+
+document.getElementById('humidite')
+.innerHTML = data.humidite + "%";
+
+document.getElementById('gaz')
+.innerHTML = data.gaz;
+
+document.getElementById('courant')
+.innerHTML = data.courant + "A";
+
+document.getElementById('puissance')
+.innerHTML = data.puissance + "W";
+
+document.getElementById('last-update')
+.innerHTML = new Date().toLocaleTimeString();
+
+ajouterLabel();
+
+ajouterValeur(temperatureData,data.temperature);
+ajouterValeur(humiditeData,data.humidite);
+ajouterValeur(gazData,data.gaz);
+ajouterValeur(courantData,data.courant);
+ajouterValeur(puissanceData,data.puissance);
+
+chart1.update();
+chart2.update();
+
+verifierAlertes(data);
+
+})
+
+.catch(error => {
+
+console.log(error);
+
+});
+
+},1000);
 
 </script>
 

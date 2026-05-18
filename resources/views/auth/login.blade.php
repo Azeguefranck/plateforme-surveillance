@@ -82,7 +82,7 @@ margin-bottom:20px;
 
 <input type="email" name="email" placeholder="Adresse email" required>
 
-<input type="password" name="mot_de_passe" placeholder="Mot de passe" required>
+<input type="password" name="password" placeholder="Mot de passe" required>
 
 <button type="submit">
 SE CONNECTER

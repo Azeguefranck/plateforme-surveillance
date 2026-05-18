@@ -1,145 +1,84 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+@extends('layouts.app')
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Paramètres</title>
+@section('content')
 
 <style>
 
-body{
-background:#050816;
-font-family:Arial;
+.settings-box{
+background:#111c3d;
 padding:30px;
+border-radius:20px;
 color:white;
 }
 
-table{
+.input-group{
+margin-bottom:20px;
+}
+
+.input-group label{
+display:block;
+margin-bottom:10px;
+}
+
+.input-group input{
 width:100%;
-border-collapse:collapse;
-background:#101935;
-border-radius:15px;
-overflow:hidden;
-}
-
-th,td{
 padding:15px;
-border-bottom:1px solid #333;
-text-align:center;
-}
-
-th{
-background:#1b2a52;
-}
-
-a{
-padding:8px 12px;
-border-radius:8px;
+border:none;
+border-radius:10px;
+background:#18264d;
 color:white;
-text-decoration:none;
-font-size:14px;
 }
 
-.valider{
-background:green;
-}
-
-.refuser{
-background:red;
-}
-
-.attente{
-background:orange;
-}
-
-.supprimer{
-background:#444;
+button{
+padding:15px 25px;
+background:#33ff88;
+border:none;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
 }
 
 </style>
 
-</head>
+<div class="settings-box">
 
-<body>
+<h1>Paramètres système</h1>
 
-<h1>
+<form>
 
-GESTION UTILISATEURS
+<div class="input-group">
 
-</h1>
+<label>Seuil température</label>
 
-<table>
+<input type="number" value="40">
 
-<tr>
+</div>
 
-<th>ID</th>
-<th>Nom</th>
-<th>Email</th>
-<th>Téléphone</th>
-<th>Profession</th>
-<th>Rôle</th>
-<th>Statut</th>
-<th>Actions</th>
+<div class="input-group">
 
-</tr>
+<label>Seuil gaz</label>
 
-@php
+<input type="number" value="500">
 
-$users = DB::table('utilisateurs')->get();
+</div>
 
-@endphp
+<div class="input-group">
 
-@foreach($users as $u)
+<label>Email alertes</label>
 
-<tr>
+<input type="email"
+value="franckazegue0007@gmail.com">
 
-<td>{{ $u->id }}</td>
-<td>{{ $u->nom }}</td>
-<td>{{ $u->email }}</td>
-<td>{{ $u->telephone }}</td>
-<td>{{ $u->profession }}</td>
-<td>{{ $u->role }}</td>
-<td>{{ $u->statut }}</td>
+</div>
 
-<td>
+<button>
 
-<a class="valider"
-href="/admin/validate/{{ $u->id }}">
+ENREGISTRER
 
-VALIDER
+</button>
 
-</a>
+</form>
 
-<a class="refuser"
-href="/admin/reject/{{ $u->id }}">
+</div>
 
-REFUSER
-
-</a>
-
-<a class="attente"
-href="/admin/pending/{{ $u->id }}">
-
-ATTENTE
-
-</a>
-
-<a class="supprimer"
-href="/admin/delete/{{ $u->id }}">
-
-SUPPRIMER
-
-</a>
-
-</td>
-
-</tr>
-
-@endforeach
-
-</table>
-
-</body>
-</html>
+@endsection

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 
+
+
 Route::view('/','accueil');
 
 Route::view('/accueil','accueil');
@@ -14,86 +16,57 @@ Route::view('/register','register');
 
 Route::view('/login','login');
 
+
+
 Route::post('/register-user',
 [AuthController::class,'register']);
 
 Route::post('/login-user',
 [AuthController::class,'login']);
 
-Route::get('/admin/validate/{id}',function($id){
 
-DB::table('utilisateurs')
-->where('id',$id)
-->update([
-'statut'=>'VALIDE'
-]);
 
-return '
+Route::get('/valider/{id}', function($id){
 
-<h1 style="
-color:green;
-text-align:center;
-margin-top:100px;
-font-family:Arial;
-">
+    DB::table('users')
+    ->where('id',$id)
+    ->update([
+        'validation_status'=>'valide'
+    ]);
 
-UTILISATEUR VALIDÉ
-
-</h1>
-
-';
+    return back();
 
 });
 
-Route::get('/admin/reject/{id}',function($id){
 
-DB::table('utilisateurs')
-->where('id',$id)
-->update([
-'statut'=>'REFUSE'
-]);
 
-return '
+Route::get('/bloquer/{id}', function($id){
 
-<h1 style="
-color:red;
-text-align:center;
-margin-top:100px;
-font-family:Arial;
-">
+    DB::table('users')
+    ->where('id',$id)
+    ->update([
+        'validation_status'=>'bloque'
+    ]);
 
-UTILISATEUR REFUSÉ
-
-</h1>
-
-';
+    return back();
 
 });
 
-Route::get('/admin/pending/{id}',function($id){
 
-DB::table('utilisateurs')
-->where('id',$id)
-->update([
-'statut'=>'EN_ATTENTE'
-]);
 
-return '
+Route::get('/attente/{id}', function($id){
 
-<h1 style="
-color:orange;
-text-align:center;
-margin-top:100px;
-font-family:Arial;
-">
+    DB::table('users')
+    ->where('id',$id)
+    ->update([
+        'validation_status'=>'en_attente'
+    ]);
 
-UTILISATEUR EN ATTENTE
-
-</h1>
-
-';
+    return back();
 
 });
+
+
 
 Route::view('/surveillance','surveillance');
 Route::view('/alertes','alertes');
