@@ -361,10 +361,11 @@ function filterTable() {
 }
 
 function exportHistory() {
-    const debut  = document.getElementById('hDebut').value;
-    const fin    = document.getElementById('hFin').value;
-    const type   = currentTab === 'alertes' ? 'alertes' : 'mesures';
+    const debut = document.getElementById('hDebut').value;
+    const fin   = document.getElementById('hFin').value;
+    const type  = currentTab === 'alertes' ? 'alertes' : 'mesures';
     window.location.href = `/rapports/export?type=${type}&format=csv&debut=${debut}&fin=${fin}`;
+    if (typeof notify === 'function') notify('Téléchargement CSV en cours...','i',2500);
 }
 
 loadHistory();

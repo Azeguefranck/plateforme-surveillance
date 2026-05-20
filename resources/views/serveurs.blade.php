@@ -126,6 +126,7 @@ table{display:block;overflow-x:auto}
             <td style="font-size:12px">{{ $srv->os ?? '—' }}</td>
             <td><span class="badge badge-{{ $srv->statut }}">{{ str_replace('_',' ',$srv->statut) }}</span></td>
             <td class="td-actions">
+                <button class="btn" style="background:transparent;border:1px solid #33ff8866;color:#33ff8899;padding:5px 10px;font-size:11px;border-radius:7px" title="Ping {{ $srv->adresse_ip ?? 'aucune IP' }}" onclick="pingServer(this,{{ $srv->id }})">Ping</button>
                 <button class="btn btn-blue" onclick="openEdit({{ $srv->id }},
                     '{{ addslashes($srv->nom) }}',
                     '{{ addslashes($srv->type) }}',
@@ -373,6 +374,30 @@ table{display:block;overflow-x:auto}
 </div>
 
 <script>
+function pingServer(btn, id) {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<span class="_spin-ico" style="width:11px;height:11px;border-width:1.5px"></span>';
+    btn.disabled = true;
+    fetch('/serveur/'+id+'/ping', {headers:{'Accept':'application/json'}})
+        .then(function(r){return r.json();})
+        .then(function(d) {
+            btn.innerHTML = orig;
+            btn.disabled = false;
+            if (d.reachable) {
+                btn.style.borderColor='#33ff88'; btn.style.color='#33ff88';
+                notify('✓ '+d.msg, 's', 4000);
+            } else {
+                btn.style.borderColor='#ff5733'; btn.style.color='#ff5733';
+                notify('✗ '+d.msg, 'e', 4000);
+            }
+            setTimeout(function(){btn.style.borderColor='';btn.style.color='';}, 6000);
+        })
+        .catch(function() {
+            btn.innerHTML = orig; btn.disabled = false;
+            notify('Erreur de connexion au serveur.', 'e');
+        });
+}
+
 function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase();
     document.querySelectorAll('#serveursTable tbody tr').forEach(tr => {

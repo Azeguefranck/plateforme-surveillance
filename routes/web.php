@@ -171,6 +171,95 @@ Route::get('/parametres',         [ParametresController::class, 'show']);
 Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
 Route::view('/rapports','rapports');
 
+// ── AJAX : modifier statut utilisateur ────────────────────────────────────
+Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    $status  = $request->status;
+    $allowed = ['valide', 'refuse', 'bloque', 'en_attente'];
+    if (!in_array($status, $allowed))
+        return response()->json(['error' => 'Statut invalide'], 422);
+
+    $target = DB::table('users')->where('id', $id)->first();
+    if (!$target) return response()->json(['error' => 'Utilisateur introuvable'], 404);
+
+    DB::table('users')->where('id', $id)->update(['validation_status' => $status]);
+
+    $subj = ['valide'=>'✅ Compte activé','refuse'=>'❌ Inscription refusée','bloque'=>'🚫 Compte suspendu','en_attente'=>'⏳ Compte en attente'];
+    $body = ['valide'=>'✅ Votre compte a été VALIDÉ. Connectez-vous sur : '.url('/login'),
+             'refuse'=>'❌ Votre inscription a été REFUSÉE.',
+             'bloque'=>'🚫 Votre compte a été SUSPENDU par l\'administrateur.',
+             'en_attente'=>'⏳ Votre compte a été remis EN ATTENTE de validation.'];
+    try {
+        Mail::raw("Bonjour {$target->prenom} {$target->nom},\n\n{$body[$status]}\n\nSupServer — Surveillance IoT",
+            fn($m) => $m->to($target->email)->subject($subj[$status].' — SupServer'));
+    } catch (\Exception $e) {}
+
+    $labels = ['valide'=>'Validé','refuse'=>'Refusé','bloque'=>'Bloqué','en_attente'=>'En attente'];
+    return response()->json(['success'=>true,'status'=>$status,'label'=>$labels[$status],'message'=>"Compte {$labels[$status]} avec succès."]);
+});
+
+// ── AJAX : supprimer utilisateur ───────────────────────────────────────────
+Route::delete('/user/{id}', function ($id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    DB::table('users')->where('id', $id)->delete();
+    return response()->json(['success' => true, 'message' => 'Utilisateur supprimé.']);
+});
+
+// ── AJAX : supprimer une alerte ────────────────────────────────────────────
+Route::delete('/alerte/{id}', function ($id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    DB::table('alertes')->where('id', $id)->delete();
+    return response()->json(['success' => true]);
+});
+
+// ── AJAX : vider toutes les alertes ───────────────────────────────────────
+Route::post('/alertes/vider', function () {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    $n = DB::table('alertes')->count();
+    DB::table('alertes')->truncate();
+    return response()->json(['success' => true, 'message' => "$n alertes supprimées."]);
+});
+
+// ── AJAX : ping serveur ────────────────────────────────────────────────────
+Route::get('/serveur/{id}/ping', function ($id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    try {
+        $srv = DB::table('serveurs')->where('id', $id)->first();
+        if (!$srv) return response()->json(['reachable' => false, 'msg' => 'Serveur introuvable']);
+        $ip = $srv->adresse_ip;
+        if (!$ip) return response()->json(['reachable' => false, 'ip' => null, 'msg' => 'Aucune IP configurée']);
+
+        $start = microtime(true);
+        $conn  = @fsockopen($ip, 80, $e, $es, 2);
+        $ms    = round((microtime(true) - $start) * 1000, 1);
+        if ($conn) { fclose($conn); return response()->json(['reachable'=>true,'ip'=>$ip,'time'=>$ms,'msg'=>"En ligne — {$ms}ms"]); }
+
+        $out = []; $ret = 1;
+        exec('ping -c 1 -W 2 '.escapeshellarg($ip).' 2>&1', $out, $ret);
+        $t = null;
+        foreach ($out as $line) { if (preg_match('/time[<=](\d+\.?\d*)\s*ms/i',$line,$m)){$t=$m[1];break;} }
+        return response()->json(['reachable'=>$ret===0,'ip'=>$ip,'time'=>$t,'msg'=>$ret===0?"En ligne — {$t}ms":"Inaccessible ({$ip})"]);
+    } catch (\Exception $e) {
+        return response()->json(['reachable' => false, 'msg' => 'Erreur: '.$e->getMessage()]);
+    }
+});
+
+// ── Impression / PDF ───────────────────────────────────────────────────────
+Route::get('/rapports/print', function (\Illuminate\Http\Request $request) {
+    if (!session('user')) return redirect('/login');
+    $type  = $request->type  ?? 'mesures';
+    $debut = $request->debut ?? now()->subDays(7)->toDateString();
+    $fin   = $request->fin   ?? now()->toDateString();
+    try {
+        $rows = DB::table($type)->whereBetween('created_at',[$debut.' 00:00:00',$fin.' 23:59:59'])
+                    ->orderByDesc('created_at')->limit(2000)->get();
+    } catch (\Exception $e) { $rows = collect(); }
+    $data  = $rows->map(fn($r) => (array) $r)->toArray();
+    $label = ['mesures'=>'Mesures capteurs','alertes'=>'Alertes','salles'=>'Salles','serveurs'=>'Serveurs'][$type] ?? $type;
+    $title = $label.' — du '.$debut.' au '.$fin;
+    return view('print_rapport', compact('data','title','type','debut','fin'));
+});
+
 Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
     $user = session('user');
     if (!$user) return redirect('/login');
@@ -192,20 +281,44 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
 
     $data = $rows->map(fn($r) => (array) $r)->toArray();
 
+    $fn = $type.'_'.$debut.'_'.$fin;
+
     if ($format === 'json') {
         return response()->json($data)
-            ->header('Content-Disposition', 'attachment; filename="'.$type.'_'.$debut.'_'.$fin.'.json"');
+            ->header('Content-Disposition', "attachment; filename=\"{$fn}.json\"");
+    }
+
+    if ($format === 'xml') {
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<export type=\"{$type}\" debut=\"{$debut}\" fin=\"{$fin}\">\n";
+        foreach ($data as $row) {
+            $xml .= "  <item>\n";
+            foreach ($row as $k => $v) {
+                $tag = preg_replace('/[^a-z0-9_]/i','_',$k);
+                $xml .= "    <{$tag}>".htmlspecialchars((string)$v)."</{$tag}>\n";
+            }
+            $xml .= "  </item>\n";
+        }
+        $xml .= "</export>";
+        return response($xml, 200, ['Content-Type'=>'application/xml','Content-Disposition'=>"attachment; filename=\"{$fn}.xml\""]);
+    }
+
+    if ($format === 'xls') {
+        $xls = "\xEF\xBB\xBF";
+        if (!empty($data)) {
+            $xls .= implode("\t", array_keys($data[0]))."\r\n";
+            foreach ($data as $row) {
+                $xls .= implode("\t", array_map(fn($v) => str_replace(["\t","\r","\n"],'',(string)$v), $row))."\r\n";
+            }
+        }
+        return response($xls, 200, ['Content-Type'=>'application/vnd.ms-excel','Content-Disposition'=>"attachment; filename=\"{$fn}.xls\""]);
     }
 
     $csv = '';
     if (!empty($data)) {
-        $csv .= implode(',', array_keys($data[0])) . "\n";
+        $csv .= implode(',', array_keys($data[0]))."\n";
         foreach ($data as $row) {
-            $csv .= implode(',', array_map(fn($v) => '"'.str_replace('"','""',$v).'"', $row)) . "\n";
+            $csv .= implode(',', array_map(fn($v) => '"'.str_replace('"','""',(string)$v).'"', $row))."\n";
         }
     }
-    return response($csv, 200, [
-        'Content-Type'        => 'text/csv',
-        'Content-Disposition' => 'attachment; filename="'.$type.'_'.$debut.'_'.$fin.'.csv"',
-    ]);
+    return response($csv, 200, ['Content-Type'=>'text/csv','Content-Disposition'=>"attachment; filename=\"{$fn}.csv\""]);
 });

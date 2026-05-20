@@ -134,9 +134,11 @@ tr:hover td{background:rgba(51,181,255,.03)}
 <div class="export-bar">
     <div class="export-label">Rapport : <strong id="exportLabel">Mesures capteurs</strong> · <span id="exportRange">7 derniers jours</span></div>
     <div class="export-btns">
-        <button class="btn btn-neon" onclick="exportData('csv')">&#8595; Export CSV</button>
-        <button class="btn btn-blue" onclick="exportData('json')">&#8195;&#123;&#125; Export JSON</button>
-        <button class="btn btn-warn" onclick="window.print()">&#128438; Imprimer</button>
+        <button class="btn btn-neon"  onclick="exportData('csv')">&#8595; CSV</button>
+        <button class="btn btn-blue"  onclick="exportData('json')">&#123;&#125; JSON</button>
+        <button class="btn btn-warn"  onclick="exportData('xls')">&#128202; Excel</button>
+        <button class="btn btn-blue"  onclick="exportData('xml')">&#60;/&#62; XML</button>
+        <button class="btn btn-gray"  onclick="printRapport()">&#128438; PDF Print</button>
     </div>
 </div>
 
@@ -339,10 +341,16 @@ function renderAlertesChart(rows) {
 }
 
 function exportData(format) {
-    const debut  = document.getElementById('dateDebut').value;
-    const fin    = document.getElementById('dateFin').value;
-    const url    = `/rapports/export?type=${currentType}&format=${format}&debut=${debut}&fin=${fin}`;
-    window.location.href = url;
+    const debut = document.getElementById('dateDebut').value;
+    const fin   = document.getElementById('dateFin').value;
+    window.location.href = `/rapports/export?type=${currentType}&format=${format}&debut=${debut}&fin=${fin}`;
+    notify('Téléchargement en cours...', 'i', 2500);
+}
+
+function printRapport() {
+    const debut = document.getElementById('dateDebut').value;
+    const fin   = document.getElementById('dateFin').value;
+    window.open(`/rapports/print?type=${currentType}&debut=${debut}&fin=${fin}`, '_blank');
 }
 
 loadReport();

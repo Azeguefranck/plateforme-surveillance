@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <title>Surveillance</title>
 
@@ -100,22 +101,33 @@ background:#d10000;
 }
 
 @media(max-width:900px){
-
-.sidebar{
-position:relative;
-width:100%;
+.sidebar{position:relative;width:100%;}
+.main{margin-left:0;width:100%;}
+.wrapper{flex-direction:column;}
 }
 
-.main{
-margin-left:0;
-width:100%;
-}
-
-.wrapper{
-flex-direction:column;
-}
-
-}
+/* ── Global UI: toasts, spinners, confirm ─────── */
+@keyframes _spin{to{transform:rotate(360deg)}}
+@keyframes _tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+@keyframes _tOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(110%)}}
+#_toasts{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+._t{pointer-events:auto;min-width:230px;max-width:370px;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;backdrop-filter:blur(14px);box-shadow:0 4px 24px rgba(0,0,0,.55);animation:_tIn .28s cubic-bezier(.21,1.02,.73,1) forwards;cursor:pointer;line-height:1.4}
+._t.out{animation:_tOut .22s ease forwards}
+._t.s{background:rgba(6,20,14,.92);border:1px solid #33ff88;color:#33ff88}
+._t.e{background:rgba(22,6,6,.92);border:1px solid #ff5733;color:#ff5733}
+._t.w{background:rgba(22,18,6,.92);border:1px solid #ffd633;color:#ffd633}
+._t.i{background:rgba(6,14,22,.92);border:1px solid #33b5ff;color:#33b5ff}
+._spin-ico{width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block;animation:_spin .65s linear infinite;flex-shrink:0}
+#_cdlg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;align-items:center;justify-content:center}
+#_cdlg.open{display:flex}
+._cbox{background:#090f22;border:1px solid #1e2f5a;border-radius:14px;padding:28px 24px;text-align:center;max-width:350px;width:92%}
+._cbox h4{color:#fff;font-size:16px;margin:0 0 10px}
+._cbox p{color:#aaa;font-size:13px;margin:0 0 22px}
+._cbtns{display:flex;gap:10px;justify-content:center}
+._cok{background:#ff5733;border:none;color:#fff;padding:9px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+._cok:hover{background:#e83d1e}
+._cno{background:transparent;border:1px solid #1e2f5a;color:#aaa;padding:9px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+._cno:hover{border-color:#33b5ff;color:#33b5ff}
 
 </style>
 
@@ -190,5 +202,68 @@ updateDateTime();
 
 </script>
 
+
+<!-- ── Global toasts ──────────────────────── -->
+<div id="_toasts"></div>
+
+<!-- ── Confirm dialog ────────────────────── -->
+<div id="_cdlg">
+  <div class="_cbox">
+    <h4 id="_ctitle">Confirmer</h4>
+    <p  id="_cmsg">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+    <div class="_cbtns">
+      <button class="_cno"  id="_cno">Annuler</button>
+      <button class="_cok"  id="_cok">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Notifications toast ── */
+function notify(msg, type, dur) {
+    type = type||'s'; dur = dur||3600;
+    var icons={s:'✓',e:'✗',w:'⚠',i:'ℹ'};
+    var t=document.createElement('div');
+    t.className='_t '+type;
+    t.innerHTML='<span>'+icons[type]+'</span><span style="flex:1">'+msg+'</span><span onclick="_dismiss(this.parentNode)" style="opacity:.45;font-size:17px;margin-left:4px;line-height:1">×</span>';
+    t.onclick=function(e){if(e.target!==t.lastElementChild)_dismiss(t)};
+    document.getElementById('_toasts').prepend(t);
+    setTimeout(function(){_dismiss(t);},dur);
+    return t;
+}
+function _dismiss(el){if(!el||el.classList.contains('out'))return;el.classList.add('out');setTimeout(function(){if(el.parentNode)el.remove();},230);}
+
+/* ── Button loader ── */
+function btnLoad(btn,on){
+    if(!btn)return;
+    if(on===false){if(btn._orig!==undefined){btn.innerHTML=btn._orig;btn.disabled=false;btn.style.opacity='';}return;}
+    btn._orig=btn.innerHTML;
+    btn.innerHTML='<span class="_spin-ico"></span> Chargement...';
+    btn.disabled=true; btn.style.opacity='.72';
+}
+
+/* ── CSRF fetch ── */
+function csrfFetch(url,opts){
+    opts=opts||{};
+    var tok=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
+    var hdrs=Object.assign({'X-CSRF-TOKEN':tok,'Content-Type':'application/json','Accept':'application/json'},opts.headers||{});
+    return fetch(url,Object.assign({},opts,{headers:hdrs}));
+}
+
+/* ── Confirm dialog ── */
+function confirmDlg(title,msg){
+    return new Promise(function(res){
+        var dlg=document.getElementById('_cdlg');
+        document.getElementById('_ctitle').textContent=title||'Confirmer';
+        document.getElementById('_cmsg').textContent=msg||'Êtes-vous sûr ?';
+        dlg.classList.add('open');
+        var ok=document.getElementById('_cok'),no=document.getElementById('_cno');
+        function done(v){dlg.classList.remove('open');ok.onclick=no.onclick=null;res(v);}
+        ok.onclick=function(){done(true);};
+        no.onclick=function(){done(false);};
+        dlg.onclick=function(e){if(e.target===dlg)done(false);};
+    });
+}
+</script>
 </body>
 </html>
