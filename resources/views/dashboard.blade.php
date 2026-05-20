@@ -142,7 +142,7 @@ canvas{max-height:240px}
 
 
 <div class="dash-header">
-  <div class="dash-title">⚡ Dashboard <span>IoT</span> Temps Réel</div>
+  <div class="dash-title">TABLEAU DE BORD EN TEMPS RÉEL</div>
   <div class="dash-live">
     <div class="dot"></div>
     EN DIRECT — <span id="last-update">--</span>

@@ -81,9 +81,9 @@
 
 <div class="pg-header">
     <div>
-        <div class="pg-title">Salles Serveurs <span>Gestion des salles</span></div>
+        <div class="pg-title"><i class="fa-solid fa-building-server" style="margin-right:8px"></i>Salles Serveurs <span>Gestion des salles</span></div>
     </div>
-    <button class="btn btn-neon" onclick="document.getElementById('addModal').classList.add('open')">+ Nouvelle Salle</button>
+    <button class="btn btn-neon" onclick="document.getElementById('addModal').classList.add('open')"><i class="fa-solid fa-plus"></i> Nouvelle Salle</button>
 </div>
 
 @if(session('success_salle'))
@@ -92,10 +92,10 @@
 
 <!-- Stats -->
 <div class="stats-row">
-    <div class="stat-card blue"><div class="val">{{ $stats['total'] }}</div><div class="lbl">Total salles</div></div>
-    <div class="stat-card green"><div class="val">{{ $stats['actives'] }}</div><div class="lbl">Actives</div></div>
-    <div class="stat-card red"><div class="val">{{ $stats['inactives'] }}</div><div class="lbl">Inactives</div></div>
-    <div class="stat-card warn"><div class="val">{{ $stats['maintenance'] }}</div><div class="lbl">Maintenance</div></div>
+    <div class="stat-card blue"><div class="val"><i class="fa-solid fa-server" style="font-size:24px"></i> {{ $stats['total'] }}</div><div class="lbl">Total salles</div></div>
+    <div class="stat-card green"><div class="val"><i class="fa-solid fa-circle-check" style="font-size:24px"></i> {{ $stats['actives'] }}</div><div class="lbl">Actives</div></div>
+    <div class="stat-card red"><div class="val"><i class="fa-solid fa-circle-xmark" style="font-size:24px"></i> {{ $stats['inactives'] }}</div><div class="lbl">Inactives</div></div>
+    <div class="stat-card warn"><div class="val"><i class="fa-solid fa-wrench" style="font-size:24px"></i> {{ $stats['maintenance'] }}</div><div class="lbl">Maintenance</div></div>
 </div>
 
 @if($derniereMesure)
@@ -124,8 +124,8 @@
 
 @if(count($salles) === 0)
 <div class="empty-state">
-    <div class="icon">&#127970;</div>
-    <p>Aucune salle enregistrée.<br>Cliquez sur <strong>+ Nouvelle Salle</strong> pour commencer.</p>
+    <div class="icon"><i class="fa-solid fa-building-server" style="font-size:48px;color:#1e2f5a"></i></div>
+    <p>Aucune salle enregistrée.<br>Cliquez sur <strong><i class="fa-solid fa-plus"></i> Nouvelle Salle</strong> pour commencer.</p>
 </div>
 @else
 <div class="rooms-grid">
@@ -155,11 +155,11 @@
         <span class="cap-unit">serveurs max</span>
     </div>
     <div class="room-actions">
-        <button class="btn btn-blue" onclick="openEdit({{ $salle->id }}, '{{ addslashes($salle->nom) }}', '{{ addslashes($salle->code ?? '') }}', '{{ addslashes($salle->localisation ?? '') }}', '{{ addslashes($salle->responsable ?? '') }}', {{ $salle->capacite_serveurs }}, '{{ $salle->statut }}', '{{ addslashes($salle->description ?? '') }}')">Modifier</button>
+        <button class="btn btn-blue" onclick="openEdit({{ $salle->id }}, '{{ addslashes($salle->nom) }}', '{{ addslashes($salle->code ?? '') }}', '{{ addslashes($salle->localisation ?? '') }}', '{{ addslashes($salle->responsable ?? '') }}', {{ $salle->capacite_serveurs }}, '{{ $salle->statut }}', '{{ addslashes($salle->description ?? '') }}')"><i class="fa-solid fa-pen-to-square"></i> Modifier</button>
         <form method="POST" action="/salles/{{ $salle->id }}" id="del-salle-{{ $salle->id }}" style="margin:0">
             @csrf
             @method('DELETE')
-            <button type="button" class="btn btn-danger" onclick="delSalle(this,{{ $salle->id }})">Supprimer</button>
+            <button type="button" class="btn btn-danger" onclick="delSalle(this,{{ $salle->id }})"><i class="fa-solid fa-trash"></i> Supprimer</button>
         </form>
     </div>
 </div>
@@ -170,7 +170,7 @@
 <!-- Add Modal -->
 <div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
-    <h3>&#10010; Nouvelle Salle <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">&#215;</button></h3>
+    <h3><i class="fa-solid fa-plus-circle"></i> Nouvelle Salle <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></h3>
     <form method="POST" action="/salles">
         @csrf
         <div class="form-grid">
@@ -208,8 +208,8 @@
             </div>
         </div>
         <div class="form-actions">
-            <button type="button" class="btn btn-danger" onclick="document.getElementById('addModal').classList.remove('open')">Annuler</button>
-            <button type="submit" class="btn btn-neon">Enregistrer</button>
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('addModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i> Annuler</button>
+            <button type="submit" class="btn btn-neon"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
         </div>
     </form>
 </div>
@@ -218,7 +218,7 @@
 <!-- Edit Modal -->
 <div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
-    <h3>&#9998; Modifier la Salle <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">&#215;</button></h3>
+    <h3><i class="fa-solid fa-pen-to-square"></i> Modifier la Salle <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></h3>
     <form method="POST" id="editForm" action="#">
         @csrf
         <div class="form-grid">
@@ -256,8 +256,8 @@
             </div>
         </div>
         <div class="form-actions">
-            <button type="button" class="btn btn-danger" onclick="document.getElementById('editModal').classList.remove('open')">Annuler</button>
-            <button type="submit" class="btn btn-neon">Mettre à jour</button>
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('editModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i> Annuler</button>
+            <button type="submit" class="btn btn-neon"><i class="fa-solid fa-floppy-disk"></i> Mettre à jour</button>
         </div>
     </form>
 </div>

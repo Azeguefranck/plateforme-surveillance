@@ -15,6 +15,15 @@ margin:0;
 padding:0;
 box-sizing:border-box;
 font-family:Arial, Helvetica, sans-serif;
+user-select:none;
+-webkit-user-select:none;
+-moz-user-select:none;
+}
+input,textarea,select,[contenteditable]{
+user-select:text;
+-webkit-user-select:text;
+-moz-user-select:text;
+cursor:auto;
 }
 
 body{
@@ -49,12 +58,12 @@ scrollbar-color:#1e2f5a #040e22;
 .sidebar::-webkit-scrollbar-thumb{background:#1e2f5a;border-radius:2px}
 
 .logo{
-font-size:20px;
+font-size:14px;
 font-weight:900;
 color:#39ff14;
 margin-bottom:18px;
-white-space:nowrap;
-letter-spacing:2px;
+letter-spacing:1px;
+line-height:1.35;
 display:flex;
 align-items:center;
 gap:8px;
@@ -264,7 +273,7 @@ table{max-width:100%}
 
 <div class="sidebar" id="sidebar">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px">
-    <div class="logo"><i class="fa-solid fa-bolt"></i> SUPSERVER</div>
+    <div class="logo"><i class="fa-solid fa-shield-halved" style="font-size:18px;flex-shrink:0"></i><span>Système de<br>Surveillance</span></div>
     <button class="sidebar-close" id="sidebarClose" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
   </div>
 

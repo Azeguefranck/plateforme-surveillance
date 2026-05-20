@@ -205,6 +205,7 @@ h1 span{color:#33ff88}
   <div class="sep"></div>
 
   <div class="links">
+    <a href="/forgot-password"><i class="fa-solid fa-key" style="margin-right:4px"></i>Mot de passe oublié ?</a>
     <a href="/register">⊕ Créer un compte</a>
     <a href="/accueil">← Retour à l'accueil</a>
   </div>

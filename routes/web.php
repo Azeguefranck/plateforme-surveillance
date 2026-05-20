@@ -17,6 +17,60 @@ Route::view('/dashboard','dashboard');
 Route::view('/register','register');
 Route::view('/login','login');
 
+Route::get('/forgot-password', fn() => view('forgot-password'));
+
+Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
+    $request->validate(['email' => 'required|email']);
+    try { DB::connection()->getPdo(); } catch (\Exception $e) {
+        return back()->with('error', 'Base de données inaccessible. Veuillez réessayer plus tard.');
+    }
+    $user = DB::table('users')->where('email', $request->email)->first();
+    if (!$user) {
+        return back()->with('success', 'Si cet email est enregistré, un nouveau mot de passe vous a été envoyé.');
+    }
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#!';
+    $nouveau = '';
+    for ($i = 0; $i < 12; $i++) $nouveau .= $chars[random_int(0, strlen($chars) - 1)];
+    DB::table('users')->where('id', $user->id)->update([
+        'password'   => \Illuminate\Support\Facades\Hash::make($nouveau),
+        'updated_at' => now(),
+    ]);
+    $prenom = $user->prenom ?? $user->name ?? 'Utilisateur';
+    $nom    = $user->nom    ?? '';
+    try {
+        Mail::html(
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+            . 'body{background:#060d1f;font-family:Arial,sans-serif;margin:0}'
+            . '.w{max-width:520px;margin:0 auto;background:#060d1f}'
+            . '.h{background:linear-gradient(135deg,#0e1a38,#060d1f);padding:24px;text-align:center;border-bottom:3px solid #33b5ff}'
+            . '.hl{color:#33b5ff;font-size:20px;font-weight:900;letter-spacing:2px;margin:0}'
+            . '.b{background:#0a1428;padding:24px}'
+            . '.pw-box{background:#07102a;border:1px solid rgba(51,181,255,.3);border-radius:10px;padding:16px 20px;margin:16px 0;text-align:center}'
+            . '.pw{color:#33ff88;font-size:22px;font-weight:900;letter-spacing:3px;font-family:monospace}'
+            . '.info{color:#8899cc;font-size:13px;line-height:1.7}'
+            . '.warn{color:#ffd633;font-size:12px;margin-top:14px;padding:10px 14px;background:rgba(255,214,51,.07);border-radius:8px;border-left:3px solid #ffd633}'
+            . '.f{background:#060d1f;padding:14px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35}'
+            . '</style></head><body>'
+            . '<div class="w">'
+            . '<div class="h"><h1 class="hl">&#128273; MOT DE PASSE R&Eacute;INITIALIS&Eacute;</h1></div>'
+            . '<div class="b">'
+            . '<p class="info">Bonjour <strong style="color:#fff">' . htmlspecialchars($prenom . ' ' . $nom) . '</strong>,</p>'
+            . '<p class="info" style="margin-top:10px">Suite &agrave; votre demande de r&eacute;initialisation, voici votre nouveau mot de passe&nbsp;:</p>'
+            . '<div class="pw-box"><div class="pw">' . htmlspecialchars($nouveau) . '</div></div>'
+            . '<p class="info">Connectez-vous ici&nbsp;: <a href="' . url('/login') . '" style="color:#33b5ff">' . url('/login') . '</a></p>'
+            . '<div class="warn">&#9888; Si vous n\'avez pas demand&eacute; cette r&eacute;initialisation, contactez imm&eacute;diatement l\'administrateur.</div>'
+            . '</div>'
+            . '<div class="f">Plateforme de Surveillance &mdash; Message automatique</div>'
+            . '</div></body></html>',
+            function ($mail) use ($user) {
+                $mail->to($user->email)
+                     ->subject('🔑 Nouveau mot de passe — Plateforme de Surveillance');
+            }
+        );
+    } catch (\Exception $e) {}
+    return back()->with('success', 'Un nouveau mot de passe vous a été envoyé par email.');
+});
+
 
 
 Route::post('/register-user', [AuthController::class, 'register']);
@@ -241,6 +295,20 @@ Route::get('/serveur/{id}/ping', function ($id) {
     } catch (\Exception $e) {
         return response()->json(['reachable' => false, 'msg' => 'Erreur: '.$e->getMessage()]);
     }
+});
+
+// ── Ping caméra IP (fsockopen) ──────────────────────────────────────────────
+Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
+    if (!session('user')) return response()->json(['reachable' => false, 'msg' => 'Non autorisé']);
+    $ip   = $request->ip_addr ?? '';
+    $port = max(1, min(65535, (int)($request->port ?? 80)));
+    if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP))
+        return response()->json(['reachable' => false, 'msg' => 'Adresse IP invalide']);
+    $start = microtime(true);
+    $conn  = @fsockopen($ip, $port, $errno, $errstr, 2);
+    $ms    = round((microtime(true) - $start) * 1000, 1);
+    if ($conn) { fclose($conn); return response()->json(['reachable' => true, 'time' => $ms]); }
+    return response()->json(['reachable' => false, 'time' => $ms, 'msg' => "Inaccessible ({$ip}:{$port})"]);
 });
 
 // ── Impression / PDF ───────────────────────────────────────────────────────
