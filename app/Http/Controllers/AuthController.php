@@ -27,7 +27,7 @@ class AuthController extends Controller
             $photoPath = $request->file('photo_profil')->store('photos', 'public');
         }
 
-        DB::table('users')->insert([
+        $userId = DB::table('users')->insertGetId([
             'name'             => $request->prenom . ' ' . $request->nom,
             'nom'              => $request->nom,
             'prenom'           => $request->prenom,
@@ -56,6 +56,7 @@ class AuthController extends Controller
             'updated_at'       => now(),
         ]);
 
+        // Email de confirmation à l'utilisateur
         try {
             Mail::raw(
                 "Bonjour " . $request->prenom . " " . $request->nom . ",\n\n" .
@@ -69,6 +70,38 @@ class AuthController extends Controller
                 "SupServer — Plateforme Surveillance IoT",
                 function ($message) use ($request) {
                     $message->to($request->email)->subject('Inscription reçue — En attente de validation');
+                }
+            );
+        } catch (\Exception $e) {}
+
+        // Notification à l'administrateur avec liens d'action
+        $validerUrl  = url('/valider/'  . $userId);
+        $bloquerUrl  = url('/bloquer/'  . $userId);
+        $adminEmail  = 'franckazegue0007@gmail.com';
+
+        try {
+            Mail::raw(
+                "═══════════════════════════════════════\n" .
+                "   NOUVELLE INSCRIPTION — SupServer\n" .
+                "═══════════════════════════════════════\n\n" .
+                "👤 Nom complet  : " . $request->prenom . " " . $request->nom . "\n" .
+                "📧 Email        : " . $request->email . "\n" .
+                "📱 Téléphone    : " . ($request->indicatif_tel ?? '') . " " . $request->telephone . "\n" .
+                "🌍 Pays         : " . $request->pays . "\n" .
+                "🏙️  Ville        : " . ($request->ville_residence ?? 'N/A') . "\n" .
+                "💼 Profession   : " . ($request->profession ?? 'N/A') . "\n" .
+                "🏢 Organisation : " . ($request->organisation ?? 'N/A') . "\n" .
+                "🗓️  Date         : " . now()->format('d/m/Y H:i') . "\n\n" .
+                "═══════════════════════════════════════\n" .
+                "   ACTIONS ADMINISTRATEUR\n" .
+                "═══════════════════════════════════════\n\n" .
+                "✅ VALIDER  → " . $validerUrl . "\n\n" .
+                "🚫 BLOQUER  → " . $bloquerUrl . "\n\n" .
+                "───────────────────────────────────────\n" .
+                "SupServer — Plateforme Surveillance IoT",
+                function ($message) use ($adminEmail, $request) {
+                    $message->to($adminEmail)
+                            ->subject('🆕 Nouvelle inscription — ' . $request->prenom . ' ' . $request->nom);
                 }
             );
         } catch (\Exception $e) {}

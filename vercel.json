@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "framework": null,
+  "builds": [
+    {
+      "src": "api/index.php",
+      "use": "vercel-php@0.7.2",
+      "config": {
+        "maxDuration": 30
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ],
+  "env": {
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "LOG_CHANNEL": "stderr",
+    "CACHE_DRIVER": "file",
+    "SESSION_DRIVER": "file",
+    "QUEUE_CONNECTION": "sync"
+  }
+}
