@@ -373,7 +373,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="cfg-ico">🚀</div>
       <div>
         <div class="cfg-key">Version plateforme</div>
-        <div class="cfg-val">SupServer IoT v2.0</div>
+        <div class="cfg-val">Plateforme de Surveillance v2.0</div>
       </div>
     </div>
   </div>

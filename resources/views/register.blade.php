@@ -199,10 +199,6 @@ select.finp option{background:#0c1c34;color:#fff;}
 <div class="reg-page">
 
   <div class="reg-header">
-    <div class="reg-logo">
-      <div class="reg-logo-icon">🖥️</div>
-      <span class="reg-logo-text">SUPSERVER</span>
-    </div>
     <h1 class="reg-title">Créer votre compte</h1>
     <p class="reg-sub">Plateforme mondiale de surveillance des salles serveurs</p>
   </div>

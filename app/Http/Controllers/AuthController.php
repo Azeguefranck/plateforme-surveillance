@@ -74,7 +74,7 @@ class AuthController extends Controller
                 "• Pays       : " . $request->pays . "\n\n" .
                 "⏳ Votre compte est en attente de validation par l'administrateur.\n" .
                 "Vous recevrez un email dès que votre compte sera activé.\n\n" .
-                "SupServer — Plateforme Surveillance IoT",
+                "Plateforme de Surveillance",
                 function ($message) use ($request) {
                     $message->to($request->email)->subject('Inscription reçue — En attente de validation');
                 }
@@ -142,7 +142,7 @@ class AuthController extends Controller
             . '</div>'
             . '<div class="note">Cliquez sur un bouton pour agir sur cette demande.<br>Une notification email sera automatiquement envoy&eacute;e &agrave; l\'utilisateur.</div>'
             . '</div>'
-            . '<div class="f">SupServer IoT &mdash; Message automatique &mdash; Ne pas r&eacute;pondre</div>'
+            . '<div class="f">Plateforme de Surveillance &mdash; Message automatique &mdash; Ne pas r&eacute;pondre</div>'
             . '</div></body></html>';
 
         try {

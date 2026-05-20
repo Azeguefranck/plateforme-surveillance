@@ -151,7 +151,7 @@ function envoyerEmailAlerte(array $alerte, string $horodatage): void
         . '<tr><td class="k">Solutions</td><td class="v">' . htmlspecialchars($alerte['solution']) . '</td></tr>'
         . '</table>'
         . '</div>'
-        . '<div class="f">SupServer IoT &mdash; Alerte automatique &mdash; Ne pas r&eacute;pondre</div>'
+        . '<div class="f">Plateforme de Surveillance &mdash; Alerte automatique &mdash; Ne pas r&eacute;pondre</div>'
         . '</div></body></html>';
 
     foreach ($users as $user) {

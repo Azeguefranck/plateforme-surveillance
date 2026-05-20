@@ -159,9 +159,6 @@ h1 span{color:#33ff88}
 <div class="box">
 
   <div class="box-top">
-    <div class="box-brand">
-      <div class="brand-line"></div>SupServer IoT<div class="brand-line r"></div>
-    </div>
     <h1>Se <span>connecter</span></h1>
   </div>
 

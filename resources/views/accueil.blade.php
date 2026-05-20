@@ -347,13 +347,6 @@ html, body {
 <!-- Main content -->
 <div class="page">
 
-  <!-- Brand -->
-  <div class="brand">
-    <div class="brand-line"></div>
-    SupServer IoT
-    <div class="brand-line r"></div>
-  </div>
-
   <!-- Title -->
   <h1 class="main-title">SURVEILLANCE DES<br><em>SALLES SERVEURS</em></h1>
   <div class="title-rule"></div>

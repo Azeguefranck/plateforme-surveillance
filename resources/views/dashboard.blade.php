@@ -271,7 +271,7 @@ canvas{max-height:240px}
   <div class="status-item">État système : <span class="badge badge-ok">EN LIGNE</span></div>
   <div class="status-item">Alerte active : <strong id="alerte-active"><span class="badge badge-ok">AUCUNE</span></strong></div>
   <div class="status-item">Dernière mesure : <strong id="last-mesure">--</strong></div>
-  <div class="status-item" style="margin-left:auto;font-size:11px;color:#3a4a6a">SupServer IoT v2.0</div>
+  <div class="status-item" style="margin-left:auto;font-size:11px;color:#3a4a6a">Plateforme de Surveillance v2.0</div>
 </div>
 
 

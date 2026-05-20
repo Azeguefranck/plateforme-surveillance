@@ -270,7 +270,6 @@ table{max-width:100%}
 
   <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
   <a href="/accueil"><i class="fa-solid fa-house"></i> Accueil</a>
-  <a href="/surveillance"><i class="fa-solid fa-eye"></i> Surveillance</a>
   <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
   <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
   <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>

@@ -39,7 +39,7 @@ Route::get('/valider/{id}', function ($id) {
             url('/login') . "\n\n" .
             "Email     : {$user->email}\n\n" .
             "Bienvenue sur la plateforme de surveillance IoT !\n\n" .
-            "SupServer — Plateforme Surveillance IoT",
+            "Plateforme de Surveillance",
             function ($mail) use ($user) {
                 $mail->to($user->email)->subject('✅ Compte activé — SupServer');
             }
@@ -68,7 +68,7 @@ Route::get('/bloquer/{id}', function ($id) {
             "Bonjour {$user->prenom} {$user->nom},\n\n" .
             "🚫 Votre compte SupServer a été SUSPENDU par l'administrateur.\n\n" .
             "Pour toute demande de réactivation, contactez l'administrateur.\n\n" .
-            "SupServer — Plateforme Surveillance IoT",
+            "Plateforme de Surveillance",
             function ($mail) use ($user) {
                 $mail->to($user->email)->subject('🚫 Compte suspendu — SupServer');
             }
@@ -97,7 +97,7 @@ Route::get('/refuser/{id}', function ($id) {
             "❌ Votre demande d'inscription sur SupServer a été REFUSÉE.\n\n" .
             "Votre demande d'accès à la plateforme de surveillance n'a pas été approuvée.\n\n" .
             "Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur.\n\n" .
-            "SupServer — Plateforme Surveillance IoT",
+            "Plateforme de Surveillance",
             function ($mail) use ($user) {
                 $mail->to($user->email)->subject('❌ Inscription refusée — SupServer');
             }
@@ -126,7 +126,7 @@ Route::get('/attente/{id}', function ($id) {
             "Bonjour {$user->prenom} {$user->nom},\n\n" .
             "⏳ Votre compte SupServer a été remis EN ATTENTE de validation.\n\n" .
             "Vous recevrez un email dès que votre compte sera activé.\n\n" .
-            "SupServer — Plateforme Surveillance IoT",
+            "Plateforme de Surveillance",
             function ($mail) use ($user) {
                 $mail->to($user->email)->subject('⏳ Compte en attente — SupServer');
             }
@@ -142,7 +142,6 @@ Route::get('/attente/{id}', function ($id) {
 
 
 
-Route::view('/surveillance','surveillance');
 Route::view('/alertes','alertes');
 Route::view('/historique','historique');
 Route::view('/statistiques','statistiques');
@@ -405,7 +404,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
                 $out .= "\n";
             }
         }
-        $out .= "\n".str_repeat('─', 70)."\nSupServer — Plateforme de Surveillance IoT\n";
+        $out .= "\n".str_repeat('─', 70)."\nPlateforme de Surveillance\n";
         return response($out,200,['Content-Type'=>'text/plain; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.txt\""]);
     }
 
@@ -458,7 +457,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
              . '<w:t>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' | Total : '.count($data).' | Généré : '.date('d/m/Y H:i').'</w:t></w:r></w:p>'
              . '<w:p/>'.$tbl.'<w:p/>'
              . '<w:p><w:r><w:rPr><w:color w:val="555555"/><w:sz w:val="14"/></w:rPr>'
-             . '<w:t>SupServer — Plateforme de Surveillance IoT</w:t></w:r></w:p>'
+             . '<w:t>Plateforme de Surveillance</w:t></w:r></w:p>'
              . '</w:body></w:document>';
 
         $tmp = tempnam(sys_get_temp_dir(), 'docx_');
@@ -500,7 +499,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
               . '<div class="hd"><h1>&#128202; Rapport — '.htmlspecialchars($type).'</h1>'
               . '<p>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' &nbsp;·&nbsp; '.count($data).' enregistrements &nbsp;·&nbsp; Généré le '.date('d/m/Y H:i').'</p></div>'
               . (!empty($data) ? '<table><thead>'.$hdr.'</thead><tbody>'.$body.'</tbody></table>' : '<p style="text-align:center;padding:40px;color:#555">Aucune donnée.</p>')
-              . '<div class="ft">SupServer — Plateforme IoT &nbsp;·&nbsp; '.date('d/m/Y H:i').'</div></body></html>';
+              . '<div class="ft">Plateforme de Surveillance &nbsp;·&nbsp; '.date('d/m/Y H:i').'</div></body></html>';
         return response($html,200,['Content-Type'=>'text/html;charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.html\""]);
     }
 
