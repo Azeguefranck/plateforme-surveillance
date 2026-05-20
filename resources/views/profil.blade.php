@@ -3,7 +3,7 @@
 @section('content')
 
 @php
-$u = $user;
+$u = is_array($user) ? (object)$user : $user;
 $nom_complet = trim(($u->prenom ?? '') . ' ' . ($u->nom ?? '')) ?: ($u->name ?? 'Utilisateur');
 $role_label  = match($u->role ?? '') {
     'admin'       => 'Administrateur',

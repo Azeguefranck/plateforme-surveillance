@@ -12,6 +12,7 @@ class ProfilController extends Controller
     {
         $user = session('user');
         if (!$user) return redirect('/login');
+        if (is_array($user)) $user = (object) $user;
 
         $alertes = [];
         try {
@@ -25,6 +26,7 @@ class ProfilController extends Controller
     {
         $user = session('user');
         if (!$user) return redirect('/login');
+        if (is_array($user)) $user = (object) $user;
 
         $request->validate([
             'nom'       => 'required|string|max:100',
@@ -58,6 +60,7 @@ class ProfilController extends Controller
     {
         $user = session('user');
         if (!$user) return redirect('/login');
+        if (is_array($user)) $user = (object) $user;
 
         $request->validate([
             'ancien_mdp'    => 'required',
@@ -82,6 +85,7 @@ class ProfilController extends Controller
     {
         $user = session('user');
         if (!$user) return redirect('/login');
+        if (is_array($user)) $user = (object) $user;
 
         $request->validate([
             'photo_profil' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
