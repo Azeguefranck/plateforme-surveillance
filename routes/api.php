@@ -264,25 +264,48 @@ Route::get('/seuils', function () {
 
 // ── GET /api/historique-data ──────────────────────────────
 Route::get('/historique-data', function (Request $request) {
-    $type   = $request->type   ?? 'mesures';
-    $debut  = $request->debut  ?? now()->subDays(7)->toDateString();
-    $fin    = $request->fin    ?? now()->toDateString();
-    $limit  = min((int) ($request->limit ?? 100), 2000);
-    $niveau = $request->niveau ?? '';
+    $type    = $request->type    ?? 'mesures';
+    $debut   = $request->debut   ?? now()->subDays(7)->toDateString();
+    $fin     = $request->fin     ?? now()->toDateString();
+    $limit   = min((int) ($request->limit ?? 100), 2000);
+    $niveau  = $request->niveau  ?? '';
+    $salleId = $request->salle_id ?? '';
+    $tMin    = $request->temp_min  !== null && $request->temp_min  !== '' ? (float)$request->temp_min  : null;
+    $tMax    = $request->temp_max  !== null && $request->temp_max  !== '' ? (float)$request->temp_max  : null;
+    $hMin    = $request->hum_min   !== null && $request->hum_min   !== '' ? (float)$request->hum_min   : null;
+    $hMax    = $request->hum_max   !== null && $request->hum_max   !== '' ? (float)$request->hum_max   : null;
+    $gMin    = $request->gaz_min   !== null && $request->gaz_min   !== '' ? (float)$request->gaz_min   : null;
+    $gMax    = $request->gaz_max   !== null && $request->gaz_max   !== '' ? (float)$request->gaz_max   : null;
+    $cMin    = $request->courant_min !== null && $request->courant_min !== '' ? (float)$request->courant_min : null;
+    $cMax    = $request->courant_max !== null && $request->courant_max !== '' ? (float)$request->courant_max : null;
+    $pMin    = $request->pwr_min   !== null && $request->pwr_min   !== '' ? (float)$request->pwr_min   : null;
+    $pMax    = $request->pwr_max   !== null && $request->pwr_max   !== '' ? (float)$request->pwr_max   : null;
 
     try {
         if ($type === 'alertes') {
-            $query = DB::table('alertes')
+            $q = DB::table('alertes')
                 ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
                 ->orderByDesc('created_at');
-            if ($niveau) $query->where('niveau', $niveau);
-            return response()->json($query->limit($limit)->get());
+            if ($niveau)  $q->where('niveau', $niveau);
+            if ($salleId) $q->where('salle_id', (int)$salleId);
+            return response()->json($q->limit($limit)->get());
         }
 
-        $query = DB::table('mesures')
+        $q = DB::table('mesures')
             ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
             ->orderByDesc('created_at');
-        return response()->json($query->limit($limit)->get());
+        if ($salleId) $q->where('salle_id', (int)$salleId);
+        if ($tMin !== null) $q->where('temperature', '>=', $tMin);
+        if ($tMax !== null) $q->where('temperature', '<=', $tMax);
+        if ($hMin !== null) $q->where('humidite', '>=', $hMin);
+        if ($hMax !== null) $q->where('humidite', '<=', $hMax);
+        if ($gMin !== null) $q->where('gaz', '>=', $gMin);
+        if ($gMax !== null) $q->where('gaz', '<=', $gMax);
+        if ($cMin !== null) $q->where('courant', '>=', $cMin);
+        if ($cMax !== null) $q->where('courant', '<=', $cMax);
+        if ($pMin !== null) $q->where('puissance', '>=', $pMin);
+        if ($pMax !== null) $q->where('puissance', '<=', $pMax);
+        return response()->json($q->limit($limit)->get());
     } catch (\Exception $e) {
         return response()->json([]);
     }
@@ -309,4 +332,77 @@ Route::post('/alertes/lire', function (Request $request) {
         DB::table('alertes')->where('id', $id)->update(['lu' => true]);
     }
     return response()->json(['success' => true]);
+});
+
+
+// ── GET /api/salles-list — liste légère pour dropdowns ────
+Route::get('/salles-list', function () {
+    try {
+        return response()->json(DB::table('salles')->select('id','nom')->orderBy('nom')->get());
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
+});
+
+
+// ── GET /api/filter — filtrage avancé multi-paramètres ────
+Route::get('/filter', function (Request $request) {
+    $allowed = ['mesures','alertes','salles','serveurs'];
+    $type    = in_array($request->type, $allowed) ? $request->type : 'mesures';
+    $debut   = $request->debut    ?? now()->subDays(7)->toDateString();
+    $fin     = $request->fin      ?? now()->toDateString();
+    $limit   = min((int)($request->limit ?? 500), 10000);
+    $niveau  = $request->niveau   ?? '';
+    $salleId = $request->salle_id ?? '';
+    $tMin    = $request->temp_min    !== null && $request->temp_min    !== '' ? (float)$request->temp_min    : null;
+    $tMax    = $request->temp_max    !== null && $request->temp_max    !== '' ? (float)$request->temp_max    : null;
+    $hMin    = $request->hum_min     !== null && $request->hum_min     !== '' ? (float)$request->hum_min     : null;
+    $hMax    = $request->hum_max     !== null && $request->hum_max     !== '' ? (float)$request->hum_max     : null;
+    $gMin    = $request->gaz_min     !== null && $request->gaz_min     !== '' ? (float)$request->gaz_min     : null;
+    $gMax    = $request->gaz_max     !== null && $request->gaz_max     !== '' ? (float)$request->gaz_max     : null;
+    $cMin    = $request->courant_min !== null && $request->courant_min !== '' ? (float)$request->courant_min : null;
+    $cMax    = $request->courant_max !== null && $request->courant_max !== '' ? (float)$request->courant_max : null;
+    $pMin    = $request->pwr_min     !== null && $request->pwr_min     !== '' ? (float)$request->pwr_min     : null;
+    $pMax    = $request->pwr_max     !== null && $request->pwr_max     !== '' ? (float)$request->pwr_max     : null;
+
+    try {
+        if ($type === 'salles') {
+            $data = DB::table('salles')->get();
+            return response()->json(['data' => $data, 'total' => $data->count()]);
+        }
+        if ($type === 'serveurs') {
+            $data = DB::table('serveurs')->get();
+            return response()->json(['data' => $data, 'total' => $data->count()]);
+        }
+        if ($type === 'alertes') {
+            $q = DB::table('alertes')
+                ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+                ->orderByDesc('created_at');
+            if ($niveau)  $q->where('niveau', $niveau);
+            if ($salleId) $q->where('salle_id', (int)$salleId);
+            $total = $q->count();
+            $data  = $q->limit($limit)->get();
+            return response()->json(['data' => $data, 'total' => $total]);
+        }
+        // mesures
+        $q = DB::table('mesures')
+            ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+            ->orderByDesc('created_at');
+        if ($salleId) $q->where('salle_id', (int)$salleId);
+        if ($tMin !== null) $q->where('temperature', '>=', $tMin);
+        if ($tMax !== null) $q->where('temperature', '<=', $tMax);
+        if ($hMin !== null) $q->where('humidite', '>=', $hMin);
+        if ($hMax !== null) $q->where('humidite', '<=', $hMax);
+        if ($gMin !== null) $q->where('gaz', '>=', $gMin);
+        if ($gMax !== null) $q->where('gaz', '<=', $gMax);
+        if ($cMin !== null) $q->where('courant', '>=', $cMin);
+        if ($cMax !== null) $q->where('courant', '<=', $cMax);
+        if ($pMin !== null) $q->where('puissance', '>=', $pMin);
+        if ($pMax !== null) $q->where('puissance', '<=', $pMax);
+        $total = $q->count();
+        $data  = $q->limit($limit)->get();
+        return response()->json(['data' => $data, 'total' => $total]);
+    } catch (\Exception $e) {
+        return response()->json(['data' => [], 'total' => 0, 'error' => $e->getMessage()]);
+    }
 });

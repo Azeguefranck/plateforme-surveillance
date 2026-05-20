@@ -116,12 +116,19 @@ table{display:block;overflow-x:auto}
         </select>
     </div>
     <div class="filter-group">
+        <label>Salle</label>
+        <select id="hSalle" onchange="loadHistory()">
+            <option value="">Toutes</option>
+        </select>
+    </div>
+    <div class="filter-group">
         <label>Limite</label>
         <select id="hLimit" onchange="loadHistory()">
-            <option value="50">50 entrées</option>
-            <option value="100" selected>100 entrées</option>
-            <option value="200">200 entrées</option>
-            <option value="500">500 entrées</option>
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000">1 000</option>
         </select>
     </div>
     <div class="filter-group" id="niveauGroup" style="display:none">
@@ -132,7 +139,16 @@ table{display:block;overflow-x:auto}
             <option value="critique">Critique</option>
         </select>
     </div>
-    <button class="btn btn-blue" onclick="loadHistory()">Actualiser</button>
+    <!-- Sensor range filters — shown per tab -->
+    <div class="filter-group" id="rangeGroup" style="display:none">
+        <label id="rangeLabel">Plage</label>
+        <div style="display:flex;gap:5px;align-items:center">
+            <input type="number" id="hRangeMin" placeholder="Min" step="any" style="width:68px" onchange="loadHistory()">
+            <span style="color:#555;font-size:11px">–</span>
+            <input type="number" id="hRangeMax" placeholder="Max" step="any" style="width:68px" onchange="loadHistory()">
+        </div>
+    </div>
+    <button class="btn btn-blue" onclick="loadHistory()">&#8635; Filtrer</button>
     <button class="btn btn-neon" onclick="exportHistory()">&#8595; CSV</button>
 </div>
 
@@ -179,6 +195,8 @@ const perPage = 25;
 let histChart = null;
 
 const tabStyles = {temperature:'temp',humidite:'hum',gaz:'gaz',courant:'cur',puissance:'pwr',alertes:'alrt'};
+const rangeLabels = {temperature:'Température (°C)',humidite:'Humidité (%)',gaz:'Gaz (ppm)',courant:'Courant (A)',puissance:'Puissance (W)'};
+const rangeSteps  = {temperature:0.1,humidite:0.1,gaz:1,courant:0.1,puissance:1};
 
 function switchTab(el, tab) {
     document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
@@ -186,6 +204,18 @@ function switchTab(el, tab) {
     if (tabStyles[tab]) el.classList.add(tabStyles[tab]);
     currentTab = tab;
     document.getElementById('niveauGroup').style.display = tab === 'alertes' ? '' : 'none';
+    // Show sensor range filter for sensor-specific tabs
+    const rangeGroup = document.getElementById('rangeGroup');
+    if (rangeLabels[tab]) {
+        rangeGroup.style.display = '';
+        document.getElementById('rangeLabel').textContent = rangeLabels[tab];
+        document.getElementById('hRangeMin').step = rangeSteps[tab] || 1;
+        document.getElementById('hRangeMax').step = rangeSteps[tab] || 1;
+        document.getElementById('hRangeMin').value = '';
+        document.getElementById('hRangeMax').value = '';
+    } else {
+        rangeGroup.style.display = 'none';
+    }
     loadHistory();
 }
 
@@ -199,16 +229,26 @@ function hApplyPeriod(days) {
 }
 
 function loadHistory() {
-    const debut  = document.getElementById('hDebut').value;
-    const fin    = document.getElementById('hFin').value;
-    const limit  = document.getElementById('hLimit').value;
-    const niveau = document.getElementById('hNiveau')?.value || '';
+    const debut   = document.getElementById('hDebut').value;
+    const fin     = document.getElementById('hFin').value;
+    const limit   = document.getElementById('hLimit').value;
+    const niveau  = document.getElementById('hNiveau')?.value || '';
+    const salleId = document.getElementById('hSalle')?.value || '';
+    const rMin    = document.getElementById('hRangeMin')?.value || '';
+    const rMax    = document.getElementById('hRangeMax')?.value || '';
     document.getElementById('histTimestamp').textContent = new Date().toLocaleString('fr-FR');
     document.getElementById('histTableWrapper').innerHTML = '<div class="loading">Chargement...</div>';
     currentPage = 1;
 
     const type = currentTab === 'alertes' ? 'alertes' : 'mesures';
-    const url  = `/api/historique-data?type=${type}&debut=${debut}&fin=${fin}&niveau=${niveau}&limit=${limit}`;
+    let url = `/api/historique-data?type=${type}&debut=${debut}&fin=${fin}&niveau=${niveau}&limit=${limit}&salle_id=${salleId}`;
+    // Append sensor range param for active tab
+    const rangeParamMap = {temperature:['temp_min','temp_max'],humidite:['hum_min','hum_max'],gaz:['gaz_min','gaz_max'],courant:['courant_min','courant_max'],puissance:['pwr_min','pwr_max']};
+    if (rangeParamMap[currentTab]) {
+        const [minKey, maxKey] = rangeParamMap[currentTab];
+        if (rMin !== '') url += `&${minKey}=${rMin}`;
+        if (rMax !== '') url += `&${maxKey}=${rMax}`;
+    }
 
     fetch(url)
         .then(r => r.json())
@@ -367,6 +407,16 @@ function exportHistory() {
     window.location.href = `/rapports/export?type=${type}&format=csv&debut=${debut}&fin=${fin}`;
     if (typeof notify === 'function') notify('Téléchargement CSV en cours...','i',2500);
 }
+
+// Load salles into dropdown
+fetch('/api/salles-list').then(r => r.json()).then(salles => {
+    const sel = document.getElementById('hSalle');
+    salles.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id; o.textContent = s.nom;
+        sel.appendChild(o);
+    });
+}).catch(() => {});
 
 loadHistory();
 </script>
