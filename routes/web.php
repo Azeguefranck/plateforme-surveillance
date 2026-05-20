@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfilController;
 
 
 
@@ -115,7 +116,10 @@ Route::view('/statistiques','statistiques');
 Route::view('/sms','sms');
 Route::view('/sms-gsm','sms-gsm');
 Route::view('/anomalies','anomalies');
-Route::view('/profil','profil');
+Route::get('/profil',           [ProfilController::class, 'show']);
+Route::post('/profil/update',   [ProfilController::class, 'update']);
+Route::post('/profil/password', [ProfilController::class, 'changePassword']);
+Route::post('/profil/photo',    [ProfilController::class, 'uploadPhoto']);
 Route::view('/utilisateurs','utilisateurs');
 Route::view('/cameras-ip','cameras-ip');
 Route::view('/salles','salles');
