@@ -164,6 +164,82 @@ function envoyerEmailAlerte(array $alerte, string $horodatage): void
 }
 
 
+// ── SMS via SIM900 (serial port) ──────────────────────────
+function envoyerSMS(array $phones, string $msg): void
+{
+    if (empty($phones)) return;
+    $msg = mb_substr($msg, 0, 160);
+
+    // Detect serial port
+    $port = null;
+    foreach (['/dev/ttyUSB0','/dev/ttyUSB1','/dev/ttyACM0','/dev/ttyACM1'] as $p) {
+        if (file_exists($p)) { $port = $p; break; }
+    }
+    if (!$port) return;
+
+    try {
+        exec('stty -F ' . escapeshellarg($port) . ' 9600 cs8 -cstopb -parenb raw 2>/dev/null');
+        $fd = @fopen($port, 'r+b');
+        if (!$fd) return;
+        stream_set_blocking($fd, false);
+
+        foreach ($phones as $phone) {
+            $phone = trim($phone);
+            if (strlen($phone) < 6) continue;
+            @fwrite($fd, "AT\r\n");         usleep(400000);
+            @fwrite($fd, "AT+CMGF=1\r\n"); usleep(400000);
+            @fwrite($fd, 'AT+CMGS="' . $phone . '"' . "\r\n"); usleep(800000);
+            @fwrite($fd, $msg . chr(26));   usleep(6000000);
+        }
+        @fclose($fd);
+    } catch (\Exception $e) {}
+}
+
+function collecterPhonesUtilisateurs(): array
+{
+    $phones = [];
+    try {
+        $users = DB::table('users')
+            ->where('validation_status', 'valide')
+            ->whereNotNull('telephone')
+            ->where('telephone', '!=', '')
+            ->get();
+        foreach ($users as $u) {
+            $tel = trim($u->telephone ?? '');
+            if ($tel === '') continue;
+            // Prepend indicatif if not already international
+            if (!str_starts_with($tel, '+')) {
+                $ind = trim($u->indicatif_tel ?? '');
+                $tel = $ind . preg_replace('/\D/', '', $tel);
+            }
+            if (strlen(preg_replace('/\D/', '', $tel)) >= 7) {
+                $phones[] = $tel;
+            }
+        }
+    } catch (\Exception $e) {}
+    // Always include admin
+    if (!in_array('+237687988340', $phones)) {
+        $phones[] = '+237687988340';
+    }
+    return array_unique($phones);
+}
+
+function envoyerSMSAlerte(array $alerte, string $horodatage): void
+{
+    $niv = $alerte['niveau'] === 'critique' ? 'CRITIQUE' : 'WARNING';
+    $msg = 'SUPSERVER ' . $niv . ': ' . strtoupper($alerte['capteur'])
+         . '=' . $alerte['valeur'] . $alerte['unite']
+         . ' Seuil=' . $alerte['seuil'] . $alerte['unite']
+         . ' ' . $horodatage;
+    envoyerSMS(collecterPhonesUtilisateurs(), $msg);
+}
+
+function envoyerSMSMouvement(string $horodatage): void
+{
+    $msg = 'SUPSERVER ALERTE SECURITE: Mouvement detecte dans la salle serveurs! ' . $horodatage;
+    envoyerSMS(collecterPhonesUtilisateurs(), $msg);
+}
+
 // ── POST /api/capteurs — réception données Arduino ────────
 Route::post('/capteurs', function (Request $request) {
 
@@ -208,6 +284,7 @@ Route::post('/capteurs', function (Request $request) {
         ]);
 
         envoyerEmailAlerte($alerte, $horodatage);
+        envoyerSMSAlerte($alerte, $horodatage);
     }
 
     // PIR actif selon seuils
@@ -222,6 +299,7 @@ Route::post('/capteurs', function (Request $request) {
             'created_at'  => now(),
             'updated_at'  => now(),
         ]);
+        envoyerSMSMouvement($horodatage);
     }
 
     return response()->json([

@@ -6,6 +6,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <title>Surveillance</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
 <style>
 
@@ -31,42 +32,75 @@ min-height:100vh;
 .sidebar{
 width:240px;
 background:#081126;
-padding:20px;
+padding:16px 12px;
 position:fixed;
 top:0;
 left:0;
 bottom:0;
 overflow-y:auto;
+overflow-x:hidden;
+z-index:999;
+transition:left .28s cubic-bezier(.4,0,.2,1);
+scrollbar-width:thin;
+scrollbar-color:#1e2f5a #040e22;
 }
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:#040e22}
+.sidebar::-webkit-scrollbar-thumb{background:#1e2f5a;border-radius:2px}
 
 .logo{
-font-size:26px;
-font-weight:bold;
+font-size:20px;
+font-weight:900;
 color:#39ff14;
-margin-bottom:25px;
+margin-bottom:18px;
 white-space:nowrap;
+letter-spacing:2px;
+display:flex;
+align-items:center;
+gap:8px;
+padding:6px 4px;
 }
 
 .sidebar a{
-display:block;
-padding:14px;
-margin-bottom:10px;
+display:flex;
+align-items:center;
+gap:10px;
+padding:11px 12px;
+margin-bottom:4px;
 background:#111c3d;
-border-radius:12px;
+border-radius:10px;
 text-decoration:none;
-color:white;
-font-weight:bold;
-transition:0.3s;
+color:#c7d5f0;
+font-weight:600;
+font-size:13px;
+transition:.2s;
+border:1px solid transparent;
+white-space:nowrap;
+overflow:hidden;
 }
-
+.sidebar a i{
+width:16px;
+text-align:center;
+font-size:14px;
+color:#39ff14;
+flex-shrink:0;
+}
 .sidebar a:hover{
 background:#1f2d5e;
+border-color:#1e3a6e;
+color:#fff;
+}
+.sidebar a.active{
+background:rgba(57,255,20,.08);
+border-color:rgba(57,255,20,.25);
+color:#39ff14;
 }
 
 .main{
 margin-left:240px;
 width:calc(100% - 240px);
 padding:20px;
+min-width:0;
 }
 
 .topbar{
@@ -74,36 +108,114 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 background:#111c3d;
-padding:15px;
+padding:12px 16px;
 border-radius:12px;
 margin-bottom:20px;
 flex-wrap:wrap;
+gap:10px;
+}
+
+.topbar-left{
+display:flex;
+align-items:center;
+gap:12px;
 }
 
 .datetime{
-font-size:18px;
+font-size:16px;
 font-weight:bold;
 color:#00ffcc;
 }
 
 .logout{
-background:red;
-padding:12px 18px;
-border:none;
+background:#1a0808;
+border:1.5px solid #ff3333;
+padding:10px 16px;
 border-radius:10px;
-color:white;
-font-weight:bold;
+color:#ff5555;
+font-weight:700;
 cursor:pointer;
+font-size:13px;
+display:flex;
+align-items:center;
+gap:7px;
+transition:.2s;
 }
-
 .logout:hover{
-background:#d10000;
+background:#ff3333;
+color:#fff;
 }
 
+/* ── Hamburger button ── */
+.menu-toggle{
+display:none;
+background:#111c3d;
+border:1px solid #1e2f5a;
+border-radius:8px;
+padding:8px 10px;
+color:#39ff14;
+font-size:16px;
+cursor:pointer;
+align-items:center;
+justify-content:center;
+transition:.2s;
+}
+.menu-toggle:hover{background:#1f2d5e}
+
+/* ── Sidebar overlay (mobile) ── */
+.sidebar-overlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.65);
+z-index:998;
+backdrop-filter:blur(3px);
+-webkit-backdrop-filter:blur(3px);
+}
+.sidebar-overlay.open{display:block}
+
+/* ── Sidebar close button (mobile) ── */
+.sidebar-close{
+display:none;
+background:none;
+border:none;
+color:#8899cc;
+font-size:18px;
+cursor:pointer;
+padding:2px 6px;
+}
+
+/* ── Global responsive ── */
+*{box-sizing:border-box}
+img{max-width:100%;height:auto}
+table{max-width:100%}
+
+/* ── Responsive breakpoints ── */
 @media(max-width:900px){
-.sidebar{position:relative;width:100%;}
-.main{margin-left:0;width:100%;}
-.wrapper{flex-direction:column;}
+.sidebar{
+  left:-260px;
+  position:fixed;
+  width:240px;
+}
+.sidebar.open{left:0}
+.sidebar-close{display:block}
+.main{margin-left:0;width:100%;padding:12px}
+.wrapper{flex-direction:column}
+.menu-toggle{display:flex}
+}
+
+@media(max-width:640px){
+.topbar{padding:10px 12px;border-radius:8px}
+.datetime{font-size:13px}
+.logout{padding:8px 12px;font-size:12px}
+.logout span{display:none}
+/* Tables scroll on small screens */
+.table-wrap,.card-body,[class*="table"]{overflow-x:auto}
+}
+
+@media(max-width:400px){
+.main{padding:8px}
+.logo{font-size:16px}
 }
 
 /* ── Global UI: toasts, spinners, confirm ─────── */
@@ -146,44 +258,50 @@ background:#d10000;
 
 <body>
 
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="wrapper">
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px">
+    <div class="logo"><i class="fa-solid fa-bolt"></i> SUPSERVER</div>
+    <button class="sidebar-close" id="sidebarClose" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
+  </div>
 
-<div class="logo">
-SURVEILLANCE
-</div>
-
-<a href="/dashboard">Dashboard</a>
-<a href="/accueil">Accueil</a>
-<a href="/surveillance">Surveillance</a>
-<a href="/alertes">Alertes</a>
-<a href="/historique">Historique</a>
-<a href="/statistiques">Statistiques</a>
-<a href="/sms">SMS GSM</a>
-<a href="/anomalies">Anomalies</a>
-<a href="/profil">Mon Profil</a>
-<a href="/users">Utilisateurs</a>
-<a href="/cameras-ip">Caméras IP</a>
-<a href="/salles">Salles Serveurs</a>
-<a href="/serveurs">Serveurs</a>
-<a href="/parametres">Paramètres</a>
-<a href="/rapports">Rapports</a>
-
+  <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+  <a href="/accueil"><i class="fa-solid fa-house"></i> Accueil</a>
+  <a href="/surveillance"><i class="fa-solid fa-eye"></i> Surveillance</a>
+  <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
+  <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
+  <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>
+  <a href="/sms"><i class="fa-solid fa-comment-sms"></i> SMS GSM</a>
+  <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
+  <a href="/profil"><i class="fa-solid fa-user"></i> Mon Profil</a>
+  <a href="/utilisateurs"><i class="fa-solid fa-users"></i> Utilisateurs</a>
+  <a href="/cameras-ip"><i class="fa-solid fa-video"></i> Caméras IP</a>
+  <a href="/salles"><i class="fa-solid fa-building-server"></i> Salles Serveurs</a>
+  <a href="/serveurs"><i class="fa-solid fa-server"></i> Serveurs</a>
+  <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
+  <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
 </div>
 
 <div class="main">
 
 <div class="topbar">
 
-<div class="datetime">
-<span id="date"></span> |
-<span id="heure"></span>
-</div>
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu navigation"><i class="fa-solid fa-bars"></i></button>
+    <div class="datetime">
+      <i class="fa-regular fa-calendar" style="margin-right:4px;opacity:.6"></i><span id="date"></span>
+      <span style="opacity:.4;margin:0 6px">|</span>
+      <i class="fa-regular fa-clock" style="margin-right:4px;opacity:.6"></i><span id="heure"></span>
+    </div>
+  </div>
 
-<button class="logout" onclick="doLogout()">
-&#128274; Se Déconnecter
-</button>
+  <button class="logout" onclick="doLogout()">
+    <i class="fa-solid fa-right-from-bracket"></i>
+    <span>Se Déconnecter</span>
+  </button>
 
 </div>
 
@@ -311,6 +429,24 @@ function confirmDlg(title, msg, opts) {
         document.addEventListener('keydown', _dlgKey);
     });
 }
+
+/* ── Hamburger / sidebar toggle ── */
+(function(){
+  var toggle=document.getElementById('menuToggle');
+  var close=document.getElementById('sidebarClose');
+  var overlay=document.getElementById('sidebarOverlay');
+  var sidebar=document.getElementById('sidebar');
+  function openSidebar(){sidebar.classList.add('open');overlay.classList.add('open');}
+  function closeSidebar(){sidebar.classList.remove('open');overlay.classList.remove('open');}
+  if(toggle) toggle.addEventListener('click',openSidebar);
+  if(close)  close.addEventListener('click',closeSidebar);
+  if(overlay) overlay.addEventListener('click',closeSidebar);
+  // Mark active link
+  var cur=window.location.pathname;
+  document.querySelectorAll('.sidebar a').forEach(function(a){
+    if(a.getAttribute('href')===cur) a.classList.add('active');
+  });
+})();
 
 /* ── Logout ── */
 function doLogout() {

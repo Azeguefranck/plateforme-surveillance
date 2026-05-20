@@ -12,6 +12,13 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // Check DB before validation (unique:users hits the DB)
+        try {
+            DB::connection()->getPdo();
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', '⚠️ Base de données inaccessible. Démarrez MySQL : sudo /opt/lampp/lampp startmysql');
+        }
+
         $request->validate([
             'nom'      => 'required|string|max:100',
             'prenom'   => 'required|string|max:100',

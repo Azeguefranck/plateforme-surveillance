@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inscription — SupServer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
@@ -230,6 +231,7 @@ select.finp option{background:#0c1c34;color:#fff;}
         <input type="hidden" name="iso_pays"      id="h_iso">
         <input type="hidden" name="indicatif_tel" id="h_dial">
         <input type="hidden" name="nationalite"   id="h_nat">
+        <input type="hidden" name="pays"           id="h_pays">
 
         {{-- ══ STEP 1 : IDENTITÉ ══ --}}
         <div class="step-pane active" id="pane1">
@@ -293,7 +295,7 @@ select.finp option{background:#0c1c34;color:#fff;}
           <div class="fg">
             <div class="fld f-full">
               <label class="flbl">Pays <span class="req">*</span></label>
-              <select id="pays_select" name="pays" placeholder="Rechercher un pays..."></select>
+              <select id="pays_select" name="_pays_ts" placeholder="Rechercher un pays..."></select>
             </div>
             <div class="fld f-full">
               <label class="flbl">Téléphone <span class="req">*</span></label>
@@ -711,6 +713,7 @@ function onCountryChange(iso){
   document.getElementById('h_iso').value=iso;
   document.getElementById('h_dial').value=c.dial;
   document.getElementById('h_nat').value=c.fr;
+  document.getElementById('h_pays').value=c.fr;
   var b=document.getElementById('dialBadge');
   b.textContent=flag(iso)+' '+c.dial; b.classList.add('loaded');
   resetSel('region_sel','— Chargement des régions... —');
