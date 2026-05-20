@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\ParametresController;
 
 
 
@@ -81,6 +82,36 @@ Route::get('/bloquer/{id}', function ($id) {
 
 
 
+Route::get('/refuser/{id}', function ($id) {
+
+    $user = DB::table('users')->where('id', $id)->first();
+    if (!$user) return response('Utilisateur introuvable', 404);
+
+    DB::table('users')->where('id', $id)->update(['validation_status' => 'refuse']);
+
+    try {
+        Mail::raw(
+            "Bonjour {$user->prenom} {$user->nom},\n\n" .
+            "❌ Votre demande d'inscription sur SupServer a été REFUSÉE.\n\n" .
+            "Votre demande d'accès à la plateforme de surveillance n'a pas été approuvée.\n\n" .
+            "Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur.\n\n" .
+            "SupServer — Plateforme Surveillance IoT",
+            function ($mail) use ($user) {
+                $mail->to($user->email)->subject('❌ Inscription refusée — SupServer');
+            }
+        );
+    } catch (\Exception $e) {}
+
+    return response('<html><body style="font-family:Arial;background:#0b1120;color:#ff5733;text-align:center;padding:60px">
+        <h1>❌ Compte refusé</h1>
+        <p style="color:#fff">' . $user->prenom . ' ' . $user->nom . ' ne peut pas accéder à la plateforme.</p>
+        <p style="color:#aaa">Email de notification envoyé.</p>
+    </body></html>');
+
+});
+
+
+
 Route::get('/attente/{id}', function ($id) {
 
     $user = DB::table('users')->where('id', $id)->first();
@@ -125,5 +156,6 @@ Route::view('/cameras-ip','cameras-ip');
 Route::view('/salles','salles');
 Route::view('/serveurs-web','serveurs_web');
 Route::view('/serveurs-bd','serveurs_bd');
-Route::view('/parametres','parametres');
+Route::get('/parametres',         [ParametresController::class, 'show']);
+Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
 Route::view('/rapports','rapports');

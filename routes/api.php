@@ -12,75 +12,150 @@ Route::get('/geo/cities/{country}',               [GeoController::class, 'cities
 Route::get('/geo/state-cities/{country}/{state}', [GeoController::class, 'stateCities']);
 
 
-// ── Seuils d'alerte ───────────────────────────────────────
-const SEUILS = [
-    'temperature' => ['warning' => 35,   'critique' => 40,   'unite' => '°C',  'risque' => 'Surchauffe serveurs, défaillance matérielle',     'solution' => 'Vérifier climatisation, ventilation, redémarrer les systèmes de refroidissement'],
-    'humidite'    => ['warning' => 75,   'critique' => 85,   'unite' => '%',   'risque' => 'Condensation, court-circuit, corrosion équipements', 'solution' => 'Activer déshumidificateur, vérifier étanchéité'],
-    'gaz'         => ['warning' => 300,  'critique' => 500,  'unite' => 'ppm', 'risque' => 'Fuite de gaz dangereux, risque d\'incendie/explosion', 'solution' => 'Évacuer la salle, couper l\'alimentation, appeler les secours'],
-    'courant'     => ['warning' => 10,   'critique' => 15,   'unite' => 'A',   'risque' => 'Surcharge électrique, risque de court-circuit',       'solution' => 'Réduire la charge, vérifier les disjoncteurs'],
-    'puissance'   => ['warning' => 3000, 'critique' => 5000, 'unite' => 'W',   'risque' => 'Consommation excessive, risque de coupure générale',  'solution' => 'Éteindre les équipements non critiques, vérifier l\'alimentation'],
-];
+// ── Méta-données capteurs (texte fixe) ────────────────────
+function getSeuilsMeta(): array
+{
+    return [
+        'temperature' => [
+            'unite'    => '°C',
+            'risque'   => 'Surchauffe serveurs, défaillance matérielle',
+            'solution' => 'Vérifier climatisation, ventilation, redémarrer les systèmes de refroidissement',
+        ],
+        'humidite' => [
+            'unite'    => '%',
+            'risque'   => 'Condensation, court-circuit, corrosion des équipements',
+            'solution' => 'Activer le déshumidificateur, vérifier l\'étanchéité de la salle',
+        ],
+        'gaz' => [
+            'unite'    => 'ppm',
+            'risque'   => 'Fuite de gaz dangereux, risque d\'incendie ou d\'explosion',
+            'solution' => 'Évacuer la salle, couper l\'alimentation, appeler les secours',
+        ],
+        'courant' => [
+            'unite'    => 'A',
+            'risque'   => 'Surcharge électrique, risque de court-circuit',
+            'solution' => 'Réduire la charge, vérifier les disjoncteurs',
+        ],
+        'puissance' => [
+            'unite'    => 'W',
+            'risque'   => 'Consommation excessive, risque de coupure générale',
+            'solution' => 'Éteindre les équipements non critiques, vérifier l\'alimentation',
+        ],
+    ];
+}
 
+// ── Seuils dynamiques depuis storage/app/seuils.json ──────
+function getSeuilsValeurs(): array
+{
+    static $cache = null;
+    if ($cache !== null) return $cache;
+
+    $path = storage_path('app/seuils.json');
+    if (file_exists($path)) {
+        $data = json_decode(file_get_contents($path), true);
+        if (is_array($data)) {
+            $cache = $data;
+            return $cache;
+        }
+    }
+
+    $cache = [
+        'temperature' => ['warning' => 35,   'critique' => 40],
+        'humidite'    => ['warning' => 75,   'critique' => 85],
+        'gaz'         => ['warning' => 300,  'critique' => 500],
+        'courant'     => ['warning' => 10,   'critique' => 15],
+        'puissance'   => ['warning' => 3000, 'critique' => 5000],
+        'pir'         => ['actif' => 1],
+    ];
+    return $cache;
+}
+
+// ── Analyse des mesures selon seuils dynamiques ───────────
 function analyserMesures(array $valeurs): array
 {
-    $alertes = [];
-    foreach (SEUILS as $capteur => $seuils) {
+    $alertes  = [];
+    $seuils   = getSeuilsValeurs();
+    $meta     = getSeuilsMeta();
+
+    foreach ($meta as $capteur => $m) {
         $val = $valeurs[$capteur] ?? null;
         if ($val === null) continue;
 
-        if ($val >= $seuils['critique']) {
+        $warn = $seuils[$capteur]['warning']  ?? null;
+        $crit = $seuils[$capteur]['critique'] ?? null;
+        if ($warn === null || $crit === null) continue;
+
+        if ($val >= $crit) {
             $alertes[] = [
-                'capteur' => $capteur,
-                'valeur'  => $val,
-                'niveau'  => 'critique',
-                'seuil'   => $seuils['critique'],
-                'unite'   => $seuils['unite'],
-                'risque'  => $seuils['risque'],
-                'solution'=> $seuils['solution'],
+                'capteur'  => $capteur,
+                'valeur'   => $val,
+                'niveau'   => 'critique',
+                'seuil'    => $crit,
+                'unite'    => $m['unite'],
+                'risque'   => $m['risque'],
+                'solution' => $m['solution'],
             ];
-        } elseif ($val >= $seuils['warning']) {
+        } elseif ($val >= $warn) {
             $alertes[] = [
-                'capteur' => $capteur,
-                'valeur'  => $val,
-                'niveau'  => 'warning',
-                'seuil'   => $seuils['warning'],
-                'unite'   => $seuils['unite'],
-                'risque'  => $seuils['risque'],
-                'solution'=> $seuils['solution'],
+                'capteur'  => $capteur,
+                'valeur'   => $val,
+                'niveau'   => 'warning',
+                'seuil'    => $warn,
+                'unite'    => $m['unite'],
+                'risque'   => $m['risque'],
+                'solution' => $m['solution'],
             ];
         }
     }
     return $alertes;
 }
 
+// ── Envoi email alerte HTML ────────────────────────────────
 function envoyerEmailAlerte(array $alerte, string $horodatage): void
 {
     $users = DB::table('users')->where('validation_status', 'valide')->get();
     if ($users->isEmpty()) return;
 
-    $capteurNom = strtoupper($alerte['capteur']);
-    $niveauLabel = $alerte['niveau'] === 'critique' ? '🔴 CRITIQUE' : '🟡 AVERTISSEMENT';
-    $sujet = "[{$niveauLabel}] Alerte {$capteurNom} — Salle Serveurs";
+    $capteurNom  = strtoupper($alerte['capteur']);
+    $niveauLabel = $alerte['niveau'] === 'critique' ? 'CRITIQUE' : 'AVERTISSEMENT';
+    $couleur     = $alerte['niveau'] === 'critique' ? '#ff5733' : '#ffd633';
+    $sujet       = '[' . $niveauLabel . '] Alerte ' . $capteurNom . ' — Salle Serveurs';
 
-    $corps =
-        "═══════════════════════════════════════\n" .
-        "   ALERTE SALLE SERVEURS — {$niveauLabel}\n" .
-        "═══════════════════════════════════════\n\n" .
-        "📍 Capteur     : {$capteurNom}\n" .
-        "📊 Valeur      : {$alerte['valeur']}{$alerte['unite']}\n" .
-        "⚠️  Seuil franchi : {$alerte['seuil']}{$alerte['unite']}\n" .
-        "🕐 Date/Heure  : {$horodatage}\n\n" .
-        "⚠️  RISQUES\n" .
-        "{$alerte['risque']}\n\n" .
-        "✅ SOLUTIONS RECOMMANDÉES\n" .
-        "{$alerte['solution']}\n\n" .
-        "───────────────────────────────────────\n" .
-        "SupServer — Plateforme IoT Surveillance\n" .
-        "Ceci est un message automatique.\n";
+    $html =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        . 'body{background:#060d1f;font-family:Arial,sans-serif;margin:0}'
+        . '.w{max-width:560px;margin:0 auto;background:#060d1f}'
+        . '.h{background:linear-gradient(135deg,#0e1a38,#060d1f);padding:24px;text-align:center;border-bottom:3px solid ' . $couleur . '}'
+        . '.hl{color:' . $couleur . ';font-size:20px;font-weight:900;letter-spacing:2px;margin:0}'
+        . '.hs{color:#5a6a99;font-size:10px;margin-top:4px;letter-spacing:1.5px}'
+        . '.b{background:#0a1428;padding:24px}'
+        . '.badge{display:inline-block;background:rgba(255,255,255,.04);color:' . $couleur . ';border:1px solid ' . $couleur . '33;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:14px}'
+        . 'table{width:100%;border-collapse:collapse;margin:10px 0}'
+        . 'td{padding:9px 10px;font-size:13px;border-bottom:1px solid #0e1c35}'
+        . '.k{color:#8899cc;width:42%;font-weight:600}'
+        . '.v{color:#c7d2ff}'
+        . '.f{background:#060d1f;padding:14px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35}'
+        . '</style></head><body>'
+        . '<div class="w">'
+        . '<div class="h"><h1 class="hl">&#9889; SUPSERVER &mdash; ' . $niveauLabel . '</h1><div class="hs">PLATEFORME IoT &mdash; SURVEILLANCE SALLES SERVEURS</div></div>'
+        . '<div class="b">'
+        . '<div><span class="badge">&#9888; ALERTE ' . $capteurNom . '</span></div>'
+        . '<table>'
+        . '<tr><td class="k">Capteur</td><td class="v">' . $capteurNom . '</td></tr>'
+        . '<tr><td class="k">Valeur mesur&eacute;e</td><td class="v" style="color:' . $couleur . ';font-weight:700">' . $alerte['valeur'] . ' ' . htmlspecialchars($alerte['unite']) . '</td></tr>'
+        . '<tr><td class="k">Seuil franchi</td><td class="v">' . $alerte['seuil'] . ' ' . htmlspecialchars($alerte['unite']) . '</td></tr>'
+        . '<tr><td class="k">Niveau</td><td class="v" style="color:' . $couleur . '">' . $niveauLabel . '</td></tr>'
+        . '<tr><td class="k">Date / Heure</td><td class="v">' . $horodatage . '</td></tr>'
+        . '<tr><td class="k">Risques</td><td class="v">' . htmlspecialchars($alerte['risque']) . '</td></tr>'
+        . '<tr><td class="k">Solutions</td><td class="v">' . htmlspecialchars($alerte['solution']) . '</td></tr>'
+        . '</table>'
+        . '</div>'
+        . '<div class="f">SupServer IoT &mdash; Alerte automatique &mdash; Ne pas r&eacute;pondre</div>'
+        . '</div></body></html>';
 
     foreach ($users as $user) {
         try {
-            Mail::raw($corps, function ($mail) use ($user, $sujet) {
+            Mail::html($html, function ($mail) use ($user, $sujet) {
                 $mail->to($user->email)->subject($sujet);
             });
         } catch (\Exception $e) {}
@@ -98,7 +173,7 @@ Route::post('/capteurs', function (Request $request) {
     $puissance   = (float) ($request->puissance   ?? 0);
     $tension     = (float) ($request->tension      ?? 0);
     $pir         = (bool)  ($request->pir          ?? false);
-    $rssi        = $request->rssi ? (int) $request->rssi : null;
+    $rssi        = $request->rssi    ? (int) $request->rssi    : null;
     $salleId     = $request->salle_id ? (int) $request->salle_id : null;
 
     DB::table('mesures')->insert([
@@ -116,12 +191,13 @@ Route::post('/capteurs', function (Request $request) {
     ]);
 
     $horodatage = now()->format('d/m/Y H:i:s');
-    $alertes = analyserMesures(compact('temperature', 'humidite', 'gaz', 'courant', 'puissance'));
+    $alertes    = analyserMesures(compact('temperature', 'humidite', 'gaz', 'courant', 'puissance'));
+    $seuils     = getSeuilsValeurs();
 
     foreach ($alertes as $alerte) {
         DB::table('alertes')->insert([
             'type_alerte' => $alerte['capteur'],
-            'message'     => "Dépassement seuil {$alerte['niveau']} — {$alerte['capteur']} : {$alerte['valeur']}{$alerte['unite']}",
+            'message'     => 'Dépassement seuil ' . $alerte['niveau'] . ' — ' . $alerte['capteur'] . ' : ' . $alerte['valeur'] . $alerte['unite'],
             'niveau'      => $alerte['niveau'],
             'valeur'      => $alerte['valeur'] . $alerte['unite'],
             'salle_id'    => $salleId,
@@ -133,7 +209,8 @@ Route::post('/capteurs', function (Request $request) {
         envoyerEmailAlerte($alerte, $horodatage);
     }
 
-    if ($pir) {
+    // PIR actif selon seuils
+    if ($pir && ($seuils['pir']['actif'] ?? 1)) {
         DB::table('alertes')->insert([
             'type_alerte' => 'pir',
             'message'     => 'Mouvement détecté dans la salle serveurs',
@@ -153,7 +230,7 @@ Route::post('/capteurs', function (Request $request) {
 });
 
 
-// ── GET /api/dashboard-data — dernière mesure ─────────────
+// ── GET /api/dashboard-data ───────────────────────────────
 Route::get('/dashboard-data', function () {
     $mesure = DB::table('mesures')->latest()->first();
     if (!$mesure) {
@@ -179,7 +256,13 @@ Route::get('/stats', function () {
 });
 
 
-// ── GET /api/historique-data — 20 dernières mesures ───────
+// ── GET /api/seuils — seuils actifs ───────────────────────
+Route::get('/seuils', function () {
+    return response()->json(getSeuilsValeurs());
+});
+
+
+// ── GET /api/historique-data ──────────────────────────────
 Route::get('/historique-data', function () {
     $mesures = DB::table('mesures')
         ->latest()
@@ -194,10 +277,7 @@ Route::get('/historique-data', function () {
 // ── GET /api/alertes-recentes ─────────────────────────────
 Route::get('/alertes-recentes', function () {
     return response()->json(
-        DB::table('alertes')
-            ->latest()
-            ->limit(30)
-            ->get()
+        DB::table('alertes')->latest()->limit(30)->get()
     );
 });
 

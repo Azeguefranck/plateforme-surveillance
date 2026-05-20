@@ -1,203 +1,215 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Connexion</title>
-
+<title>Connexion — SupServer</title>
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:#020c1a;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:'Segoe UI', Arial, sans-serif;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
 }
 
-body{
-background:#050816;
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-font-family:Arial, Helvetica, sans-serif;
-padding:20px;
+/* Background grid */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,255,136,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,.03) 1px, transparent 1px);
+  background-size:45px 45px;
+  pointer-events:none;
 }
 
-.box{
-width:100%;
-max-width:450px;
-background:#101935;
-padding:40px;
-border-radius:25px;
-box-shadow:0 0 30px rgba(0,0,0,0.4);
+/* Radial glow */
+body::after {
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(0,255,136,.05) 0%, transparent 70%);
+  pointer-events:none;
 }
 
-h1{
-color:#39ff14;
-text-align:center;
-margin-bottom:30px;
-font-size:42px;
+.box {
+  position:relative;z-index:1;
+  width:100%;max-width:440px;
+  background:linear-gradient(135deg,#0e1a38,#0a1225);
+  padding:40px 38px;
+  border-radius:20px;
+  border:1px solid #1e2f5a;
+  box-shadow:0 0 60px rgba(0,0,0,.6), 0 0 30px rgba(0,255,136,.05);
+  animation:fadeUp .5s ease;
 }
 
-input{
-width:100%;
-padding:18px;
-margin-top:20px;
-border:none;
-border-radius:12px;
-font-size:18px;
-outline:none;
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
 }
 
-button{
-width:100%;
-padding:18px;
-margin-top:25px;
-background:#63f5c8;
-border:none;
-border-radius:12px;
-font-size:22px;
-font-weight:bold;
-color:white;
-cursor:pointer;
-transition:0.3s;
+/* Top bar */
+.box-top {
+  text-align:center;
+  margin-bottom:28px;
+}
+.box-brand {
+  font-size:13px;letter-spacing:5px;color:#33ff88;
+  text-transform:uppercase;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:10px;
+}
+.brand-line {
+  width:28px;height:1px;
+  background:linear-gradient(90deg,transparent,#33ff88);
+}
+.brand-line.r{transform:scaleX(-1)}
+
+h1 {
+  font-size:26px;font-weight:800;color:#fff;
+  letter-spacing:1px;margin:0;
+}
+h1 span{color:#33ff88}
+
+/* Alert boxes */
+.alert-box {
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;border-radius:10px;
+  margin-bottom:16px;font-size:13px;font-weight:600;line-height:1.4;
+  animation:fadeUp .3s ease;
+}
+.alert-error  {background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff7755}
+.alert-success{background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:#33ff88}
+.alert-warn   {background:rgba(255,214,51,.1);border:1px solid rgba(255,214,51,.3);color:#ffd633}
+
+/* Form */
+.field {
+  margin-bottom:16px;
+}
+.field label {
+  display:block;
+  font-size:11px;font-weight:700;letter-spacing:.8px;
+  color:#5a6a99;text-transform:uppercase;margin-bottom:6px;
+}
+.field input {
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,.04);
+  border:1px solid #1e2f5a;border-radius:9px;
+  color:#e0e8ff;font-size:15px;outline:none;
+  transition:.25s;font-family:inherit;
+}
+.field input:focus {
+  border-color:#33ff88;
+  box-shadow:0 0 0 3px rgba(51,255,136,.08);
+}
+.field input::placeholder{color:#3a4a6a}
+
+/* Password wrapper */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:44px}
+.pw-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#5a6a99;cursor:pointer;
+  font-size:16px;transition:.2s;padding:0;
+}
+.pw-eye:hover{color:#33ff88}
+
+/* Submit */
+.btn-submit {
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,rgba(51,255,136,.15),rgba(51,255,136,.08));
+  border:1px solid rgba(51,255,136,.35);border-radius:9px;
+  color:#33ff88;font-size:15px;font-weight:800;
+  letter-spacing:1.5px;cursor:pointer;transition:.25s;
+  text-transform:uppercase;margin-top:4px;
+}
+.btn-submit:hover {
+  background:linear-gradient(135deg,rgba(51,255,136,.22),rgba(51,255,136,.12));
+  box-shadow:0 0 24px rgba(51,255,136,.3);
+  transform:translateY(-1px);
 }
 
-button:hover{
-opacity:0.9;
+/* Links */
+.links {
+  margin-top:22px;
+  display:flex;flex-direction:column;gap:10px;align-items:center;
 }
-
-.error{
-background:red;
-color:white;
-padding:14px;
-margin-top:15px;
-border-radius:10px;
-text-align:center;
-font-size:17px;
+.links a {
+  color:#5a6a99;text-decoration:none;font-size:13px;transition:.2s;
 }
+.links a:hover{color:#33ff88}
 
-.success{
-background:green;
-color:white;
-padding:14px;
-margin-top:15px;
-border-radius:10px;
-text-align:center;
-font-size:17px;
-}
-
-.links{
-margin-top:25px;
-text-align:center;
-}
-
-.links a{
-display:block;
-margin-top:12px;
-color:white;
-text-decoration:none;
-font-size:17px;
-}
-
-.links a:hover{
-color:#63f5c8;
-}
-
-@media(max-width:500px){
-
-.box{
-padding:25px;
-}
-
-h1{
-font-size:32px;
-}
-
-button{
-font-size:18px;
-}
-
+.sep {
+  height:1px;margin:20px 0;
+  background:linear-gradient(90deg,transparent,#1e2f5a,transparent);
 }
 
 </style>
-
 </head>
-
 <body>
 
 <div class="box">
 
-<h1>Connexion</h1>
+  <div class="box-top">
+    <div class="box-brand">
+      <div class="brand-line"></div>SupServer IoT<div class="brand-line r"></div>
+    </div>
+    <h1>Se <span>connecter</span></h1>
+  </div>
 
-@if(session('error'))
+  {{-- Messages de statut --}}
+  @if(session('error'))
+    @php
+      $err = session('error');
+      $cls = str_contains($err, 'attente') ? 'alert-warn' : (str_contains($err, 'refusé') ? 'alert-error' : 'alert-error');
+      $ico = str_contains($err, 'attente') ? '⏳' : (str_contains($err, 'refusé') ? '❌' : '⚠️');
+    @endphp
+    <div class="alert-box {{ $cls }}">
+      <span>{{ $ico }}</span>
+      <span>{{ $err }}</span>
+    </div>
+  @endif
 
-<div class="error">
+  @if(session('success'))
+    <div class="alert-box alert-success">
+      <span>✅</span>
+      <span>{{ session('success') }}</span>
+    </div>
+  @endif
 
-{{ session('error') }}
+  <form method="POST" action="/login-user">
+    @csrf
 
-</div>
+    <div class="field">
+      <label>Adresse email</label>
+      <input type="email" name="email" placeholder="votre@email.com" required autofocus>
+    </div>
 
-@endif
+    <div class="field">
+      <label>Mot de passe</label>
+      <div class="pw-wrap">
+        <input type="password" name="mot_de_passe" id="pw-input" placeholder="••••••••" required>
+        <button type="button" class="pw-eye" onclick="this.previousElementSibling.type==='password'?(this.previousElementSibling.type='text',this.textContent='🙈'):(this.previousElementSibling.type='password',this.textContent='👁')">👁</button>
+      </div>
+    </div>
 
-@if(session('success'))
+    <button type="submit" class="btn-submit">⊙ Se connecter</button>
 
-<div class="success">
+  </form>
 
-{{ session('success') }}
+  <div class="sep"></div>
 
-</div>
-
-@endif
-
-<form method="POST" action="/login-user">
-
-@csrf
-
-<input
-type="email"
-name="email"
-placeholder="Adresse email"
-required>
-
-<input
-type="password"
-name="password"
-placeholder="Mot de passe"
-required>
-
-<button type="submit">
-
-SE CONNECTER
-
-</button>
-
-</form>
-
-<div class="links">
-
-<a href="/forgot-password">
-
-Mot de passe oublié ?
-
-</a>
-
-<a href="/register">
-
-Créer un compte
-
-</a>
-
-<a href="/accueil">
-
-Retour accueil
-
-</a>
-
-</div>
+  <div class="links">
+    <a href="/register">⊕ Créer un compte</a>
+    <a href="/accueil">← Retour à l'accueil</a>
+  </div>
 
 </div>
 
