@@ -206,7 +206,7 @@ function resoudre(btn, id) {
 }
 
 function supprimerAnom(btn, id) {
-    confirmDlg('Supprimer cette anomalie ?','Elle sera retirée définitivement.').then(function(ok){
+    confirmDlg('Supprimer cette anomalie ?','Cette anomalie sera définitivement retirée de l\'historique. Cette action est irréversible.',{type:'danger',icon:'🗑️',confirmText:'Supprimer'}).then(function(ok){
         if (!ok) return;
         btnLoad(btn);
         csrfFetch('/alerte/'+id, {method:'DELETE'})

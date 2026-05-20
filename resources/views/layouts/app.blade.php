@@ -118,16 +118,27 @@ background:#d10000;
 ._t.w{background:rgba(22,18,6,.92);border:1px solid #ffd633;color:#ffd633}
 ._t.i{background:rgba(6,14,22,.92);border:1px solid #33b5ff;color:#33b5ff}
 ._spin-ico{width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block;animation:_spin .65s linear infinite;flex-shrink:0}
-#_cdlg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;align-items:center;justify-content:center}
+@keyframes _dlgIn{from{opacity:0;transform:scale(.86) translateY(14px)}to{opacity:1;transform:none}}
+@keyframes _dlgBg{from{opacity:0}to{opacity:1}}
+@keyframes _icoFloat{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes _glowBar{0%,100%{opacity:.5}50%{opacity:1}}
+#_cdlg{display:none;position:fixed;inset:0;background:rgba(2,5,18,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:10000;align-items:center;justify-content:center;animation:_dlgBg .22s ease}
 #_cdlg.open{display:flex}
-._cbox{background:#090f22;border:1px solid #1e2f5a;border-radius:14px;padding:28px 24px;text-align:center;max-width:350px;width:92%}
-._cbox h4{color:#fff;font-size:16px;margin:0 0 10px}
-._cbox p{color:#aaa;font-size:13px;margin:0 0 22px}
-._cbtns{display:flex;gap:10px;justify-content:center}
-._cok{background:#ff5733;border:none;color:#fff;padding:9px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
-._cok:hover{background:#e83d1e}
-._cno{background:transparent;border:1px solid #1e2f5a;color:#aaa;padding:9px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
-._cno:hover{border-color:#33b5ff;color:#33b5ff}
+._cbox{background:rgba(6,11,30,.98);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:0;text-align:center;max-width:420px;width:92%;box-shadow:0 0 0 1px rgba(255,255,255,.04),0 12px 80px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05);animation:_dlgIn .32s cubic-bezier(.21,1.02,.73,1) forwards;position:relative;overflow:hidden}
+._cbox::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,rgba(255,255,255,.03),transparent 60%);pointer-events:none}
+._cbox-top{height:3px;background:linear-gradient(90deg,transparent 0%,var(--dc,#ff5733) 30%,var(--dc,#ff5733) 70%,transparent 100%);box-shadow:0 0 20px var(--dc,#ff5733);animation:_glowBar 2.5s ease infinite}
+._cbox-head{padding:28px 28px 4px}
+._cico{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:30px;background:radial-gradient(circle,rgba(var(--dr,255,87,51),.16) 0%,transparent 70%);border:1.5px solid rgba(var(--dr,255,87,51),.3);box-shadow:0 0 18px rgba(var(--dr,255,87,51),.12);animation:_icoFloat 3.5s ease infinite}
+._ctitl{color:#fff;font-size:14px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;margin:0 0 10px}
+._cmsg{color:#8899bb;font-size:13px;margin:0;line-height:1.65;padding:0 2px}
+._cbox-body{padding:20px 28px 28px}
+._cdivider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:0 0 20px}
+._cbtns{display:flex;gap:12px}
+._cno{flex:1;background:rgba(18,30,68,.65);border:1px solid rgba(51,181,255,.2);color:#7788aa;padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.3px;transition:.2s}
+._cno:hover{background:rgba(51,181,255,.12);border-color:rgba(51,181,255,.55);color:#33b5ff;transform:translateY(-1px)}
+._cok{flex:1;background:rgba(var(--dr,255,87,51),.1);border:1px solid rgba(var(--dr,255,87,51),.35);color:var(--dc,#ff5733);padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.3px;transition:.2s}
+._cok:hover{background:var(--dc,#ff5733);color:#fff;box-shadow:0 0 24px rgba(var(--dr,255,87,51),.5);transform:translateY(-1px)}
+._cok:active,._cno:active{transform:scale(.95)!important;transition:transform .08s}
 
 </style>
 
@@ -170,8 +181,8 @@ SURVEILLANCE
 <span id="heure"></span>
 </div>
 
-<button class="logout" onclick="window.location.href='/login'">
-Se Déconnecter
+<button class="logout" onclick="doLogout()">
+&#128274; Se Déconnecter
 </button>
 
 </div>
@@ -208,12 +219,19 @@ updateDateTime();
 
 <!-- ── Confirm dialog ────────────────────── -->
 <div id="_cdlg">
-  <div class="_cbox">
-    <h4 id="_ctitle">Confirmer</h4>
-    <p  id="_cmsg">Êtes-vous sûr de vouloir effectuer cette action ?</p>
-    <div class="_cbtns">
-      <button class="_cno"  id="_cno">Annuler</button>
-      <button class="_cok"  id="_cok">Confirmer</button>
+  <div class="_cbox" id="_cboxEl">
+    <div class="_cbox-top"></div>
+    <div class="_cbox-head">
+      <div class="_cico" id="_cico">⚠️</div>
+      <div class="_ctitl" id="_ctitle">Confirmation requise</div>
+      <p class="_cmsg" id="_cmsg">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+    </div>
+    <div class="_cbox-body">
+      <div class="_cdivider"></div>
+      <div class="_cbtns">
+        <button class="_cno" id="_cno">Annuler</button>
+        <button class="_cok" id="_cok">Confirmer</button>
+      </div>
     </div>
   </div>
 </div>
@@ -251,17 +269,60 @@ function csrfFetch(url,opts){
 }
 
 /* ── Confirm dialog ── */
-function confirmDlg(title,msg){
-    return new Promise(function(res){
-        var dlg=document.getElementById('_cdlg');
-        document.getElementById('_ctitle').textContent=title||'Confirmer';
-        document.getElementById('_cmsg').textContent=msg||'Êtes-vous sûr ?';
+var _cdlgBusy = false;
+function confirmDlg(title, msg, opts) {
+    return new Promise(function(res) {
+        if (_cdlgBusy) { res(false); return; }
+        _cdlgBusy = true;
+        opts = opts || {};
+        var type = opts.type || 'danger';
+        var icoMap = {danger:'🗑️',warning:'⚠️',success:'✅',info:'ℹ️',logout:'🔒',user:'👤',reset:'🔄',stop:'⏹️',valide:'✔️',refuse:'✗',bloque:'🚫'};
+        var clrMap = {danger:'#ff5733',warning:'#ffd633',success:'#33ff88',info:'#33b5ff',logout:'#ff9933',user:'#ff5733',reset:'#ffd633',stop:'#ff5733',valide:'#33ff88',refuse:'#ffd633',bloque:'#ff5733'};
+        var rgbMap = {danger:'255,87,51',warning:'255,214,51',success:'51,255,136',info:'51,181,255',logout:'255,153,51',user:'255,87,51',reset:'255,214,51',stop:'255,87,51',valide:'51,255,136',refuse:'255,214,51',bloque:'255,87,51'};
+        var icon = opts.icon  || icoMap[type] || '⚠️';
+        var clr  = clrMap[type] || clrMap.danger;
+        var rgb  = rgbMap[type] || rgbMap.danger;
+        var box  = document.getElementById('_cboxEl');
+        box.style.setProperty('--dc', clr);
+        box.style.setProperty('--dr', rgb);
+        document.getElementById('_cico').textContent   = icon;
+        document.getElementById('_ctitle').textContent = title || 'Confirmation requise';
+        document.getElementById('_cmsg').textContent   = msg   || 'Êtes-vous sûr de vouloir effectuer cette action ?';
+        document.getElementById('_cok').textContent    = opts.confirmText || 'Confirmer';
+        document.getElementById('_cno').textContent    = opts.cancelText  || 'Annuler';
+        var dlg = document.getElementById('_cdlg');
         dlg.classList.add('open');
-        var ok=document.getElementById('_cok'),no=document.getElementById('_cno');
-        function done(v){dlg.classList.remove('open');ok.onclick=no.onclick=null;res(v);}
-        ok.onclick=function(){done(true);};
-        no.onclick=function(){done(false);};
-        dlg.onclick=function(e){if(e.target===dlg)done(false);};
+        box.style.animation = 'none'; void box.offsetHeight; box.style.animation = '';
+        setTimeout(function(){ var n=document.getElementById('_cno'); if(n) n.focus(); }, 80);
+        var ok=document.getElementById('_cok'), no=document.getElementById('_cno');
+        function done(v) {
+            _cdlgBusy = false;
+            dlg.classList.remove('open');
+            ok.onclick = no.onclick = dlg.onclick = null;
+            document.removeEventListener('keydown', _dlgKey);
+            res(v);
+        }
+        function _dlgKey(e) {
+            if (e.key === 'Escape') { e.preventDefault(); done(false); }
+        }
+        ok.onclick   = function(){ done(true);  };
+        no.onclick   = function(){ done(false); };
+        dlg.onclick  = function(e){ if(e.target===dlg) done(false); };
+        document.addEventListener('keydown', _dlgKey);
+    });
+}
+
+/* ── Logout ── */
+function doLogout() {
+    confirmDlg(
+        'Se déconnecter ?',
+        'Vous allez quitter la plateforme de surveillance des salles serveurs. Votre session active sera fermée.',
+        {type:'logout', icon:'🔒', confirmText:'Se déconnecter', cancelText:'Rester connecté'}
+    ).then(function(ok) {
+        if (ok) {
+            notify('Déconnexion en cours…', 'w', 2000);
+            setTimeout(function(){ window.location.href='/login'; }, 700);
+        }
     });
 }
 </script>

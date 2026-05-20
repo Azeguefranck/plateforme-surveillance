@@ -156,10 +156,10 @@
     </div>
     <div class="room-actions">
         <button class="btn btn-blue" onclick="openEdit({{ $salle->id }}, '{{ addslashes($salle->nom) }}', '{{ addslashes($salle->code ?? '') }}', '{{ addslashes($salle->localisation ?? '') }}', '{{ addslashes($salle->responsable ?? '') }}', {{ $salle->capacite_serveurs }}, '{{ $salle->statut }}', '{{ addslashes($salle->description ?? '') }}')">Modifier</button>
-        <form method="POST" action="/salles/{{ $salle->id }}" onsubmit="return confirm('Supprimer cette salle ?')" style="margin:0">
+        <form method="POST" action="/salles/{{ $salle->id }}" id="del-salle-{{ $salle->id }}" style="margin:0">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-danger">Supprimer</button>
+            <button type="button" class="btn btn-danger" onclick="delSalle(this,{{ $salle->id }})">Supprimer</button>
         </form>
     </div>
 </div>
@@ -264,6 +264,12 @@
 </div>
 
 <script>
+function delSalle(btn, id) {
+    confirmDlg('Supprimer cette salle ?','La salle serveurs sera définitivement supprimée. Toutes ses données associées seront perdues. Cette action est irréversible.',{type:'danger',icon:'🏢',confirmText:'Supprimer la salle'}).then(function(ok) {
+        if (ok) { btnLoad(btn); document.getElementById('del-salle-'+id).submit(); }
+    });
+}
+
 function openEdit(id, nom, code, localisation, responsable, capacite, statut, description) {
     document.getElementById('editForm').action = '/salles/' + id;
     document.getElementById('edit_nom').value = nom;

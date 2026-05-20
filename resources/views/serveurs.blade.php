@@ -143,10 +143,10 @@ table{display:block;overflow-x:auto}
                     '{{ $srv->date_installation ?? '' }}',
                     '{{ addslashes($srv->notes ?? '') }}'
                 )">Modifier</button>
-                <form method="POST" action="/serveurs/{{ $srv->id }}" onsubmit="return confirm('Supprimer ce serveur ?')" style="margin:0">
+                <form method="POST" action="/serveurs/{{ $srv->id }}" id="del-srv-{{ $srv->id }}" style="margin:0">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                    <button type="button" class="btn btn-danger" onclick="delServeur(this,{{ $srv->id }})">Supprimer</button>
                 </form>
             </td>
         </tr>
@@ -374,6 +374,12 @@ table{display:block;overflow-x:auto}
 </div>
 
 <script>
+function delServeur(btn, id) {
+    confirmDlg('Supprimer ce serveur ?','Ce serveur sera définitivement supprimé de l\'inventaire. Toutes ses données associées seront perdues. Cette action est irréversible.',{type:'danger',icon:'🖥️',confirmText:'Supprimer le serveur'}).then(function(ok) {
+        if (ok) { btnLoad(btn); document.getElementById('del-srv-'+id).submit(); }
+    });
+}
+
 function pingServer(btn, id) {
     var orig = btn.innerHTML;
     btn.innerHTML = '<span class="_spin-ico" style="width:11px;height:11px;border-width:1.5px"></span>';

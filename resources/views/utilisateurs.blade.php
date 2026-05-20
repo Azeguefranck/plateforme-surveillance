@@ -175,6 +175,22 @@ try {
 
 <script>
 function changeStatut(btn, userId, status) {
+    var needsConfirm = status === 'refuse' || status === 'bloque';
+    if (needsConfirm) {
+        var cfgs = {
+            refuse: {title:'Refuser cet utilisateur ?', msg:'L\'utilisateur sera refusé et ne pourra plus accéder à la plateforme de surveillance.', type:'warning', icon:'✗', confirmText:'Refuser'},
+            bloque: {title:'Bloquer cet utilisateur ?', msg:'L\'accès de cet utilisateur sera immédiatement et définitivement bloqué.', type:'danger', icon:'🚫', confirmText:'Bloquer'}
+        };
+        var cfg = cfgs[status];
+        confirmDlg(cfg.title, cfg.msg, {type:cfg.type, icon:cfg.icon, confirmText:cfg.confirmText}).then(function(ok) {
+            if (ok) _doChangeStatut(btn, userId, status);
+        });
+        return;
+    }
+    _doChangeStatut(btn, userId, status);
+}
+
+function _doChangeStatut(btn, userId, status) {
     btnLoad(btn);
     csrfFetch('/user/'+userId+'/statut', {method:'POST', body:JSON.stringify({status:status})})
         .then(function(r){return r.json();})
@@ -209,7 +225,7 @@ function changeStatut(btn, userId, status) {
 }
 
 function supprimerUser(btn, userId) {
-    confirmDlg('Supprimer l\'utilisateur', 'Cette action est irréversible.').then(function(ok) {
+    confirmDlg('Supprimer cet utilisateur ?', 'Cet utilisateur perdra définitivement l\'accès à la plateforme. Cette action est irréversible.',{type:'danger',icon:'👤',confirmText:'Supprimer l\'utilisateur'}).then(function(ok) {
         if (!ok) return;
         btnLoad(btn);
         csrfFetch('/user/'+userId, {method:'DELETE'})
