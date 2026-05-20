@@ -152,10 +152,13 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-
-        $user = DB::table('users')
-        ->where('email', $request->email)
-        ->first();
+        try {
+            $user = DB::table('users')
+                ->where('email', $request->email)
+                ->first();
+        } catch (\Exception $e) {
+            return back()->with('error', '⚠️ Base de données inaccessible. Démarrez MySQL avec : sudo /opt/lampp/lampp startmysql');
+        }
 
         if(!$user){
 

@@ -296,6 +296,14 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .card-scroll::-webkit-scrollbar{width:3px}
 .card-scroll::-webkit-scrollbar-track{background:#0a1225}
 .card-scroll::-webkit-scrollbar-thumb{background:#33ff88;border-radius:2px}
+
+/* ── Geo cascade ──────────────────────────────────────── */
+.geo-sel{width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;outline:none;transition:.2s;cursor:pointer;appearance:none;-webkit-appearance:none}
+.geo-sel:focus{border-color:#33ff88;box-shadow:0 0 0 2px rgba(51,255,136,.1)}
+.geo-sel:disabled{opacity:.45;cursor:not-allowed}
+.geo-sel option{background:#0e1a38}
+.geo-ld{font-size:11px;color:#33b5ff;margin-top:4px;display:none}
+.geo-ld.show{display:block}
 </style>
 
 
@@ -415,26 +423,51 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="section-sep"></div>
 
       <div class="form-grid-3">
+        {{-- Pays --}}
         <div class="field">
-          <label>Pays</label>
-          <input type="text" name="pays" value="{{ old('pays', $u->pays ?? '') }}">
+          <label>🌍 Pays</label>
+          <input type="hidden" name="pays"     id="p_pays_val"    value="{{ old('pays',    $u->pays    ?? '') }}">
+          <input type="hidden" name="iso_pays" id="p_iso_val"     value="{{ old('iso_pays',$u->iso_pays?? '') }}">
+          <select class="geo-sel" id="p_pays_sel">
+            <option value="">— Sélectionner un pays —</option>
+          </select>
+          <div class="geo-ld" id="p_pays_ld">Chargement…</div>
         </div>
+        {{-- Région --}}
         <div class="field">
-          <label>Région / Province</label>
-          <input type="text" name="region" value="{{ old('region', $u->region ?? '') }}">
+          <label>🌐 Région / Province / État</label>
+          <select class="geo-sel" name="region" id="p_region_sel" disabled>
+            <option value="">— Choisir un pays d'abord —</option>
+          </select>
+          <div class="geo-ld" id="p_reg_ld">Chargement…</div>
         </div>
+        {{-- Département --}}
         <div class="field">
-          <label>Département</label>
-          <input type="text" name="departement" value="{{ old('departement', $u->departement ?? '') }}">
+          <label>🏛️ Département / District</label>
+          <select class="geo-sel" name="departement" id="p_dept_sel" disabled>
+            <option value="">— Choisir une région d'abord —</option>
+          </select>
+          <div class="geo-ld" id="p_dept_ld">Chargement…</div>
         </div>
+        {{-- Arrondissement --}}
         <div class="field">
-          <label>Arrondissement</label>
-          <input type="text" name="arrondissement" value="{{ old('arrondissement', $u->arrondissement ?? '') }}">
+          <label>🏘️ Arrondissement / Commune</label>
+          <input type="hidden" name="arrondissement" id="p_h_arrond" value="{{ old('arrondissement', $u->arrondissement ?? '') }}">
+          <select class="geo-sel" id="p_arrond_sel" style="display:none">
+            <option value="">— Sélectionner —</option>
+          </select>
+          <input class="geo-sel" id="p_arrond_txt" type="text" name="_arrond_txt" placeholder="Ex: Yaoundé 1er, Lyon 3e…" value="{{ old('arrondissement', $u->arrondissement ?? '') }}" style="display:block">
+          <div class="geo-ld" id="p_arrond_ld">Chargement…</div>
         </div>
+        {{-- Ville --}}
         <div class="field">
-          <label>Ville / Résidence</label>
-          <input type="text" name="ville_residence" value="{{ old('ville_residence', $u->ville_residence ?? '') }}">
+          <label>🏙️ Ville / Résidence</label>
+          <select class="geo-sel" name="ville_residence" id="p_ville_sel" disabled>
+            <option value="">— Choisir un département d'abord —</option>
+          </select>
+          <div class="geo-ld" id="p_ville_ld">Chargement…</div>
         </div>
+        {{-- Quartier --}}
         <div class="field">
           <label>Quartier</label>
           <input type="text" name="quartier" value="{{ old('quartier', $u->quartier ?? '') }}">
@@ -789,6 +822,263 @@ fetch('/api/stats')
     document.getElementById('sm-mesures').textContent = s.totalMesures || 0;
   })
   .catch(() => {});
+
+// ── Geographic cascade (profil) ─────────────────────────
+(function(){
+const PRE_PAYS   = @json($u->pays    ?? '');
+const PRE_ISO    = @json($u->iso_pays?? '');
+const PRE_REGION = @json($u->region  ?? '');
+const PRE_DEPT   = @json($u->departement ?? '');
+const PRE_ARROND = @json($u->arrondissement ?? '');
+const PRE_VILLE  = @json($u->ville_residence ?? '');
+
+const P_CTRS = [
+  {iso:'AF',fr:'Afghanistan',en:'Afghanistan'},{iso:'ZA',fr:'Afrique du Sud',en:'South Africa'},{iso:'AL',fr:'Albanie',en:'Albania'},
+  {iso:'DZ',fr:'Algérie',en:'Algeria'},{iso:'DE',fr:'Allemagne',en:'Germany'},{iso:'AD',fr:'Andorre',en:'Andorra'},
+  {iso:'AO',fr:'Angola',en:'Angola'},{iso:'AG',fr:'Antigua-et-Barbuda',en:'Antigua and Barbuda'},{iso:'SA',fr:'Arabie saoudite',en:'Saudi Arabia'},
+  {iso:'AR',fr:'Argentine',en:'Argentina'},{iso:'AM',fr:'Arménie',en:'Armenia'},{iso:'AU',fr:'Australie',en:'Australia'},
+  {iso:'AT',fr:'Autriche',en:'Austria'},{iso:'AZ',fr:'Azerbaïdjan',en:'Azerbaijan'},{iso:'BS',fr:'Bahamas',en:'Bahamas'},
+  {iso:'BH',fr:'Bahreïn',en:'Bahrain'},{iso:'BD',fr:'Bangladesh',en:'Bangladesh'},{iso:'BB',fr:'Barbade',en:'Barbados'},
+  {iso:'BE',fr:'Belgique',en:'Belgium'},{iso:'BZ',fr:'Belize',en:'Belize'},{iso:'BJ',fr:'Bénin',en:'Benin'},
+  {iso:'BT',fr:'Bhoutan',en:'Bhutan'},{iso:'BY',fr:'Biélorussie',en:'Belarus'},{iso:'BO',fr:'Bolivie',en:'Bolivia'},
+  {iso:'BA',fr:'Bosnie-Herzégovine',en:'Bosnia and Herzegovina'},{iso:'BW',fr:'Botswana',en:'Botswana'},{iso:'BR',fr:'Brésil',en:'Brazil'},
+  {iso:'BN',fr:'Brunéi',en:'Brunei'},{iso:'BG',fr:'Bulgarie',en:'Bulgaria'},{iso:'BF',fr:'Burkina Faso',en:'Burkina Faso'},
+  {iso:'BI',fr:'Burundi',en:'Burundi'},{iso:'CV',fr:'Cap-Vert',en:'Cape Verde'},{iso:'KH',fr:'Cambodge',en:'Cambodia'},
+  {iso:'CM',fr:'Cameroun',en:'Cameroon'},{iso:'CA',fr:'Canada',en:'Canada'},{iso:'CF',fr:'Centrafrique',en:'Central African Republic'},
+  {iso:'CL',fr:'Chili',en:'Chile'},{iso:'CN',fr:'Chine',en:'China'},{iso:'CY',fr:'Chypre',en:'Cyprus'},
+  {iso:'CO',fr:'Colombie',en:'Colombia'},{iso:'KM',fr:'Comores',en:'Comoros'},{iso:'CG',fr:'Congo',en:'Congo'},
+  {iso:'CD',fr:'Congo (RDC)',en:'DR Congo'},{iso:'KP',fr:'Corée du Nord',en:'North Korea'},{iso:'KR',fr:'Corée du Sud',en:'South Korea'},
+  {iso:'CR',fr:'Costa Rica',en:'Costa Rica'},{iso:'CI',fr:"Côte d'Ivoire",en:"Ivory Coast"},{iso:'HR',fr:'Croatie',en:'Croatia'},
+  {iso:'CU',fr:'Cuba',en:'Cuba'},{iso:'DK',fr:'Danemark',en:'Denmark'},{iso:'DJ',fr:'Djibouti',en:'Djibouti'},
+  {iso:'DM',fr:'Dominique',en:'Dominica'},{iso:'EG',fr:'Égypte',en:'Egypt'},{iso:'AE',fr:'Émirats arabes unis',en:'United Arab Emirates'},
+  {iso:'EC',fr:'Équateur',en:'Ecuador'},{iso:'ER',fr:'Érythrée',en:'Eritrea'},{iso:'ES',fr:'Espagne',en:'Spain'},
+  {iso:'EE',fr:'Estonie',en:'Estonia'},{iso:'SZ',fr:'Eswatini',en:'Eswatini'},{iso:'ET',fr:'Éthiopie',en:'Ethiopia'},
+  {iso:'FJ',fr:'Fidji',en:'Fiji'},{iso:'FI',fr:'Finlande',en:'Finland'},{iso:'FR',fr:'France',en:'France'},
+  {iso:'GA',fr:'Gabon',en:'Gabon'},{iso:'GM',fr:'Gambie',en:'Gambia'},{iso:'GE',fr:'Géorgie',en:'Georgia'},
+  {iso:'GH',fr:'Ghana',en:'Ghana'},{iso:'GR',fr:'Grèce',en:'Greece'},{iso:'GD',fr:'Grenade',en:'Grenada'},
+  {iso:'GT',fr:'Guatemala',en:'Guatemala'},{iso:'GN',fr:'Guinée',en:'Guinea'},{iso:'GW',fr:'Guinée-Bissau',en:'Guinea-Bissau'},
+  {iso:'GQ',fr:'Guinée équatoriale',en:'Equatorial Guinea'},{iso:'GY',fr:'Guyana',en:'Guyana'},{iso:'HT',fr:'Haïti',en:'Haiti'},
+  {iso:'HN',fr:'Honduras',en:'Honduras'},{iso:'HU',fr:'Hongrie',en:'Hungary'},{iso:'IN',fr:'Inde',en:'India'},
+  {iso:'ID',fr:'Indonésie',en:'Indonesia'},{iso:'IQ',fr:'Irak',en:'Iraq'},{iso:'IR',fr:'Iran',en:'Iran'},
+  {iso:'IE',fr:'Irlande',en:'Ireland'},{iso:'IS',fr:'Islande',en:'Iceland'},{iso:'IL',fr:'Israël',en:'Israel'},
+  {iso:'IT',fr:'Italie',en:'Italy'},{iso:'JM',fr:'Jamaïque',en:'Jamaica'},{iso:'JP',fr:'Japon',en:'Japan'},
+  {iso:'JO',fr:'Jordanie',en:'Jordan'},{iso:'KZ',fr:'Kazakhstan',en:'Kazakhstan'},{iso:'KE',fr:'Kenya',en:'Kenya'},
+  {iso:'KG',fr:'Kirghizistan',en:'Kyrgyzstan'},{iso:'KI',fr:'Kiribati',en:'Kiribati'},{iso:'KW',fr:'Koweït',en:'Kuwait'},
+  {iso:'LA',fr:'Laos',en:'Laos'},{iso:'LS',fr:'Lesotho',en:'Lesotho'},{iso:'LV',fr:'Lettonie',en:'Latvia'},
+  {iso:'LB',fr:'Liban',en:'Lebanon'},{iso:'LR',fr:'Libéria',en:'Liberia'},{iso:'LY',fr:'Libye',en:'Libya'},
+  {iso:'LI',fr:'Liechtenstein',en:'Liechtenstein'},{iso:'LT',fr:'Lituanie',en:'Lithuania'},{iso:'LU',fr:'Luxembourg',en:'Luxembourg'},
+  {iso:'MG',fr:'Madagascar',en:'Madagascar'},{iso:'MY',fr:'Malaisie',en:'Malaysia'},{iso:'MW',fr:'Malawi',en:'Malawi'},
+  {iso:'MV',fr:'Maldives',en:'Maldives'},{iso:'ML',fr:'Mali',en:'Mali'},{iso:'MT',fr:'Malte',en:'Malta'},
+  {iso:'MA',fr:'Maroc',en:'Morocco'},{iso:'MH',fr:'Marshall',en:'Marshall Islands'},{iso:'MU',fr:'Maurice',en:'Mauritius'},
+  {iso:'MR',fr:'Mauritanie',en:'Mauritania'},{iso:'MX',fr:'Mexique',en:'Mexico'},{iso:'FM',fr:'Micronésie',en:'Micronesia'},
+  {iso:'MD',fr:'Moldavie',en:'Moldova'},{iso:'MC',fr:'Monaco',en:'Monaco'},{iso:'MN',fr:'Mongolie',en:'Mongolia'},
+  {iso:'ME',fr:'Monténégro',en:'Montenegro'},{iso:'MZ',fr:'Mozambique',en:'Mozambique'},{iso:'MM',fr:'Myanmar',en:'Myanmar'},
+  {iso:'NA',fr:'Namibie',en:'Namibia'},{iso:'NR',fr:'Nauru',en:'Nauru'},{iso:'NP',fr:'Népal',en:'Nepal'},
+  {iso:'NI',fr:'Nicaragua',en:'Nicaragua'},{iso:'NE',fr:'Niger',en:'Niger'},{iso:'NG',fr:'Nigeria',en:'Nigeria'},
+  {iso:'NO',fr:'Norvège',en:'Norway'},{iso:'NZ',fr:'Nouvelle-Zélande',en:'New Zealand'},{iso:'OM',fr:'Oman',en:'Oman'},
+  {iso:'UG',fr:'Ouganda',en:'Uganda'},{iso:'UZ',fr:'Ouzbékistan',en:'Uzbekistan'},{iso:'PK',fr:'Pakistan',en:'Pakistan'},
+  {iso:'PW',fr:'Palaos',en:'Palau'},{iso:'PA',fr:'Panama',en:'Panama'},{iso:'PG',fr:'Papouasie',en:'Papua New Guinea'},
+  {iso:'PY',fr:'Paraguay',en:'Paraguay'},{iso:'NL',fr:'Pays-Bas',en:'Netherlands'},{iso:'PE',fr:'Pérou',en:'Peru'},
+  {iso:'PH',fr:'Philippines',en:'Philippines'},{iso:'PL',fr:'Pologne',en:'Poland'},{iso:'PT',fr:'Portugal',en:'Portugal'},
+  {iso:'QA',fr:'Qatar',en:'Qatar'},{iso:'RO',fr:'Roumanie',en:'Romania'},{iso:'GB',fr:'Royaume-Uni',en:'United Kingdom'},
+  {iso:'RU',fr:'Russie',en:'Russia'},{iso:'RW',fr:'Rwanda',en:'Rwanda'},{iso:'KN',fr:'Saint-Kitts',en:'Saint Kitts and Nevis'},
+  {iso:'LC',fr:'Saint-Lucie',en:'Saint Lucia'},{iso:'VC',fr:'Saint-Vincent',en:'Saint Vincent and the Grenadines'},
+  {iso:'SB',fr:'Salomon',en:'Solomon Islands'},{iso:'SV',fr:'Salvador',en:'El Salvador'},{iso:'WS',fr:'Samoa',en:'Samoa'},
+  {iso:'ST',fr:'Sao Tomé-et-Principe',en:'Sao Tome and Principe'},{iso:'SN',fr:'Sénégal',en:'Senegal'},{iso:'RS',fr:'Serbie',en:'Serbia'},
+  {iso:'SC',fr:'Seychelles',en:'Seychelles'},{iso:'SL',fr:'Sierra Leone',en:'Sierra Leone'},{iso:'SG',fr:'Singapour',en:'Singapore'},
+  {iso:'SK',fr:'Slovaquie',en:'Slovakia'},{iso:'SI',fr:'Slovénie',en:'Slovenia'},{iso:'SO',fr:'Somalie',en:'Somalia'},
+  {iso:'SD',fr:'Soudan',en:'Sudan'},{iso:'SS',fr:'Soudan du Sud',en:'South Sudan'},{iso:'LK',fr:'Sri Lanka',en:'Sri Lanka'},
+  {iso:'SE',fr:'Suède',en:'Sweden'},{iso:'CH',fr:'Suisse',en:'Switzerland'},{iso:'SR',fr:'Suriname',en:'Suriname'},
+  {iso:'SY',fr:'Syrie',en:'Syria'},{iso:'TJ',fr:'Tadjikistan',en:'Tajikistan'},{iso:'TZ',fr:'Tanzanie',en:'Tanzania'},
+  {iso:'TD',fr:'Tchad',en:'Chad'},{iso:'CZ',fr:'Tchéquie',en:'Czech Republic'},{iso:'TH',fr:'Thaïlande',en:'Thailand'},
+  {iso:'TL',fr:'Timor oriental',en:'Timor-Leste'},{iso:'TG',fr:'Togo',en:'Togo'},{iso:'TO',fr:'Tonga',en:'Tonga'},
+  {iso:'TT',fr:'Trinité-et-Tobago',en:'Trinidad and Tobago'},{iso:'TN',fr:'Tunisie',en:'Tunisia'},{iso:'TM',fr:'Turkménistan',en:'Turkmenistan'},
+  {iso:'TR',fr:'Turquie',en:'Turkey'},{iso:'TV',fr:'Tuvalu',en:'Tuvalu'},{iso:'UA',fr:'Ukraine',en:'Ukraine'},
+  {iso:'UY',fr:'Uruguay',en:'Uruguay'},{iso:'VU',fr:'Vanuatu',en:'Vanuatu'},{iso:'VE',fr:'Venezuela',en:'Venezuela'},
+  {iso:'VN',fr:'Vietnam',en:'Vietnam'},{iso:'YE',fr:'Yémen',en:'Yemen'},{iso:'ZM',fr:'Zambie',en:'Zambia'},
+  {iso:'ZW',fr:'Zimbabwe',en:'Zimbabwe'},{iso:'US',fr:'États-Unis',en:'United States'}
+];
+
+function pFlag(iso){ try{return String.fromCodePoint(...[...iso.toUpperCase()].map(c=>0x1F1E6-65+c.charCodeAt(0)))}catch(e){return''} }
+function pXss(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function pLd(id,show){const el=document.getElementById(id);if(el){el.className='geo-ld'+(show?' show':'')}}
+function pReset(sel,disabled,placeholder){
+  sel.innerHTML='<option value="">'+placeholder+'</option>';
+  sel.disabled=disabled;
+}
+
+function pLoadRegions(countryEn, preSelect){
+  const sel=document.getElementById('p_region_sel');
+  pLd('p_reg_ld',true);
+  pReset(sel,true,'Chargement…');
+  fetch('/api/geo/states/'+encodeURIComponent(countryEn))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_reg_ld',false);
+      pReset(sel,false,'— Région / Province —');
+      list.forEach(name=>{
+        const o=document.createElement('option');
+        o.value=name; o.textContent=name;
+        if(name===preSelect) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.disabled=list.length===0;
+      if(preSelect && list.includes(preSelect)){
+        pLoadDepts(countryEn, preSelect, PRE_DEPT);
+      }
+    })
+    .catch(()=>{pLd('p_reg_ld',false);pReset(sel,false,'— Région non disponible —')});
+}
+
+function pLoadDepts(countryEn, region, preSelect){
+  const sel=document.getElementById('p_dept_sel');
+  pLd('p_dept_ld',true);
+  pReset(sel,true,'Chargement…');
+  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(region))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_dept_ld',false);
+      pReset(sel,false,'— Département / District —');
+      list.forEach(name=>{
+        const o=document.createElement('option');
+        o.value=name; o.textContent=name;
+        if(name===preSelect) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.disabled=list.length===0;
+      if(preSelect && list.includes(preSelect)){
+        pLoadArronds(countryEn, preSelect, PRE_ARROND);
+        pLoadVilles(countryEn, preSelect, PRE_VILLE);
+      }
+    })
+    .catch(()=>{pLd('p_dept_ld',false);pReset(sel,false,'— Dept non disponible —')});
+}
+
+function pLoadArronds(countryEn, dept, preSelect){
+  const hid=document.getElementById('p_h_arrond');
+  const sel=document.getElementById('p_arrond_sel');
+  const txt=document.getElementById('p_arrond_txt');
+  pLd('p_arrond_ld',true);
+  fetch('/api/geo/subcities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_arrond_ld',false);
+      if(list.length>0){
+        sel.innerHTML='<option value="">— Arrondissement —</option>';
+        list.forEach(name=>{
+          const o=document.createElement('option');
+          o.value=name; o.textContent=name;
+          if(name===preSelect) o.selected=true;
+          sel.appendChild(o);
+        });
+        sel.style.display='block'; txt.style.display='none';
+        hid.value=preSelect||'';
+        sel.onchange=()=>{ hid.value=sel.value; };
+      } else {
+        sel.style.display='none'; txt.style.display='block';
+        txt.value=preSelect||'';
+        hid.value=preSelect||'';
+      }
+    })
+    .catch(()=>{ pLd('p_arrond_ld',false); sel.style.display='none'; txt.style.display='block'; txt.value=preSelect||''; hid.value=preSelect||''; });
+}
+
+function pLoadVilles(countryEn, dept, preSelect){
+  const sel=document.getElementById('p_ville_sel');
+  pLd('p_ville_ld',true);
+  pReset(sel,true,'Chargement…');
+  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_ville_ld',false);
+      pReset(sel,false,'— Ville / Résidence —');
+      list.forEach(name=>{
+        const o=document.createElement('option');
+        o.value=name; o.textContent=name;
+        if(name===preSelect) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.disabled=list.length===0;
+    })
+    .catch(()=>{pLd('p_ville_ld',false);pReset(sel,false,'— Villes non disponibles —')});
+}
+
+// Build country dropdown & wire events
+document.addEventListener('DOMContentLoaded',function(){
+  const pSel=document.getElementById('p_pays_sel');
+  const pVal=document.getElementById('p_pays_val');
+  const pIso=document.getElementById('p_iso_val');
+
+  // Populate country list
+  P_CTRS.sort((a,b)=>a.fr.localeCompare(b.fr,'fr')).forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.iso; o.dataset.en=c.en; o.dataset.fr=c.fr;
+    o.textContent=pFlag(c.iso)+' '+c.fr;
+    if(c.iso===PRE_ISO || c.fr===PRE_PAYS || c.en===PRE_PAYS) o.selected=true;
+    pSel.appendChild(o);
+  });
+
+  // Sync hidden pays/iso on change
+  pSel.addEventListener('change',function(){
+    const opt=pSel.options[pSel.selectedIndex];
+    pVal.value=opt.dataset.fr||'';
+    pIso.value=opt.value||'';
+    // Reset downstream
+    pReset(document.getElementById('p_region_sel'),true,'— Choisir un pays d\'abord —');
+    pReset(document.getElementById('p_dept_sel'),true,'— Choisir une région d\'abord —');
+    pReset(document.getElementById('p_ville_sel'),true,'— Choisir un département d\'abord —');
+    document.getElementById('p_arrond_sel').style.display='none';
+    document.getElementById('p_arrond_txt').style.display='block';
+    document.getElementById('p_arrond_txt').value='';
+    document.getElementById('p_h_arrond').value='';
+    if(opt.dataset.en) pLoadRegions(opt.dataset.en,'');
+  });
+
+  // Region → Dept cascade
+  document.getElementById('p_region_sel').addEventListener('change',function(){
+    const opt=pSel.options[pSel.selectedIndex];
+    const region=this.value;
+    pReset(document.getElementById('p_dept_sel'),true,'Chargement…');
+    pReset(document.getElementById('p_ville_sel'),true,'— Choisir un département d\'abord —');
+    document.getElementById('p_arrond_sel').style.display='none';
+    document.getElementById('p_arrond_txt').style.display='block';
+    document.getElementById('p_arrond_txt').value='';
+    document.getElementById('p_h_arrond').value='';
+    if(opt && opt.dataset.en && region) pLoadDepts(opt.dataset.en, region,'');
+  });
+
+  // Dept → Arrond + Ville cascade
+  document.getElementById('p_dept_sel').addEventListener('change',function(){
+    const opt=pSel.options[pSel.selectedIndex];
+    const dept=this.value;
+    pReset(document.getElementById('p_ville_sel'),true,'Chargement…');
+    document.getElementById('p_arrond_sel').style.display='none';
+    document.getElementById('p_arrond_txt').style.display='block';
+    document.getElementById('p_arrond_txt').value='';
+    document.getElementById('p_h_arrond').value='';
+    if(opt && opt.dataset.en && dept){
+      pLoadArronds(opt.dataset.en, dept,'');
+      pLoadVilles(opt.dataset.en, dept,'');
+    }
+  });
+
+  // Sync arrond text input → hidden
+  document.getElementById('p_arrond_txt').addEventListener('input',function(){
+    document.getElementById('p_h_arrond').value=this.value;
+  });
+
+  // Pre-populate if user has existing data
+  if(PRE_ISO || PRE_PAYS){
+    const opt=Array.from(pSel.options).find(o=>o.value===PRE_ISO || o.dataset.fr===PRE_PAYS || o.dataset.en===PRE_PAYS);
+    if(opt){
+      pSel.value=opt.value;
+      pVal.value=opt.dataset.fr||'';
+      pIso.value=opt.value||'';
+      if(opt.dataset.en) pLoadRegions(opt.dataset.en, PRE_REGION);
+    }
+  }
+});
+})();
 </script>
 
 @endsection

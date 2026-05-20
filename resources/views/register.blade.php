@@ -302,36 +302,43 @@ select.finp option{background:#0c1c34;color:#fff;}
                 <input class="finp" type="tel" name="telephone" id="telephone" placeholder="Numéro de téléphone" style="flex:1" value="{{ old('telephone') }}">
               </div>
             </div>
+            {{-- Niveau 2 : Région --}}
             <div class="fld">
-              <label class="flbl">Région / Province / État</label>
+              <label class="flbl">🌐 Région / Province / État</label>
               <select class="finp" name="region" id="region_sel" disabled>
                 <option value="">— Choisir un pays d'abord —</option>
               </select>
-              <div class="loader" id="regLoader"><div class="spin"></div> Chargement...</div>
+              <div class="loader" id="regLoader"><div class="spin"></div> Chargement des régions...</div>
             </div>
+            {{-- Niveau 3 : Département --}}
             <div class="fld">
-              <label class="flbl">Ville</label>
-              <select class="finp" name="ville_residence" id="ville_sel" disabled>
+              <label class="flbl">🏛️ Département / District / Comté</label>
+              <select class="finp" name="departement" id="dept_sel" disabled>
                 <option value="">— Choisir une région d'abord —</option>
               </select>
-              <div class="loader" id="villeLoader"><div class="spin"></div> Chargement...</div>
+              <div class="loader" id="deptLoader"><div class="spin"></div> Chargement des départements...</div>
             </div>
-            <div class="sec-div">
-              <div class="sec-div-line"></div>
-              <div class="sec-div-text">Adresse détaillée (optionnel)</div>
-              <div class="sec-div-line"></div>
-            </div>
+            {{-- Niveau 4 : Arrondissement --}}
             <div class="fld">
-              <label class="flbl">Département</label>
-              <input class="finp" type="text" name="departement" placeholder="Ex: Mfoundi, Rhône..." value="{{ old('departement') }}">
+              <label class="flbl">🏘️ Arrondissement / Commune</label>
+              <input type="hidden" name="arrondissement" id="h_arrond" value="{{ old('arrondissement') }}">
+              <select class="finp" id="arrond_sel" style="display:none">
+                <option value="">— Sélectionner un arrondissement —</option>
+              </select>
+              <input class="finp" id="arrond_txt" type="text" placeholder="Ex: Yaoundé 1er, Lyon 3e, District 1..." value="{{ old('arrondissement') }}">
+              <div class="loader" id="arrondLoader" style="display:none"><div class="spin"></div> Chargement...</div>
             </div>
+            {{-- Niveau 5 : Ville --}}
             <div class="fld">
-              <label class="flbl">Arrondissement / Commune</label>
-              <input class="finp" type="text" name="arrondissement" placeholder="Ex: Yaoundé 1er, Lyon 3e..." value="{{ old('arrondissement') }}">
+              <label class="flbl">🏙️ Ville / Résidence</label>
+              <select class="finp" name="ville_residence" id="ville_sel" disabled>
+                <option value="">— Choisir un département d'abord —</option>
+              </select>
+              <div class="loader" id="villeLoader"><div class="spin"></div> Chargement des villes...</div>
             </div>
             <div class="fld">
               <label class="flbl">Quartier</label>
-              <input class="finp" type="text" name="quartier" placeholder="Ex: Bastos, Montmartre..." value="{{ old('quartier') }}">
+              <input class="finp" type="text" name="quartier" placeholder="Ex: Bastos, Montmartre, Downtown..." value="{{ old('quartier') }}">
             </div>
             <div class="fld">
               <label class="flbl">Adresse complète</label>
@@ -436,6 +443,8 @@ select.finp option{background:#0c1c34;color:#fff;}
             <div class="recap-item"><div class="recap-label">Téléphone</div><div class="recap-val" id="r_tel">—</div></div>
             <div class="recap-item"><div class="recap-label">Pays</div><div class="recap-val" id="r_pays">—</div></div>
             <div class="recap-item"><div class="recap-label">Région</div><div class="recap-val" id="r_region">—</div></div>
+            <div class="recap-item"><div class="recap-label">Département</div><div class="recap-val" id="r_dept">—</div></div>
+            <div class="recap-item"><div class="recap-label">Arrondissement</div><div class="recap-val" id="r_arrond">—</div></div>
             <div class="recap-item"><div class="recap-label">Profession</div><div class="recap-val" id="r_prof">—</div></div>
             <div class="recap-item"><div class="recap-label">Organisation</div><div class="recap-val" id="r_org">—</div></div>
           </div>
@@ -704,8 +713,10 @@ function onCountryChange(iso){
   document.getElementById('h_nat').value=c.fr;
   var b=document.getElementById('dialBadge');
   b.textContent=flag(iso)+' '+c.dial; b.classList.add('loaded');
-  resetSel('region_sel','— Chargement... —');
-  resetSel('ville_sel','— Choisir une région —');
+  resetSel('region_sel','— Chargement des régions... —');
+  resetSel('dept_sel','— Choisir une région d\'abord —');
+  resetSel('ville_sel','— Choisir un département d\'abord —');
+  resetArrond();
   loadRegions(c.en);
 }
 
@@ -729,33 +740,108 @@ function loadRegions(countryEn){
 }
 
 document.addEventListener('DOMContentLoaded',function(){
+  // Région → Département
   document.getElementById('region_sel').addEventListener('change',function(){
-    if(this.value&&currentCountry) loadCities(currentCountry.en,this.value);
+    var reg = this.value;
+    resetSel('dept_sel','— Choisir une région d\'abord —');
+    resetSel('ville_sel','— Choisir un département d\'abord —');
+    resetArrond();
+    if(reg && currentCountry) loadDepts(currentCountry.en, reg);
+  });
+  // Département → Arrondissement + Ville
+  document.getElementById('dept_sel').addEventListener('change',function(){
+    var dept = this.value;
+    resetSel('ville_sel','— Choisir un département d\'abord —');
+    resetArrond();
+    if(dept && currentCountry){
+      loadArronds(currentCountry.en, dept);
+      loadVilles(currentCountry.en, dept);
+    }
+  });
+  // Sync arrondissement hidden input
+  document.getElementById('arrond_sel').addEventListener('change',function(){
+    document.getElementById('h_arrond').value=this.value;
+  });
+  document.getElementById('arrond_txt').addEventListener('input',function(){
+    document.getElementById('h_arrond').value=this.value;
   });
 });
 
-function loadCities(countryEn,region){
+/* ── Niveau 3 : Département (via state-cities) ── */
+function loadDepts(countryEn, region){
+  var sel=document.getElementById('dept_sel');
+  var ld=document.getElementById('deptLoader');
+  sel.disabled=true; sel.innerHTML='<option value="">— Chargement... —</option>';
+  ld.classList.add('show');
+  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(region))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      ld.classList.remove('show');
+      sel.innerHTML='<option value="">— Sélectionner un département —</option>';
+      if(data && data.length){
+        data.slice(0,500).forEach(function(v){sel.innerHTML+='<option value="'+xss(v)+'">'+xss(v)+'</option>';});
+        sel.disabled=false;
+      } else {
+        sel.innerHTML='<option value="">— Aucune donnée (saisie libre) —</option>';
+        sel.disabled=false;
+      }
+    }).catch(function(){ld.classList.remove('show'); sel.disabled=false;});
+}
+
+/* ── Niveau 4 : Arrondissement (via subcities, fallback text) ── */
+function loadArronds(countryEn, dept){
+  var sel=document.getElementById('arrond_sel');
+  var txt=document.getElementById('arrond_txt');
+  var ld=document.getElementById('arrondLoader');
+  var hid=document.getElementById('h_arrond');
+  sel.style.display='none'; txt.style.display='none';
+  ld.style.display='flex'; hid.value='';
+  fetch('/api/geo/subcities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      ld.style.display='none';
+      if(data && data.length){
+        sel.innerHTML='<option value="">— Sélectionner un arrondissement —</option>';
+        data.slice(0,400).forEach(function(v){sel.innerHTML+='<option value="'+xss(v)+'">'+xss(v)+'</option>';});
+        sel.style.display=''; txt.style.display='none';
+      } else {
+        sel.style.display='none'; txt.style.display='';
+        txt.placeholder='Saisir l\'arrondissement / commune...';
+      }
+    }).catch(function(){ld.style.display='none'; txt.style.display='';});
+}
+
+/* ── Niveau 5 : Ville (via state-cities du département) ── */
+function loadVilles(countryEn, dept){
   var sel=document.getElementById('ville_sel');
   var ld=document.getElementById('villeLoader');
   sel.disabled=true; sel.innerHTML='<option value="">— Chargement... —</option>';
   ld.classList.add('show');
-  var url=region
-    ?'/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(region)
-    :'/api/geo/cities/'+encodeURIComponent(countryEn);
-  fetch(url)
+  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
     .then(function(r){return r.json();})
     .then(function(data){
       ld.classList.remove('show');
       sel.innerHTML='<option value="">— Sélectionner une ville —</option>';
-      if(data&&data.length){
+      if(data && data.length){
         data.slice(0,300).forEach(function(v){sel.innerHTML+='<option value="'+xss(v)+'">'+xss(v)+'</option>';});
         sel.disabled=false;
-      } else { sel.innerHTML='<option value="">— Saisir manuellement —</option>'; }
-    }).catch(function(){ld.classList.remove('show');});
+      } else {
+        sel.innerHTML='<option value="">— Saisir manuellement —</option>';
+        sel.disabled=false;
+      }
+    }).catch(function(){ld.classList.remove('show'); sel.disabled=false;});
+}
+
+function resetArrond(){
+  var sel=document.getElementById('arrond_sel');
+  var txt=document.getElementById('arrond_txt');
+  sel.style.display='none'; sel.innerHTML='<option value="">—</option>';
+  txt.style.display=''; txt.value='';
+  document.getElementById('h_arrond').value='';
 }
 
 function xss(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function resetSel(id,ph){var s=document.getElementById(id);s.innerHTML='<option value="">'+ph+'</option>';s.disabled=true;}
+function resetSel(id,ph){var s=document.getElementById(id);if(s){s.innerHTML='<option value="">'+ph+'</option>';s.disabled=true;}}
 
 /* ── Steps ───────────────────────────────────────── */
 var curStep=1,TOTAL=5;
@@ -815,6 +901,8 @@ function buildRecap(){
   document.getElementById('r_tel').textContent=(document.getElementById('h_dial').value||'')+' '+document.getElementById('telephone').value;
   document.getElementById('r_pays').textContent=currentCountry?flag(currentCountry.iso)+' '+currentCountry.fr:'—';
   document.getElementById('r_region').textContent=document.getElementById('region_sel').value||'—';
+  document.getElementById('r_dept').textContent=document.getElementById('dept_sel').value||'—';
+  document.getElementById('r_arrond').textContent=document.getElementById('h_arrond').value||'—';
   document.getElementById('r_prof').textContent=document.querySelector('[name=profession]').value||'—';
   document.getElementById('r_org').textContent=document.querySelector('[name=organisation]').value||'—';
   var prevImg=document.getElementById('photoPrev');

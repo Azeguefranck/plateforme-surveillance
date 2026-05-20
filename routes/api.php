@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\GeoController;
 
 // ── Géographie ────────────────────────────────────────────
-Route::get('/geo/states/{country}',               [GeoController::class, 'states']);
-Route::get('/geo/cities/{country}',               [GeoController::class, 'cities']);
-Route::get('/geo/state-cities/{country}/{state}', [GeoController::class, 'stateCities']);
+Route::get('/geo/states/{country}',                    [GeoController::class, 'states']);
+Route::get('/geo/cities/{country}',                    [GeoController::class, 'cities']);
+Route::get('/geo/state-cities/{country}/{state}',      [GeoController::class, 'stateCities']);
+Route::get('/geo/subcities/{country}/{city}',          [GeoController::class, 'subcities']);
 
 
 // ── Méta-données capteurs (texte fixe) ────────────────────
