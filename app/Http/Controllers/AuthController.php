@@ -12,59 +12,68 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-
         $request->validate([
-
-            'nom' => 'required',
-            'prenom' => 'required',
-            'email' => 'required|email',
-            'telephone' => 'required',
-            'password' => 'required|confirmed|min:6'
-
+            'nom'      => 'required|string|max:100',
+            'prenom'   => 'required|string|max:100',
+            'email'    => 'required|email|unique:users,email',
+            'telephone'=> 'required|string|max:30',
+            'password' => 'required|confirmed|min:8',
+            'pays'     => 'required|string',
         ]);
 
-        $password = $request->password;
+        // Photo de profil
+        $photoPath = null;
+        if ($request->hasFile('photo_profil')) {
+            $photoPath = $request->file('photo_profil')->store('photos', 'public');
+        }
 
         DB::table('users')->insert([
-
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
-            'telephone' => $request->telephone,
-            'profession' => $request->profession,
-            'role' => $request->role,
-            'validation_status' => 'en_attente',
-            'password' => Hash::make($password),
-
-            'created_at' => now(),
-            'updated_at' => now()
-
+            'name'             => $request->prenom . ' ' . $request->nom,
+            'nom'              => $request->nom,
+            'prenom'           => $request->prenom,
+            'sexe'             => $request->sexe,
+            'date_naissance'   => $request->date_naissance ?: null,
+            'nationalite'      => $request->nationalite ?: $request->pays,
+            'statut_matrimonial'=> $request->statut_matrimonial,
+            'email'            => $request->email,
+            'telephone'        => $request->telephone,
+            'indicatif_tel'    => $request->indicatif_tel,
+            'pays'             => $request->pays,
+            'iso_pays'         => $request->iso_pays,
+            'region'           => $request->region,
+            'departement'      => $request->departement,
+            'arrondissement'   => $request->arrondissement,
+            'ville_residence'  => $request->ville_residence,
+            'quartier'         => $request->quartier,
+            'adresse'          => $request->adresse,
+            'profession'       => $request->profession,
+            'organisation'     => $request->organisation,
+            'role'             => $request->role ?? 'utilisateur',
+            'photo_profil'     => $photoPath,
+            'password'         => Hash::make($request->password),
+            'validation_status'=> 'en_attente',
+            'created_at'       => now(),
+            'updated_at'       => now(),
         ]);
 
-        Mail::raw(
+        try {
+            Mail::raw(
+                "Bonjour " . $request->prenom . " " . $request->nom . ",\n\n" .
+                "Votre demande d'inscription a bien été reçue.\n\n" .
+                "Informations enregistrées :\n" .
+                "• Email      : " . $request->email . "\n" .
+                "• Téléphone  : " . $request->telephone . "\n" .
+                "• Pays       : " . $request->pays . "\n\n" .
+                "⏳ Votre compte est en attente de validation par l'administrateur.\n" .
+                "Vous recevrez un email dès que votre compte sera activé.\n\n" .
+                "SupServer — Plateforme Surveillance IoT",
+                function ($message) use ($request) {
+                    $message->to($request->email)->subject('Inscription reçue — En attente de validation');
+                }
+            );
+        } catch (\Exception $e) {}
 
-            "Bonjour ".$request->nom."
-
-Votre compte a été créé avec succès.
-
-Vous devez attendre la validation de l'administrateur.",
-
-            function($message) use($request){
-
-                $message
-                ->to($request->email)
-                ->subject('Création compte');
-
-            }
-
-        );
-
-        return redirect('/login')
-        ->with(
-            'success',
-            'Compte créé avec succès.'
-        );
-
+        return redirect('/login')->with('success', 'Inscription envoyée. En attente de validation administrateur.');
     }
 
 

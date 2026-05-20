@@ -4,6 +4,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\GeoController;
+
+// ── Géographie mondiale (pays → régions → villes) ────────
+Route::get('/geo/states/{country}',                  [GeoController::class, 'states']);
+Route::get('/geo/cities/{country}',                  [GeoController::class, 'cities']);
+Route::get('/geo/state-cities/{country}/{state}',    [GeoController::class, 'stateCities']);
 
 
 
