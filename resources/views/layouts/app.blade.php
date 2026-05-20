@@ -143,8 +143,7 @@ SURVEILLANCE
 <a href="/users">Utilisateurs</a>
 <a href="/cameras-ip">Caméras IP</a>
 <a href="/salles">Salles Serveurs</a>
-<a href="/serveurs-web">Serveurs Web</a>
-<a href="/serveurs-bd">Serveurs BD</a>
+<a href="/serveurs">Serveurs</a>
 <a href="/parametres">Paramètres</a>
 <a href="/rapports">Rapports</a>
 

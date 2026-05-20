@@ -263,22 +263,40 @@ Route::get('/seuils', function () {
 
 
 // ── GET /api/historique-data ──────────────────────────────
-Route::get('/historique-data', function () {
-    $mesures = DB::table('mesures')
-        ->latest()
-        ->limit(20)
-        ->get()
-        ->reverse()
-        ->values();
-    return response()->json($mesures);
+Route::get('/historique-data', function (Request $request) {
+    $type   = $request->type   ?? 'mesures';
+    $debut  = $request->debut  ?? now()->subDays(7)->toDateString();
+    $fin    = $request->fin    ?? now()->toDateString();
+    $limit  = min((int) ($request->limit ?? 100), 2000);
+    $niveau = $request->niveau ?? '';
+
+    try {
+        if ($type === 'alertes') {
+            $query = DB::table('alertes')
+                ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+                ->orderByDesc('created_at');
+            if ($niveau) $query->where('niveau', $niveau);
+            return response()->json($query->limit($limit)->get());
+        }
+
+        $query = DB::table('mesures')
+            ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+            ->orderByDesc('created_at');
+        return response()->json($query->limit($limit)->get());
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
 });
 
 
 // ── GET /api/alertes-recentes ─────────────────────────────
-Route::get('/alertes-recentes', function () {
-    return response()->json(
-        DB::table('alertes')->latest()->limit(30)->get()
-    );
+Route::get('/alertes-recentes', function (Request $request) {
+    $limit = min((int) ($request->limit ?? 30), 500);
+    try {
+        return response()->json(DB::table('alertes')->latest()->limit($limit)->get());
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
 });
 
 

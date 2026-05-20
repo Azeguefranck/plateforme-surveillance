@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\ParametresController;
+use App\Http\Controllers\ServeursController;
+use App\Http\Controllers\SallesController;
 
 
 
@@ -153,9 +155,57 @@ Route::post('/profil/password', [ProfilController::class, 'changePassword']);
 Route::post('/profil/photo',    [ProfilController::class, 'uploadPhoto']);
 Route::view('/utilisateurs','utilisateurs');
 Route::view('/cameras-ip','cameras-ip');
-Route::view('/salles','salles');
-Route::view('/serveurs-web','serveurs_web');
-Route::view('/serveurs-bd','serveurs_bd');
+Route::get('/salles',          [SallesController::class, 'index']);
+Route::post('/salles',         [SallesController::class, 'store']);
+Route::delete('/salles/{id}',  [SallesController::class, 'destroy']);
+Route::post('/salles/{id}',    [SallesController::class, 'update']);
+
+Route::get('/serveurs',        [ServeursController::class, 'index']);
+Route::post('/serveurs',       [ServeursController::class, 'store']);
+Route::delete('/serveurs/{id}',[ServeursController::class, 'destroy']);
+Route::post('/serveurs/{id}',  [ServeursController::class, 'update']);
+
+Route::redirect('/serveurs-web', '/serveurs', 301);
+Route::redirect('/serveurs-bd',  '/serveurs', 301);
 Route::get('/parametres',         [ParametresController::class, 'show']);
 Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
 Route::view('/rapports','rapports');
+
+Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
+    $user = session('user');
+    if (!$user) return redirect('/login');
+
+    $type   = $request->type   ?? 'mesures';
+    $format = $request->format ?? 'csv';
+    $debut  = $request->debut  ?? now()->subDays(7)->toDateString();
+    $fin    = $request->fin    ?? now()->toDateString();
+
+    try {
+        $rows = DB::table($type)
+            ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+            ->orderByDesc('created_at')
+            ->limit(5000)
+            ->get();
+    } catch (\Exception $e) {
+        $rows = collect();
+    }
+
+    $data = $rows->map(fn($r) => (array) $r)->toArray();
+
+    if ($format === 'json') {
+        return response()->json($data)
+            ->header('Content-Disposition', 'attachment; filename="'.$type.'_'.$debut.'_'.$fin.'.json"');
+    }
+
+    $csv = '';
+    if (!empty($data)) {
+        $csv .= implode(',', array_keys($data[0])) . "\n";
+        foreach ($data as $row) {
+            $csv .= implode(',', array_map(fn($v) => '"'.str_replace('"','""',$v).'"', $row)) . "\n";
+        }
+    }
+    return response($csv, 200, [
+        'Content-Type'        => 'text/csv',
+        'Content-Disposition' => 'attachment; filename="'.$type.'_'.$debut.'_'.$fin.'.csv"',
+    ]);
+});
