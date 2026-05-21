@@ -148,8 +148,8 @@ tr:hover td{background:rgba(51,181,255,.03)}
         </div>
         <div class="form-group">
             <label>Message <span style="color:#555;font-weight:400">(max 160 car.)</span></label>
-            <textarea id="smsMsg" maxlength="160" oninput="updateChar()" placeholder="[SupServer] Test SMS — Surveillance IoT opérationnelle.">
-[SupServer] Test SMS — Surveillance IoT opérationnelle.</textarea>
+            <textarea id="smsMsg" maxlength="160" oninput="updateChar()" placeholder="[Surveillance] Test SMS — Système de surveillance opérationnel.">
+[Surveillance] Test SMS — Système de surveillance opérationnel.</textarea>
             <div class="char-count"><span id="charCount">52</span>/160</div>
         </div>
         <button class="btn btn-neon" onclick="sendSms()" style="height:fit-content;white-space:nowrap">&#9993; Envoyer SMS</button>

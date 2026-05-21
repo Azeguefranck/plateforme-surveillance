@@ -88,14 +88,14 @@ Route::get('/valider/{id}', function ($id) {
     try {
         Mail::raw(
             "Bonjour {$user->prenom} {$user->nom},\n\n" .
-            "✅ Votre compte SupServer a été VALIDÉ par l'administrateur.\n\n" .
+            "✅ Votre compte a été VALIDÉ par l'administrateur.\n\n" .
             "Vous pouvez maintenant vous connecter à la plateforme :\n" .
             url('/login') . "\n\n" .
             "Email     : {$user->email}\n\n" .
-            "Bienvenue sur la plateforme de surveillance IoT !\n\n" .
+            "Bienvenue sur la Plateforme de Surveillance !\n\n" .
             "Plateforme de Surveillance",
             function ($mail) use ($user) {
-                $mail->to($user->email)->subject('✅ Compte activé — SupServer');
+                $mail->to($user->email)->subject('✅ Compte activé — Plateforme de Surveillance');
             }
         );
     } catch (\Exception $e) {}
@@ -120,11 +120,11 @@ Route::get('/bloquer/{id}', function ($id) {
     try {
         Mail::raw(
             "Bonjour {$user->prenom} {$user->nom},\n\n" .
-            "🚫 Votre compte SupServer a été SUSPENDU par l'administrateur.\n\n" .
+            "🚫 Votre compte a été SUSPENDU par l'administrateur.\n\n" .
             "Pour toute demande de réactivation, contactez l'administrateur.\n\n" .
             "Plateforme de Surveillance",
             function ($mail) use ($user) {
-                $mail->to($user->email)->subject('🚫 Compte suspendu — SupServer');
+                $mail->to($user->email)->subject('🚫 Compte suspendu — Plateforme de Surveillance');
             }
         );
     } catch (\Exception $e) {}
@@ -148,12 +148,12 @@ Route::get('/refuser/{id}', function ($id) {
     try {
         Mail::raw(
             "Bonjour {$user->prenom} {$user->nom},\n\n" .
-            "❌ Votre demande d'inscription sur SupServer a été REFUSÉE.\n\n" .
+            "❌ Votre demande d'inscription a été REFUSÉE.\n\n" .
             "Votre demande d'accès à la plateforme de surveillance n'a pas été approuvée.\n\n" .
             "Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur.\n\n" .
             "Plateforme de Surveillance",
             function ($mail) use ($user) {
-                $mail->to($user->email)->subject('❌ Inscription refusée — SupServer');
+                $mail->to($user->email)->subject('❌ Inscription refusée — Plateforme de Surveillance');
             }
         );
     } catch (\Exception $e) {}
@@ -178,11 +178,11 @@ Route::get('/attente/{id}', function ($id) {
     try {
         Mail::raw(
             "Bonjour {$user->prenom} {$user->nom},\n\n" .
-            "⏳ Votre compte SupServer a été remis EN ATTENTE de validation.\n\n" .
+            "⏳ Votre compte a été remis EN ATTENTE de validation.\n\n" .
             "Vous recevrez un email dès que votre compte sera activé.\n\n" .
             "Plateforme de Surveillance",
             function ($mail) use ($user) {
-                $mail->to($user->email)->subject('⏳ Compte en attente — SupServer');
+                $mail->to($user->email)->subject('⏳ Compte en attente — Plateforme de Surveillance');
             }
         );
     } catch (\Exception $e) {}
@@ -243,8 +243,8 @@ Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $i
              'bloque'=>'🚫 Votre compte a été SUSPENDU par l\'administrateur.',
              'en_attente'=>'⏳ Votre compte a été remis EN ATTENTE de validation.'];
     try {
-        Mail::raw("Bonjour {$target->prenom} {$target->nom},\n\n{$body[$status]}\n\nSupServer — Surveillance IoT",
-            fn($m) => $m->to($target->email)->subject($subj[$status].' — SupServer'));
+        Mail::raw("Bonjour {$target->prenom} {$target->nom},\n\n{$body[$status]}\n\nPlateforme de Surveillance",
+            fn($m) => $m->to($target->email)->subject($subj[$status].' — Plateforme de Surveillance'));
     } catch (\Exception $e) {}
 
     $labels = ['valide'=>'Validé','refuse'=>'Refusé','bloque'=>'Bloqué','en_attente'=>'En attente'];
@@ -455,7 +455,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
 
     // ── TXT ───────────────────────────────────────────────────────────────
     if ($format === 'txt') {
-        $out  = "=== SupServer — Export : {$type} ===\n";
+        $out  = "=== Plateforme de Surveillance — Export : {$type} ===\n";
         $out .= "Période  : {$debut} au {$fin}\n";
         $out .= "Généré   : ".date('d/m/Y H:i:s')."\n";
         $out .= "Total    : ".count($data)." enregistrements\n";
@@ -478,7 +478,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
 
     // ── SQL ───────────────────────────────────────────────────────────────
     if ($format === 'sql') {
-        $out  = "-- SupServer SQL Export\n-- Table   : {$type}\n";
+        $out  = "-- Plateforme de Surveillance — SQL Export\n-- Table   : {$type}\n";
         $out .= "-- Période : {$debut} au {$fin}\n-- Généré  : ".date('Y-m-d H:i:s')."\n-- Total   : ".count($data)." lignes\n\n";
         $out .= "SET NAMES 'utf8mb4';\nSET FOREIGN_KEY_CHECKS=0;\n\n";
         foreach ($data as $row) {
@@ -520,7 +520,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
              . '<w:body>'
              . '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
              . '<w:r><w:rPr><w:b/><w:color w:val="33FF88"/><w:sz w:val="32"/></w:rPr>'
-             . '<w:t>Rapport SupServer — '.htmlspecialchars($type).'</w:t></w:r></w:p>'
+             . '<w:t>Rapport — '.htmlspecialchars($type).'</w:t></w:r></w:p>'
              . '<w:p><w:r><w:rPr><w:color w:val="888888"/><w:sz w:val="18"/></w:rPr>'
              . '<w:t>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' | Total : '.count($data).' | Généré : '.date('d/m/Y H:i').'</w:t></w:r></w:p>'
              . '<w:p/>'.$tbl.'<w:p/>'
@@ -589,7 +589,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         $zip->addFromString("{$fn}.csv",  $csv);
         $zip->addFromString("{$fn}.json", json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
         $zip->addFromString("{$fn}.html", $html2);
-        $zip->addFromString('README.txt', "SupServer Bundle Export\nType: {$type}\nPeriode: {$debut} - {$fin}\nTotal: ".count($data)." records\nGenerated: ".date('Y-m-d H:i:s')."\n");
+        $zip->addFromString('README.txt', "Plateforme de Surveillance — Bundle Export\nType: {$type}\nPeriode: {$debut} - {$fin}\nTotal: ".count($data)." records\nGenerated: ".date('Y-m-d H:i:s')."\n");
         $zip->close();
 
         $content = file_get_contents($tmp); @unlink($tmp);
@@ -616,7 +616,7 @@ Route::get('/rapports/backup', function () {
 
     $tables = ['mesures', 'alertes', 'salles', 'serveurs'];
     $today  = date('Y-m-d');
-    $summary = "=== SupServer Full Backup ===\nDate: ".date('Y-m-d H:i:s')."\n\n";
+    $summary = "=== Plateforme de Surveillance — Backup complet ===\nDate: ".date('Y-m-d H:i:s')."\n\n";
 
     foreach ($tables as $tbl) {
         try {
