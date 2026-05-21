@@ -287,7 +287,7 @@ table{max-width:100%}
   <a href="/profil"><i class="fa-solid fa-user"></i> Mon Profil</a>
   <a href="/utilisateurs"><i class="fa-solid fa-users"></i> Utilisateurs</a>
   <a href="/cameras-ip"><i class="fa-solid fa-video"></i> Caméras IP</a>
-  <a href="/salles"><i class="fa-solid fa-building-server"></i> Salles Serveurs</a>
+  <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
   <a href="/serveurs"><i class="fa-solid fa-server"></i> Serveurs</a>
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>

@@ -81,7 +81,7 @@
 
 <div class="pg-header">
     <div>
-        <div class="pg-title"><i class="fa-solid fa-building-server" style="margin-right:8px"></i>Salles Serveurs <span>Gestion des salles</span></div>
+        <div class="pg-title"><i class="fa-solid fa-warehouse" style="margin-right:8px"></i>Salles Serveurs <span>Gestion des salles</span></div>
     </div>
     <button class="btn btn-neon" onclick="document.getElementById('addModal').classList.add('open')"><i class="fa-solid fa-plus"></i> Nouvelle Salle</button>
 </div>
@@ -124,7 +124,7 @@
 
 @if(count($salles) === 0)
 <div class="empty-state">
-    <div class="icon"><i class="fa-solid fa-building-server" style="font-size:48px;color:#1e2f5a"></i></div>
+    <div class="icon"><i class="fa-solid fa-warehouse" style="font-size:48px;color:#1e2f5a"></i></div>
     <p>Aucune salle enregistrée.<br>Cliquez sur <strong><i class="fa-solid fa-plus"></i> Nouvelle Salle</strong> pour commencer.</p>
 </div>
 @else
