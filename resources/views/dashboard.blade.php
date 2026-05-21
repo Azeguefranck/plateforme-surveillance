@@ -289,7 +289,6 @@ const SEUILS = {
 };
 
 // ── Données graphiques ──────────────────────────────────
-const MAX_POINTS = 20;
 const labels = [];
 const D = { temperature:[], humidite:[], gaz:[], courant:[], puissance:[], tension:[] };
 
@@ -348,37 +347,15 @@ function majJauge(nom, val) {
   else if (val >= s.warn) card.classList.add('alerte-warning');
 }
 
-// ── Push données graphique ──────────────────────────────
-function pushData(data) {
-  const now = new Date();
-  const t = now.getHours().toString().padStart(2,'0') + ':' +
-            now.getMinutes().toString().padStart(2,'0') + ':' +
-            now.getSeconds().toString().padStart(2,'0');
-  labels.push(t);
-  D.temperature.push(data.temperature ?? 0);
-  D.humidite.push(data.humidite ?? 0);
-  D.gaz.push(data.gaz ?? 0);
-  D.courant.push(data.courant ?? 0);
-  D.puissance.push(data.puissance ?? 0);
-  D.tension.push(data.tension ?? 0);
-
-  if (labels.length > MAX_POINTS) {
-    labels.shift();
-    Object.values(D).forEach(arr => arr.shift());
-  }
-  chart1.update();
-  chart2.update();
-}
-
-// ── Polling dashboard-data ──────────────────────────────
-function pollSensors() {
-  fetch('/api/dashboard-data')
-    .then(r => r.json())
+// ── Polling live (1s) : jauges uniquement, sans SQL ────────
+function pollLive() {
+  fetch('/api/live-data')
+    .then(r => r.ok ? r.json() : Promise.reject())
     .then(data => {
       majJauge('temperature', parseFloat(data.temperature) || 0);
       majJauge('humidite',    parseFloat(data.humidite)    || 0);
       majJauge('gaz',         parseFloat(data.gaz)         || 0);
-      majJauge('courant',     parseFloat(data.courant)      || 0);
+      majJauge('courant',     parseFloat(data.courant)     || 0);
       majJauge('puissance',   parseFloat(data.puissance)   || 0);
       majJauge('tension',     parseFloat(data.tension)     || 0);
 
@@ -389,25 +366,45 @@ function pollSensors() {
       pirBadge.textContent = pir ? 'MOUVEMENT DÉTECTÉ' : 'AUCUN MOUVEMENT';
       pirCard.className = 'gauge-card ' + (pir ? 'crit alerte-critique' : 'ok');
 
-      // Alerte active
       let alerteActive = '';
-      if (parseFloat(data.temperature) >= 40) alerteActive = 'TEMPÉRATURE CRITIQUE';
-      else if (parseFloat(data.gaz) >= 500) alerteActive = 'GAZ CRITIQUE';
-      else if (parseFloat(data.temperature) >= 35) alerteActive = 'TEMPÉRATURE ÉLEVÉE';
-      else if (parseFloat(data.gaz) >= 300) alerteActive = 'GAZ ÉLEVÉ';
+      const t = parseFloat(data.temperature);
+      const g = parseFloat(data.gaz);
+      if (t >= 40) alerteActive = 'TEMPÉRATURE CRITIQUE';
+      else if (g >= 500) alerteActive = 'GAZ CRITIQUE';
+      else if (t >= 35) alerteActive = 'TEMPÉRATURE ÉLEVÉE';
+      else if (g >= 300) alerteActive = 'GAZ ÉLEVÉ';
       else if (pir) alerteActive = 'MOUVEMENT DÉTECTÉ';
 
-      const alerteEl = document.getElementById('alerte-active');
-      if (alerteActive) {
-        alerteEl.innerHTML = `<span class="badge badge-crit">${alerteActive}</span>`;
-      } else {
-        alerteEl.innerHTML = `<span class="badge badge-ok">AUCUNE</span>`;
-      }
+      document.getElementById('alerte-active').innerHTML = alerteActive
+        ? `<span class="badge badge-crit">${alerteActive}</span>`
+        : `<span class="badge badge-ok">AUCUNE</span>`;
 
       document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
-      if (data.created_at) document.getElementById('last-mesure').textContent = data.created_at.replace('T',' ').substring(0,19);
+      if (data.ts) document.getElementById('last-mesure').textContent = (data.ts||'').replace('T',' ').substring(0,19);
+    })
+    .catch(() => {});
+}
 
-      pushData(data);
+// ── Polling historique (30s) : graphiques depuis la base ──
+function pollHistorique() {
+  fetch('/api/mesures-recentes?n=30')
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(rows => {
+      if (!rows.length) return;
+      labels.length = 0;
+      Object.values(D).forEach(arr => arr.length = 0);
+      rows.forEach(m => {
+        const t = (m.ts || m.created_at || '').substring(11, 19);
+        labels.push(t);
+        D.temperature.push(parseFloat(m.temperature) || 0);
+        D.humidite.push(parseFloat(m.humidite) || 0);
+        D.gaz.push(parseFloat(m.gaz) || 0);
+        D.courant.push(parseFloat(m.courant) || 0);
+        D.puissance.push(parseFloat(m.puissance) || 0);
+        D.tension.push(parseFloat(m.tension) || 0);
+      });
+      chart1.update();
+      chart2.update();
     })
     .catch(() => {});
 }
@@ -425,7 +422,7 @@ function pollAlertes() {
       list.innerHTML = alertes.map(a => {
         const icon  = a.niveau === 'critique' ? '🔴' : a.niveau === 'warning' ? '🟡' : '🟢';
         const niv   = a.niveau === 'critique' ? 'critique' : a.niveau === 'warning' ? 'warning' : 'info';
-        const nonLu = a.lu == 0 ? ' non-lu' : '';
+        const nonLu = a.resolu == 0 ? ' non-lu' : '';
         const date  = (a.created_at || '').substring(0, 16).replace('T', ' ');
         return `<div class="alerte-item ${niv}${nonLu}" data-id="${a.id}">
           <span class="alerte-icon">${icon}</span>
@@ -463,12 +460,14 @@ function lireTout() {
 }
 
 // ── Démarrage ──────────────────────────────────────────
-pollSensors();
+pollLive();
+pollHistorique();
 pollAlertes();
 pollStats();
-setInterval(pollSensors, 1000);
-setInterval(pollAlertes, 5000);
-setInterval(pollStats,  10000);
+setInterval(pollLive,       1000);
+setInterval(pollHistorique, 30000);
+setInterval(pollAlertes,    5000);
+setInterval(pollStats,     15000);
 </script>
 
 @endsection

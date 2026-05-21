@@ -1,0 +1,15 @@
+[RELAY] Recherche du port Arduino...
+[RELAY] 15:00:11  Port /dev/ttyACM0  ->  http://localhost:8000/api/capteurs
+[RELAY] Ctrl+C pour arreter | pkill -f serial_relay.py pour tuer
+
+[RELAY] Connexion etablie sur /dev/ttyACM0
+[dbg]  DEMARRAGE SYSTEME 
+[dbg]  SYSTEME PRET 
+[json err] {"type":"donnees","salle_id":1,"temperature":?,"humidite":?,"gaz":936,"courant":?,"puissance":?,"pir":1}
+[dbg] 
+[dbg] T:30.90C  H:52.10%  G:936  I:13.81A  P:3038.45W  PIR:1
+[json err] {"type":"donnees","salle_id":1,"temperature":?,"humidite":?,"gaz":935,"courant":?,"puissance":?,"pir":1}
+[dbg] 
+[dbg] T:30.90C  H:52.30%  G:935  I:12.70A  P:2794.07W  PIR:1
+
+[RELAY] Arret.

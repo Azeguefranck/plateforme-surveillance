@@ -1,85 +1,142 @@
 <?php
 /**
- * Base locale des arrondissements du Cameroun
- * Clé = geonameId du département (GeoNames)
- * Valeur = liste des arrondissements
+ * Base complète des arrondissements du Cameroun — 360 communes (BUCREP/MINATD)
+ * Clé = geonameId GeoNames du département (ADM2)
  */
 return [
-    // ── ADAMAOUA ──────────────────────────────────────
-    7670946 => ['Djohong','Kontcha','Mbé','Ngaoundal','Tignère'],
-    7670947 => ['Galim-Tignère','Maio-Baléo','Nganha','Tignère'],
-    9224946 => ['Bankim','Banyo','Gashiga','Kontcha','Maio-Darlé','Tibati'],
-    8299279 => ['Belel','Dir','Meiganga','Ngaoui'],
-    7670948 => ['Martap','Mbe','Ngaoundéré 1er','Ngaoundéré 2e','Ngaoundéré 3e','Nyambaka'],
+    // ── ADAMAOUA (21 arrondissements) ─────────────────
+    // Djérem
+    7670946 => ['Ngaoundal','Tibati'],
+    // Faro-et-Déo
+    7670947 => ['Galim-Tignère','Kontcha','Mayo-Baléo','Tignère'],
+    // Mayo-Banyo
+    9224946 => ['Bankim','Banyo','Mayo-Darlé'],
+    // Mbéré
+    8299279 => ['Dir','Djohong','Meiganga','Ngaoui'],
+    // Vina
+    7670948 => ['Belel','Martap','Mbe','Nganha','Ngaoundéré 1er','Ngaoundéré 2e','Ngaoundéré 3e','Nyambaka'],
 
-    // ── CENTRE ────────────────────────────────────────
-    2229546 => ['Elig-Mfomo','Evodoula','Mbankomo','Monatélé','Obala','Okola','Sa\'a'],
-    9224948 => ['Bafia','Bokito','Deuk','Kiiki','Kon-Yambetta','Makénéné','Ndikiniméki','Nitoukou','Ntoum','Ombessa'],
-    7730793 => ['Mbangassina','Ngambe-Tikar','Ntui','Yoko'],
-    9165815 => ['Akono','Awae','Bikok','Dzeng','Ebebda','Ngomedzap','Nkolafamba','Obono','Ongot','Soa'],
+    // ── CENTRE (70 arrondissements) ───────────────────
+    // Lekié
+    2229546 => ['Batchenga','Ebebda','Elig-Mfomo','Evodoula','Lobo','Monatélé','Obala','Okola','Sa\'a'],
+    // Mbam-et-Inoubou
+    9224948 => ['Bafia','Bokito','Deuk','Kiiki','Kon-Yambetta','Makénéné','Ndikiniméki','Nitoukou','Ombessa'],
+    // Mbam-et-Kim
+    7730793 => ['Mbangassina','Ngambè-Tikar','Ngoro','Ntui','Yoko'],
+    // Méfou-et-Akono
+    9165815 => ['Akono','Bikok','Mbankomo','Ngoumou'],
+    // Mfoundi
     8693008 => ['Yaoundé 1er','Yaoundé 2e','Yaoundé 3e','Yaoundé 4e','Yaoundé 5e','Yaoundé 6e','Yaoundé 7e'],
-    7731690 => ['Awae','Esse','Mbankomo','Mfou','Nkolafamba','Soa'],
-    2223330 => ['Eseka','Makak','Matomb','Messondo','Ndog-Batanga','Nguibassal','Ngwei'],
-    2223329 => ['Akonolinga','Ayos','Endom','Mengang','Ngoyla'],
-    2223327 => ['Mbalmayo','Ngomedzap','Ngoumou'],
-    2230817 => ['Lembe-Yezoum','Minta','Nanga-Eboko','Nsem'],
+    // Méfou-et-Afamba
+    7731690 => ['Afanloum','Assamba','Awaé','Edzendouan','Esse','Mfou','Nkolafamba','Soa'],
+    // Nyong-et-Kéllé
+    2223330 => ['Biyouha','Bondjock','Bot-Makak','Dibang','Éséka','Makak','Matomb','Messondo','Ngog-Mapubi','Nguibassal'],
+    // Nyong-et-Mfoumou
+    2223329 => ['Akonolinga','Ayos','Endom','Mengang','Nyakokombo'],
+    // Nyong-et-So'o
+    2223327 => ['Akoeman','Dzeng','Mbalmayo','Mengueme','Ngomedzap','Nkolmetet'],
+    // Haute-Sanaga
+    2230817 => ['Bibey','Lembe-Yezoum','Mbandjock','Minta','Nanga-Eboko','Nkoteng','Nsem'],
 
-    // ── EST ───────────────────────────────────────────
-    2233500 => ['Moloundou','Ngoyla','Salapoumbé'],
-    2230815 => ['Abong-Mbang','Angossas','Dimako','Doumaintang','Doumé','Lomié','Mboma','Messamena','Messok','Mindourou','Ngoyla','Nguelemendouka','Somalomo'],
-    2230606 => ['Batouri','Bétaré-Oya','Diang','Doumaintang','Kentzou','Kette','Mbang','Ndélélé','Ndom'],
-    2229251 => ['Bélabo','Bertoua 1er','Bertoua 2e','Bétaré-Oya','Diang','Doumé','Mandjou'],
+    // ── EST (33 arrondissements) ──────────────────────
+    // Boumba-et-Ngoko
+    2233500 => ['Gari-Gombo','Moloundou','Salapoumbé','Yokadouma'],
+    // Haut-Nyong
+    2230815 => ['Abong-Mbang','Bebend','Dimako','Dja','Doumaintang','Doumé','Lomié','Mboanz','Mboma','Messamena','Messok','Ngoyla','Nguelemendouka','Somalomo'],
+    // Kadey
+    2230606 => ['Batouri','Bombé','Kette','Mbang','Mbotoro','Ndelele','Ndem-Nam'],
+    // Lom-et-Djérem
+    2229251 => ['Bélabo','Bertoua 1er','Bertoua 2e','Bétaré-Oya','Diang','Garoua-Boulaï','Mandjou','Ngoura'],
 
-    // ── EXTRÊME-NORD ──────────────────────────────────
-    2233122 => ['Gazawa','Kaélé','Maga','Maroua 1er','Maroua 2e','Maroua 3e','Meri','Mindif','Moutouroua','Pétté','Tokombéré'],
+    // ── EXTRÊME-NORD (47 arrondissements) ────────────
+    // Diamaré
+    2233122 => ['Bogo','Dargala','Gazawa','Maroua 1er','Maroua 2e','Maroua 3e','Meri','Ndoukoula','Petté'],
+    // Logone-et-Chari
     2229291 => ['Blangoua','Darak','Fotokol','Goulfey','Hile-Alifa','Kousseri','Logone-Birni','Makary','Waza','Zina'],
-    2228217 => ['Datchéka','Gobo','Gueme','Kai-Kai','Kar-Hay','Kalfou','Maga','Naibam','Tchatibali','Vele','Wina','Yagoua'],
-    7932539 => ['Bogo','Dziguilao','Guidiguis','Kaélé','Kar-Hay','Mindif','Mildou','Moutourwa','Ngong','Touboro'],
+    // Mayo-Danay
+    2228217 => ['Datcheka','Gobo','Guéré','Kaï-Kaï','Kalfou','Kar-Hay','Maga','Tchati-Bali','Vele','Wina','Yagoua'],
+    // Mayo-Kani
+    7932539 => ['Guidiguis','Kaélé','Mindif','Moulvoudaye','Moutourwa','Porhi','Taibong'],
+    // Mayo-Sava
     9224949 => ['Kolofata','Mora','Tokombéré'],
-    9224951 => ['Bourrha','Doumrou','Hina','Koza','Mokolo','Mozogo','Sir','Touloum'],
+    // Mayo-Tsanaga
+    9224951 => ['Bourrha','Hina','Koza','Mayo-Moskota','Mogode','Mokolo','Soulédé-Roua'],
 
-    // ── LITTORAL ──────────────────────────────────────
-    2225744 => ['Dibombari','Loum','Manjo','Mbanga','Melong','Nkongsamba 1er','Nkongsamba 2e','Nkongsamba 3e','Njombe-Penja'],
-    2224165 => ['Ndom','Ngambe','Nlong','Yabassi'],
-    2222269 => ['Dibeng','Edéa 1er','Edéa 2e','Mouanko','Ngambe','Nyanon','Pouma'],
+    // ── LITTORAL (34 arrondissements) ────────────────
+    // Moungo
+    2225744 => ['Abo-Fiko','Baré-Bakem','Dibombari','Loum','Manjo','Mbanga','Melong','Mombo','Njombe-Penja','Nkongsamba 1er','Nkongsamba 2e','Nkongsamba 3e','Nlonako'],
+    // Nkam
+    2224165 => ['Nkondjock','Nord-Makombé','Yabassi','Yingui'],
+    // Sanaga-Maritime
+    2222269 => ['Dibamba','Dizangué','Édéa 1er','Édéa 2e','Massock-Songloulou','Mouanko','Ndom','Ngambe','Ngwei','Nyanon','Pouma'],
+    // Wouri
     2221059 => ['Douala 1er','Douala 2e','Douala 3e','Douala 4e','Douala 5e','Douala 6e'],
 
-    // ── NORD ──────────────────────────────────────────
-    2234396 => ['Baschéo','Bibemi','Dembo','Garoua 1er','Garoua 2e','Garoua 3e','Lagdo','Mayo-Oulo','Ngong','Pitoa','Tchéboa'],
+    // ── NORD (21 arrondissements) ─────────────────────
+    // Bénoué
+    2234396 => ['Baschéo','Bibemi','Dembo','Demsa','Garoua 1er','Garoua 2e','Garoua 3e','Lagdo','Mayo-Hourna','Pitoa','Tcheboa','Touroua'],
+    // Faro
     9228189 => ['Beka','Poli'],
-    8740152 => ['Doukoula','Figuil','Guider','Mayo-Oulo'],
-    8740150 => ['Madingring','Ngong','Tcholliré','Touboro'],
+    // Mayo-Louti
+    8740152 => ['Figuil','Guider','Mayo-Oulo'],
+    // Mayo-Rey
+    8740150 => ['Madingring','Rey-Bouba','Tcholliré','Touboro'],
 
-    // ── OUEST ─────────────────────────────────────────
-    2234988 => ['Babadjou','Bafang','Galim','Mbouda'],
-    9224961 => ['Foumbot','Koutaba','Massangam'],
-    2230816 => ['Bafang','Bana','Banka','Bakou','Kekem'],
-    9224964 => ['Bafoussam 1er','Bafoussam 2e','Bafoussam 3e','Baham','Bayangam'],
-    2227064 => ['Dschang','Fokoué','Kékem','Nkong-Ni','Nkong-Zem','Penka-Michel','Santchou'],
-    2226712 => ['Bafoussam 1er','Bafoussam 2e','Bafoussam 3e'],
+    // ── OUEST (40 arrondissements) ────────────────────
+    // Bamboutos
+    2234988 => ['Babadjou','Batcham','Galim','Mbouda'],
+    // Ménoua
+    2227064 => ['Dschang','Fokoué','Fongo-Tongo','Nkong-Ni','Penka-Michel','Santchou'],
+    // Ndé
     2225334 => ['Bangangté','Bassamba','Bazou','Tonga'],
-    9224965 => ['Foumban','Foumbot','Koutaba','Kouoptamo','Malantouen','Massangam','Njimom'],
+    // Haut-Nkam
+    2230816 => ['Bafang','Bakou','Bana','Bandja','Banka','Banwa','Kékem'],
+    // Hauts-Plateaux
+    9224961 => ['Baham','Bamendjou','Bangou','Batié'],
+    // Koung-Khi
+    9224964 => ['Bayangam','Djebem','Poumougne'],
+    // Mifi
+    2226712 => ['Bafoussam 1er','Bafoussam 2e','Bafoussam 3e'],
+    // Noun
+    9224965 => ['Bangourain','Foumban','Foumbot','Kouoptamo','Koutaba','Magba','Malentouen','Massangam','Njimom'],
 
-    // ── NORD-OUEST ────────────────────────────────────
-    9224959 => ['Fundong'],
-    2233408 => ['Jakiri','Kumbo','Mbven','Nkum','Noni'],
-    2232640 => ['Ako','Misaje','Nkambe','Nwa'],
-    2226947 => ['Batibo','Esu','Wum','Zhoa'],
+    // ── NORD-OUEST (34 arrondissements) ──────────────
+    // Boyo
+    9224959 => ['Belo','Bum','Fundong','Njinikom'],
+    // Bui
+    2233408 => ['Jakiri','Kumbo','Mbven','Nkum','Noni','Oku'],
+    // Donga-Mantung
+    2232640 => ['Ako','Misaje','Ndu','Nkambé','Nwa'],
+    // Menchum
+    2226947 => ['Fungom','Furu-Awa','Menchum Valley','Wum'],
+    // Mezam
     2226830 => ['Bafut','Bali','Bamenda 1er','Bamenda 2e','Bamenda 3e','Santa','Tubah'],
-    2226140 => ['Batibo','Mbengwi','Njikwa','Widikum'],
-    10289311 => ['Balikumbat','Ndop'],
+    // Momo
+    2226140 => ['Batibo','Mbengwi','Ngie','Njikwa','Widikum-Menka'],
+    // Ngo-Ketunjia
+    10289311 => ['Babessi','Balikumbat','Ndop'],
 
-    // ── SUD ───────────────────────────────────────────
+    // ── SUD (29 arrondissements) ──────────────────────
+    // Dja-et-Lobo
     2232969 => ['Bengbis','Djoum','Meyomessala','Meyomessi','Mintom','Oveng','Sangmélima','Zoétélé'],
-    9230015 => ['Ebolowa 1er','Ebolowa 2e','Efoulan','Kiiki','Lolodorf','Ma\'an','Mekin','Mvangan','Ngoulemakong'],
-    2229760 => ['Akom 2','Campo','Kribi 1er','Kribi 2e','Lokoundjé','Lolabe','Mvengue','Niete'],
-    9239012 => ['Ambam','Kye-Ossi','Ma\'an','Olamze'],
+    // Océan
+    2229760 => ['Akom 2','Bipindi','Campo','Kribi 1er','Kribi 2e','Lokoundjé','Lolodorf','Mvengue','Niete'],
+    // Mvila
+    9230015 => ['Biwong-Bane','Biwong-Bulu','Ebolowa 1er','Ebolowa 2e','Efoulan','Mengong','Mvangan','Ngoulemakong'],
+    // Vallée-du-Ntem
+    9239012 => ['Ambam','Kyé-Ossi','Ma\'an','Olamze'],
 
-    // ── SUD-OUEST ─────────────────────────────────────
-    2231710 => ['Buea','Limbe 1er','Limbe 2e','Limbe 3e','Muyuka','Tiko'],
+    // ── SUD-OUEST (31 arrondissements) ───────────────
+    // Fako
+    2231710 => ['Buea','Limbé 1er','Limbé 2e','Limbé 3e','Muyuka','Tiko','West Coast'],
+    // Koupé-Manengouba
     8505106 => ['Bangem','Nguti','Tombel'],
+    // Lebialem
     9224975 => ['Alou','Fontem','Wabane'],
-    2228442 => ['Akwaya','Eyumojock','Mamfe','Upper Bayang'],
+    // Manyu
+    2228442 => ['Akwaya','Eyumodjock','Mamfé Central','Upper Banyang'],
+    // Meme
     2227197 => ['Konye','Kumba 1er','Kumba 2e','Kumba 3e','Mbonge'],
-    2225280 => ['Bamusso','Dikome Balue','Ekondo Titi','Isangele','Kombo Abedimo','Mundemba','Nguti','Toko'],
+    // Ndian
+    2225280 => ['Bamusso','Dikome-Balue','Ekondo-Titi','Idabato','Isanguele','Kombo-Abedimo','Kombo-Itindi','Mundemba','Toko'],
 ];

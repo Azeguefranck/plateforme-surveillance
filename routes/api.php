@@ -218,8 +218,8 @@ function collecterPhonesUtilisateurs(): array
         }
     } catch (\Exception $e) {}
     // Always include admin
-    if (!in_array('+237687988340', $phones)) {
-        $phones[] = '+237687988340';
+    if (!in_array('+237692543407', $phones)) {
+        $phones[] = '+237692543407';
     }
     return array_unique($phones);
 }
@@ -240,6 +240,69 @@ function envoyerSMSMouvement(string $horodatage): void
     envoyerSMS(collecterPhonesUtilisateurs(), $msg);
 }
 
+// ── État alertes — évite les spams répétés ────────────────
+function chargerEtatAlertes(): array
+{
+    $path = storage_path('app/alert_state.json');
+    if (file_exists($path)) {
+        $d = json_decode(file_get_contents($path), true);
+        if (is_array($d)) return $d;
+    }
+    return [
+        'temperature' => 'normal',
+        'humidite'    => 'normal',
+        'gaz'         => 'normal',
+        'courant'     => 'normal',
+        'puissance'   => 'normal',
+        'pir_last'    => 0,
+    ];
+}
+
+function sauvegarderEtatAlertes(array $state): void
+{
+    @file_put_contents(storage_path('app/alert_state.json'), json_encode($state));
+}
+
+function envoyerEmailMouvement(string $horodatage, ?int $salleId): void
+{
+    $couleur = '#ffd633';
+    $users   = DB::table('users')->where('validation_status', 'valide')->get();
+    if ($users->isEmpty()) return;
+
+    $esc = fn($v) => htmlspecialchars($v ?? '', ENT_QUOTES, 'UTF-8');
+    $html =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        . 'body{background:#060d1f;font-family:Arial,sans-serif;margin:0}'
+        . '.w{max-width:560px;margin:0 auto;background:#060d1f}'
+        . '.h{background:linear-gradient(135deg,#0e1a38,#060d1f);padding:24px;text-align:center;border-bottom:3px solid #ffd633}'
+        . '.hl{color:#ffd633;font-size:20px;font-weight:900;letter-spacing:2px;margin:0}'
+        . '.b{background:#0a1428;padding:24px}'
+        . 'table{width:100%;border-collapse:collapse;margin:10px 0}'
+        . 'td{padding:9px 10px;font-size:13px;border-bottom:1px solid #0e1c35}'
+        . '.k{color:#8899cc;width:42%;font-weight:600}'
+        . '.v{color:#c7d2ff}'
+        . '.f{background:#060d1f;padding:14px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35}'
+        . '</style></head><body><div class="w">'
+        . '<div class="h"><h1 class="hl">&#128680; INTRUSION D&Eacute;TECT&Eacute;E</h1></div>'
+        . '<div class="b"><table>'
+        . '<tr><td class="k">Type</td><td class="v" style="color:#ffd633;font-weight:700">Mouvement PIR d&eacute;tect&eacute;</td></tr>'
+        . '<tr><td class="k">Salle ID</td><td class="v">' . (int)$salleId . '</td></tr>'
+        . '<tr><td class="k">Date / Heure</td><td class="v">' . $esc($horodatage) . '</td></tr>'
+        . '<tr><td class="k">Risque</td><td class="v">Intrusion possible dans la salle serveurs</td></tr>'
+        . '<tr><td class="k">Action</td><td class="v">V&eacute;rifier imm&eacute;diatement les acc&egrave;s, pr&eacute;venir la s&eacute;curit&eacute;</td></tr>'
+        . '</table></div>'
+        . '<div class="f">Plateforme de Surveillance &mdash; Alerte automatique</div>'
+        . '</div></body></html>';
+
+    foreach ($users as $user) {
+        try {
+            Mail::html($html, function ($mail) use ($user) {
+                $mail->to($user->email)->subject('[INTRUSION] Mouvement détecté — Salle Serveurs');
+            });
+        } catch (\Exception $e) {}
+    }
+}
+
 // ── POST /api/capteurs — réception données Arduino ────────
 Route::post('/capteurs', function (Request $request) {
 
@@ -248,64 +311,145 @@ Route::post('/capteurs', function (Request $request) {
     $gaz         = (float) ($request->gaz         ?? 0);
     $courant     = (float) ($request->courant      ?? 0);
     $puissance   = (float) ($request->puissance   ?? 0);
-    $tension     = (float) ($request->tension      ?? 0);
+    $tension     = $request->tension !== null ? (float) $request->tension : 220.0;
     $pir         = (bool)  ($request->pir          ?? false);
-    $rssi        = $request->rssi    ? (int) $request->rssi    : null;
+    $rssi        = $request->rssi     ? (int) $request->rssi     : null;
     $salleId     = $request->salle_id ? (int) $request->salle_id : null;
 
+    // Toujours enregistrer la mesure
     DB::table('mesures')->insert([
-        'temperature' => $temperature,
-        'humidite'    => $humidite,
-        'gaz'         => $gaz,
-        'courant'     => $courant,
-        'puissance'   => $puissance,
-        'tension'     => $tension ?: null,
-        'pir'         => $pir,
-        'rssi'        => $rssi,
-        'salle_id'    => $salleId,
-        'created_at'  => now(),
-        'updated_at'  => now(),
+        'temperature'  => $temperature,
+        'humidite'     => $humidite,
+        'gaz'          => $gaz,
+        'courant'      => $courant,
+        'puissance'    => $puissance,
+        'tension'      => $tension,
+        'pir_detecte'  => $pir ? 1 : 0,
+        'salle_id'     => $salleId,
+        'created_at'   => now(),
+        'updated_at'   => now(),
     ]);
 
     $horodatage = now()->format('d/m/Y H:i:s');
     $alertes    = analyserMesures(compact('temperature', 'humidite', 'gaz', 'courant', 'puissance'));
     $seuils     = getSeuilsValeurs();
 
-    foreach ($alertes as $alerte) {
-        DB::table('alertes')->insert([
-            'type_alerte' => $alerte['capteur'],
-            'message'     => 'Dépassement seuil ' . $alerte['niveau'] . ' — ' . $alerte['capteur'] . ' : ' . $alerte['valeur'] . $alerte['unite'],
-            'niveau'      => $alerte['niveau'],
-            'valeur'      => $alerte['valeur'] . $alerte['unite'],
-            'salle_id'    => $salleId,
-            'lu'          => false,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
+    // Charger l'état précédent des alertes
+    $prevState = chargerEtatAlertes();
+    $newState  = $prevState;
 
-        envoyerEmailAlerte($alerte, $horodatage);
-        envoyerSMSAlerte($alerte, $horodatage);
+    // Construire map capteur → alerte
+    $alertMap = [];
+    foreach ($alertes as $a) { $alertMap[$a['capteur']] = $a; }
+
+    $nbAlertes = 0;
+
+    // Pour chaque capteur : notifier uniquement si état change ou s'aggrave
+    foreach (['temperature', 'humidite', 'gaz', 'courant', 'puissance'] as $cap) {
+        $newNiveau = isset($alertMap[$cap]) ? $alertMap[$cap]['niveau'] : 'normal';
+        $oldNiveau = $prevState[$cap] ?? 'normal';
+        $newState[$cap] = $newNiveau;
+
+        if ($newNiveau === 'normal') continue;
+
+        // Insérer l'alerte dans la table (pour le dashboard)
+        DB::table('alertes')->insert([
+            'type'       => $alertMap[$cap]['capteur'],
+            'message'    => 'Dépassement seuil ' . $newNiveau . ' — ' . $cap
+                          . ' : ' . $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite'],
+            'niveau'     => $newNiveau,
+            'valeur'     => $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite'],
+            'salle_id'   => $salleId,
+            'resolu'     => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $nbAlertes++;
+
+        // Email uniquement si l'état change (normal→warning, normal→critique, warning→critique)
+        $stateChange = ($newNiveau !== $oldNiveau)
+            && !($oldNiveau === 'critique' && $newNiveau === 'warning');
+
+        if ($stateChange) {
+            envoyerEmailAlerte($alertMap[$cap], $horodatage);
+            // SMS géré côté Arduino — pas de doublon
+        }
     }
 
-    // PIR actif selon seuils
+    // PIR : cooldown 5 minutes pour éviter les fausses alertes
     if ($pir && ($seuils['pir']['actif'] ?? 1)) {
-        DB::table('alertes')->insert([
-            'type_alerte' => 'pir',
-            'message'     => 'Mouvement détecté dans la salle serveurs',
-            'niveau'      => 'warning',
-            'valeur'      => 'Détecté',
-            'salle_id'    => $salleId,
-            'lu'          => false,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-        envoyerSMSMouvement($horodatage);
+        $pirCooldown = 300; // secondes
+        if (time() - ($prevState['pir_last'] ?? 0) >= $pirCooldown) {
+            DB::table('alertes')->insert([
+                'type'       => 'pir',
+                'message'    => 'Mouvement détecté dans la salle serveurs (salle ' . $salleId . ')',
+                'niveau'     => 'warning',
+                'valeur'     => 'Détecté',
+                'salle_id'   => $salleId,
+                'resolu'     => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            envoyerEmailMouvement($horodatage, $salleId);
+            $newState['pir_last'] = time();
+            $nbAlertes++;
+        }
     }
+
+    sauvegarderEtatAlertes($newState);
 
     return response()->json([
         'success' => true,
-        'alertes' => count($alertes) + ($pir ? 1 : 0),
+        'alertes' => $nbAlertes,
+        'seuils'  => getSeuilsValeurs(),
     ]);
+});
+
+
+// ── GET /api/live-data ────────────────────────────────────
+// Lit le fichier JSON écrit par le relay toutes les 2s (sans requête SQL)
+Route::get('/live-data', function () {
+    $file = '/tmp/latest_sensor.json';
+    if (!file_exists($file) || (time() - filemtime($file)) > 30) {
+        // Fichier absent ou trop vieux (>30s) → fallback DB
+        $mesure = DB::table('mesures')->latest()->first();
+        if (!$mesure) {
+            return response()->json(['error' => 'no_data', 'pir' => false], 404);
+        }
+        return response()->json([
+            'temperature' => (float)$mesure->temperature,
+            'humidite'    => (float)$mesure->humidite,
+            'gaz'         => (int)$mesure->gaz,
+            'courant'     => (float)$mesure->courant,
+            'puissance'   => (float)$mesure->puissance,
+            'pir'         => (bool)($mesure->pir_detecte ?? false),
+            'ts'          => $mesure->created_at,
+            'source'      => 'db',
+        ]);
+    }
+    $data = json_decode(file_get_contents($file), true) ?? [];
+    $data['pir'] = (bool)($data['pir'] ?? false);
+    $data['source'] = 'live';
+    return response()->json($data);
+});
+
+
+// ── GET /api/mesures-recentes ─────────────────────────────
+// Dernières N mesures pour le graphique historique
+Route::get('/mesures-recentes', function (Request $request) {
+    $n = min((int)($request->n ?? 30), 100);
+    $mesures = DB::table('mesures')->latest()->limit($n)->get()->reverse()->values();
+    return response()->json($mesures->map(function($m) {
+        return [
+            'temperature' => (float)$m->temperature,
+            'humidite'    => (float)$m->humidite,
+            'gaz'         => (int)$m->gaz,
+            'courant'     => (float)$m->courant,
+            'puissance'   => (float)$m->puissance,
+            'pir'         => (bool)($m->pir_detecte ?? false),
+            'ts'          => $m->created_at,
+        ];
+    }));
 });
 
 
@@ -318,7 +462,9 @@ Route::get('/dashboard-data', function () {
             'courant' => 0, 'puissance' => 0, 'tension' => 0, 'pir' => false,
         ]);
     }
-    return response()->json($mesure);
+    $data = (array) $mesure;
+    $data['pir'] = (bool) ($mesure->pir_detecte ?? false);
+    return response()->json($data);
 });
 
 
@@ -328,7 +474,7 @@ Route::get('/stats', function () {
         'totalMesures'      => DB::table('mesures')->count(),
         'alertesCritiques'  => DB::table('alertes')->where('niveau', 'critique')->count(),
         'alertesWarning'    => DB::table('alertes')->where('niveau', 'warning')->count(),
-        'alertesNonLues'    => DB::table('alertes')->where('lu', false)->count(),
+        'alertesNonLues'    => DB::table('alertes')->where('resolu', 0)->count(),
         'totalUtilisateurs' => DB::table('users')->where('validation_status', 'valide')->count(),
         'derniereMesure'    => DB::table('mesures')->latest()->value('created_at'),
     ]);
@@ -406,9 +552,9 @@ Route::get('/alertes-recentes', function (Request $request) {
 Route::post('/alertes/lire', function (Request $request) {
     $id = $request->id;
     if ($id === 'all') {
-        DB::table('alertes')->update(['lu' => true]);
+        DB::table('alertes')->update(['resolu' => 1]);
     } else {
-        DB::table('alertes')->where('id', $id)->update(['lu' => true]);
+        DB::table('alertes')->where('id', $id)->update(['resolu' => 1]);
     }
     return response()->json(['success' => true]);
 });
@@ -484,4 +630,66 @@ Route::get('/filter', function (Request $request) {
     } catch (\Exception $e) {
         return response()->json(['data' => [], 'total' => 0, 'error' => $e->getMessage()]);
     }
+});
+
+
+// ── GET /api/seuils-arduino — format CSV pour Arduino ─────
+// Retourne: tw,tc,hw,hc,gw,gc,cw,cc,pw,pc,pir
+// ex: 35,40,75,85,300,500,10,15,3000,5000,1
+Route::get('/seuils-arduino', function () {
+    $s = getSeuilsValeurs();
+    $csv = implode(',', [
+        (int) ($s['temperature']['warning']  ?? 35),
+        (int) ($s['temperature']['critique'] ?? 40),
+        (int) ($s['humidite']['warning']     ?? 75),
+        (int) ($s['humidite']['critique']    ?? 85),
+        (int) ($s['gaz']['warning']          ?? 300),
+        (int) ($s['gaz']['critique']         ?? 500),
+        (int) ($s['courant']['warning']      ?? 10),
+        (int) ($s['courant']['critique']     ?? 15),
+        (int) ($s['puissance']['warning']    ?? 3000),
+        (int) ($s['puissance']['critique']   ?? 5000),
+        ($s['pir']['actif'] ?? 1) ? 1 : 0,
+    ]);
+    return response($csv, 200)->header('Content-Type', 'text/plain');
+});
+
+
+// ── GET /api/phones — numéros téléphone pour Arduino ──────
+// Retourne: +237692543407,+237699001122,...
+Route::get('/phones', function () {
+    $phones = [];
+    try {
+        $users = DB::table('users')
+            ->where('validation_status', 'valide')
+            ->whereNotNull('telephone')
+            ->where('telephone', '!=', '')
+            ->get();
+        foreach ($users as $u) {
+            $tel = trim($u->telephone ?? '');
+            if ($tel === '') continue;
+            if (!str_starts_with($tel, '+')) {
+                $ind = trim($u->indicatif_tel ?? '');
+                $tel = $ind . preg_replace('/\D/', '', $tel);
+            }
+            if (strlen(preg_replace('/\D/', '', $tel)) >= 7) {
+                $phones[] = $tel;
+            }
+        }
+    } catch (\Exception $e) {}
+
+    // Admin principal toujours inclus
+    if (!in_array('+237692543407', $phones)) {
+        $phones[] = '+237692543407';
+    }
+
+    return response(implode(',', array_unique($phones)), 200)
+        ->header('Content-Type', 'text/plain');
+});
+
+
+// ── DELETE /api/alerte/{id} ───────────────────────────────
+Route::delete('/alerte/{id}', function (int $id) {
+    DB::table('alertes')->where('id', $id)->delete();
+    return response()->json(['success' => true]);
 });

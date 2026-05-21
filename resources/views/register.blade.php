@@ -225,13 +225,12 @@ select.finp option{background:#0c1c34;color:#fff;}
 
       <form action="/register-user" method="POST" enctype="multipart/form-data" id="regForm" novalidate>
         @csrf
-        <input type="hidden" name="iso_pays"         id="h_iso">
-        <input type="hidden" name="indicatif_tel"  id="h_dial">
-        <input type="hidden" name="nationalite"    id="h_nat">
-        <input type="hidden" name="pays"           id="h_pays">
-        {{-- [NOUVEAU] GeoNames IDs --}}
-        <input type="hidden" name="pays_geoname_id"   id="h_pays_gid">
-        <input type="hidden" name="pays_nom"           id="h_pays_nom">
+        <input type="hidden" name="iso_pays"        id="h_iso"      value="CM">
+        <input type="hidden" name="indicatif_tel"  id="h_dial"     value="+237">
+        <input type="hidden" name="nationalite"    id="h_nat"      value="Camerounaise">
+        <input type="hidden" name="pays"           id="h_pays"     value="Cameroun">
+        <input type="hidden" name="pays_geoname_id" id="h_pays_gid" value="2233387">
+        <input type="hidden" name="pays_nom"        id="h_pays_nom" value="Cameroun">
 
         {{-- ══ STEP 1 : IDENTITÉ ══ --}}
         <div class="step-pane active" id="pane1">
@@ -320,16 +319,20 @@ select.finp option{background:#0c1c34;color:#fff;}
           <div class="pane-title">🌍 Localisation géographique</div>
           <div class="pane-sub">Votre pays, région et adresse</div>
           <div class="fg">
-            {{-- Pays --}}
+            {{-- Pays — Cameroun uniquement --}}
             <div class="fld f-full">
-              <label class="flbl">Pays <span class="req">*</span></label>
-              <select id="pays_select" name="_pays_ts" placeholder="Rechercher un pays..."></select>
+              <label class="flbl">Pays</label>
+              <div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.35);border:1px solid rgba(57,255,20,.25);border-radius:8px;padding:11px 13px;">
+                <span style="font-size:20px">🇨🇲</span>
+                <span style="color:#fff;font-size:13px;font-weight:600;">Cameroun</span>
+                <span style="color:rgba(255,255,255,.35);font-size:11px;margin-left:auto">+237</span>
+              </div>
             </div>
             {{-- Téléphone --}}
             <div class="fld f-full">
               <label class="flbl">Téléphone <span class="req">*</span></label>
               <div class="dial-row">
-                <div class="dial-badge" id="dialBadge">+—</div>
+                <div class="dial-badge loaded" id="dialBadge">🇨🇲 +237</div>
                 <input class="finp" type="tel" name="telephone" id="telephone" placeholder="Numéro de téléphone" style="flex:1" value="{{ old('telephone') }}">
               </div>
             </div>
@@ -505,310 +508,15 @@ select.finp option{background:#0c1c34;color:#fff;}
 
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
-/* ── 195 Pays ────────────────────────────────────── */
-const COUNTRIES=[
-  {iso:'AF',fr:'Afghanistan',en:'Afghanistan',dial:'+93'},
-  {iso:'ZA',fr:'Afrique du Sud',en:'South Africa',dial:'+27'},
-  {iso:'AL',fr:'Albanie',en:'Albania',dial:'+355'},
-  {iso:'DZ',fr:'Algérie',en:'Algeria',dial:'+213'},
-  {iso:'DE',fr:'Allemagne',en:'Germany',dial:'+49'},
-  {iso:'AD',fr:'Andorre',en:'Andorra',dial:'+376'},
-  {iso:'AO',fr:'Angola',en:'Angola',dial:'+244'},
-  {iso:'AG',fr:'Antigua-et-Barbuda',en:'Antigua and Barbuda',dial:'+1268'},
-  {iso:'SA',fr:'Arabie saoudite',en:'Saudi Arabia',dial:'+966'},
-  {iso:'AR',fr:'Argentine',en:'Argentina',dial:'+54'},
-  {iso:'AM',fr:'Arménie',en:'Armenia',dial:'+374'},
-  {iso:'AU',fr:'Australie',en:'Australia',dial:'+61'},
-  {iso:'AT',fr:'Autriche',en:'Austria',dial:'+43'},
-  {iso:'AZ',fr:'Azerbaïdjan',en:'Azerbaijan',dial:'+994'},
-  {iso:'BS',fr:'Bahamas',en:'Bahamas',dial:'+1242'},
-  {iso:'BH',fr:'Bahreïn',en:'Bahrain',dial:'+973'},
-  {iso:'BD',fr:'Bangladesh',en:'Bangladesh',dial:'+880'},
-  {iso:'BB',fr:'Barbade',en:'Barbados',dial:'+1246'},
-  {iso:'BE',fr:'Belgique',en:'Belgium',dial:'+32'},
-  {iso:'BZ',fr:'Belize',en:'Belize',dial:'+501'},
-  {iso:'BJ',fr:'Bénin',en:'Benin',dial:'+229'},
-  {iso:'BT',fr:'Bhoutan',en:'Bhutan',dial:'+975'},
-  {iso:'BY',fr:'Biélorussie',en:'Belarus',dial:'+375'},
-  {iso:'BO',fr:'Bolivie',en:'Bolivia',dial:'+591'},
-  {iso:'BA',fr:'Bosnie-Herzégovine',en:'Bosnia and Herzegovina',dial:'+387'},
-  {iso:'BW',fr:'Botswana',en:'Botswana',dial:'+267'},
-  {iso:'BR',fr:'Brésil',en:'Brazil',dial:'+55'},
-  {iso:'BN',fr:'Brunei',en:'Brunei',dial:'+673'},
-  {iso:'BG',fr:'Bulgarie',en:'Bulgaria',dial:'+359'},
-  {iso:'BF',fr:'Burkina Faso',en:'Burkina Faso',dial:'+226'},
-  {iso:'BI',fr:'Burundi',en:'Burundi',dial:'+257'},
-  {iso:'CV',fr:'Cap-Vert',en:'Cape Verde',dial:'+238'},
-  {iso:'KH',fr:'Cambodge',en:'Cambodia',dial:'+855'},
-  {iso:'CM',fr:'Cameroun',en:'Cameroon',dial:'+237'},
-  {iso:'CA',fr:'Canada',en:'Canada',dial:'+1'},
-  {iso:'CF',fr:'Rép. centrafricaine',en:'Central African Republic',dial:'+236'},
-  {iso:'CL',fr:'Chili',en:'Chile',dial:'+56'},
-  {iso:'CN',fr:'Chine',en:'China',dial:'+86'},
-  {iso:'CY',fr:'Chypre',en:'Cyprus',dial:'+357'},
-  {iso:'CO',fr:'Colombie',en:'Colombia',dial:'+57'},
-  {iso:'KM',fr:'Comores',en:'Comoros',dial:'+269'},
-  {iso:'CG',fr:'Congo',en:'Republic of the Congo',dial:'+242'},
-  {iso:'CD',fr:'RD Congo',en:'Democratic Republic of the Congo',dial:'+243'},
-  {iso:'KP',fr:'Corée du Nord',en:'North Korea',dial:'+850'},
-  {iso:'KR',fr:'Corée du Sud',en:'South Korea',dial:'+82'},
-  {iso:'CR',fr:'Costa Rica',en:'Costa Rica',dial:'+506'},
-  {iso:'CI',fr:"Côte d'Ivoire",en:'Ivory Coast',dial:'+225'},
-  {iso:'HR',fr:'Croatie',en:'Croatia',dial:'+385'},
-  {iso:'CU',fr:'Cuba',en:'Cuba',dial:'+53'},
-  {iso:'DK',fr:'Danemark',en:'Denmark',dial:'+45'},
-  {iso:'DJ',fr:'Djibouti',en:'Djibouti',dial:'+253'},
-  {iso:'DM',fr:'Dominique',en:'Dominica',dial:'+1767'},
-  {iso:'EG',fr:'Égypte',en:'Egypt',dial:'+20'},
-  {iso:'SV',fr:'Salvador',en:'El Salvador',dial:'+503'},
-  {iso:'AE',fr:'Émirats arabes unis',en:'United Arab Emirates',dial:'+971'},
-  {iso:'EC',fr:'Équateur',en:'Ecuador',dial:'+593'},
-  {iso:'ER',fr:'Érythrée',en:'Eritrea',dial:'+291'},
-  {iso:'ES',fr:'Espagne',en:'Spain',dial:'+34'},
-  {iso:'EE',fr:'Estonie',en:'Estonia',dial:'+372'},
-  {iso:'SZ',fr:'Eswatini',en:'Eswatini',dial:'+268'},
-  {iso:'ET',fr:'Éthiopie',en:'Ethiopia',dial:'+251'},
-  {iso:'FJ',fr:'Fidji',en:'Fiji',dial:'+679'},
-  {iso:'FI',fr:'Finlande',en:'Finland',dial:'+358'},
-  {iso:'FR',fr:'France',en:'France',dial:'+33'},
-  {iso:'GA',fr:'Gabon',en:'Gabon',dial:'+241'},
-  {iso:'GM',fr:'Gambie',en:'Gambia',dial:'+220'},
-  {iso:'GE',fr:'Géorgie',en:'Georgia',dial:'+995'},
-  {iso:'GH',fr:'Ghana',en:'Ghana',dial:'+233'},
-  {iso:'GR',fr:'Grèce',en:'Greece',dial:'+30'},
-  {iso:'GD',fr:'Grenade',en:'Grenada',dial:'+1473'},
-  {iso:'GT',fr:'Guatemala',en:'Guatemala',dial:'+502'},
-  {iso:'GN',fr:'Guinée',en:'Guinea',dial:'+224'},
-  {iso:'GW',fr:'Guinée-Bissau',en:'Guinea-Bissau',dial:'+245'},
-  {iso:'GQ',fr:'Guinée équatoriale',en:'Equatorial Guinea',dial:'+240'},
-  {iso:'GY',fr:'Guyana',en:'Guyana',dial:'+592'},
-  {iso:'HT',fr:'Haïti',en:'Haiti',dial:'+509'},
-  {iso:'HN',fr:'Honduras',en:'Honduras',dial:'+504'},
-  {iso:'HU',fr:'Hongrie',en:'Hungary',dial:'+36'},
-  {iso:'IN',fr:'Inde',en:'India',dial:'+91'},
-  {iso:'ID',fr:'Indonésie',en:'Indonesia',dial:'+62'},
-  {iso:'IQ',fr:'Irak',en:'Iraq',dial:'+964'},
-  {iso:'IR',fr:'Iran',en:'Iran',dial:'+98'},
-  {iso:'IE',fr:'Irlande',en:'Ireland',dial:'+353'},
-  {iso:'IS',fr:'Islande',en:'Iceland',dial:'+354'},
-  {iso:'IL',fr:'Israël',en:'Israel',dial:'+972'},
-  {iso:'IT',fr:'Italie',en:'Italy',dial:'+39'},
-  {iso:'JM',fr:'Jamaïque',en:'Jamaica',dial:'+1876'},
-  {iso:'JP',fr:'Japon',en:'Japan',dial:'+81'},
-  {iso:'JO',fr:'Jordanie',en:'Jordan',dial:'+962'},
-  {iso:'KZ',fr:'Kazakhstan',en:'Kazakhstan',dial:'+7'},
-  {iso:'KE',fr:'Kenya',en:'Kenya',dial:'+254'},
-  {iso:'KG',fr:'Kirghizistan',en:'Kyrgyzstan',dial:'+996'},
-  {iso:'KI',fr:'Kiribati',en:'Kiribati',dial:'+686'},
-  {iso:'XK',fr:'Kosovo',en:'Kosovo',dial:'+383'},
-  {iso:'KW',fr:'Koweït',en:'Kuwait',dial:'+965'},
-  {iso:'LA',fr:'Laos',en:'Laos',dial:'+856'},
-  {iso:'LS',fr:'Lesotho',en:'Lesotho',dial:'+266'},
-  {iso:'LV',fr:'Lettonie',en:'Latvia',dial:'+371'},
-  {iso:'LB',fr:'Liban',en:'Lebanon',dial:'+961'},
-  {iso:'LR',fr:'Libéria',en:'Liberia',dial:'+231'},
-  {iso:'LY',fr:'Libye',en:'Libya',dial:'+218'},
-  {iso:'LI',fr:'Liechtenstein',en:'Liechtenstein',dial:'+423'},
-  {iso:'LT',fr:'Lituanie',en:'Lithuania',dial:'+370'},
-  {iso:'LU',fr:'Luxembourg',en:'Luxembourg',dial:'+352'},
-  {iso:'MG',fr:'Madagascar',en:'Madagascar',dial:'+261'},
-  {iso:'MY',fr:'Malaisie',en:'Malaysia',dial:'+60'},
-  {iso:'MW',fr:'Malawi',en:'Malawi',dial:'+265'},
-  {iso:'MV',fr:'Maldives',en:'Maldives',dial:'+960'},
-  {iso:'ML',fr:'Mali',en:'Mali',dial:'+223'},
-  {iso:'MT',fr:'Malte',en:'Malta',dial:'+356'},
-  {iso:'MA',fr:'Maroc',en:'Morocco',dial:'+212'},
-  {iso:'MH',fr:'Îles Marshall',en:'Marshall Islands',dial:'+692'},
-  {iso:'MU',fr:'Maurice',en:'Mauritius',dial:'+230'},
-  {iso:'MR',fr:'Mauritanie',en:'Mauritania',dial:'+222'},
-  {iso:'MX',fr:'Mexique',en:'Mexico',dial:'+52'},
-  {iso:'FM',fr:'Micronésie',en:'Micronesia',dial:'+691'},
-  {iso:'MD',fr:'Moldavie',en:'Moldova',dial:'+373'},
-  {iso:'MC',fr:'Monaco',en:'Monaco',dial:'+377'},
-  {iso:'MN',fr:'Mongolie',en:'Mongolia',dial:'+976'},
-  {iso:'ME',fr:'Monténégro',en:'Montenegro',dial:'+382'},
-  {iso:'MZ',fr:'Mozambique',en:'Mozambique',dial:'+258'},
-  {iso:'MM',fr:'Myanmar',en:'Myanmar',dial:'+95'},
-  {iso:'NA',fr:'Namibie',en:'Namibia',dial:'+264'},
-  {iso:'NR',fr:'Nauru',en:'Nauru',dial:'+674'},
-  {iso:'NP',fr:'Népal',en:'Nepal',dial:'+977'},
-  {iso:'NI',fr:'Nicaragua',en:'Nicaragua',dial:'+505'},
-  {iso:'NE',fr:'Niger',en:'Niger',dial:'+227'},
-  {iso:'NG',fr:'Nigéria',en:'Nigeria',dial:'+234'},
-  {iso:'NO',fr:'Norvège',en:'Norway',dial:'+47'},
-  {iso:'NZ',fr:'Nouvelle-Zélande',en:'New Zealand',dial:'+64'},
-  {iso:'OM',fr:'Oman',en:'Oman',dial:'+968'},
-  {iso:'UG',fr:'Ouganda',en:'Uganda',dial:'+256'},
-  {iso:'UZ',fr:'Ouzbékistan',en:'Uzbekistan',dial:'+998'},
-  {iso:'PK',fr:'Pakistan',en:'Pakistan',dial:'+92'},
-  {iso:'PW',fr:'Palaos',en:'Palau',dial:'+680'},
-  {iso:'PS',fr:'Palestine',en:'Palestine',dial:'+970'},
-  {iso:'PA',fr:'Panama',en:'Panama',dial:'+507'},
-  {iso:'PG',fr:'Papouasie-Nvle-Guinée',en:'Papua New Guinea',dial:'+675'},
-  {iso:'PY',fr:'Paraguay',en:'Paraguay',dial:'+595'},
-  {iso:'NL',fr:'Pays-Bas',en:'Netherlands',dial:'+31'},
-  {iso:'PE',fr:'Pérou',en:'Peru',dial:'+51'},
-  {iso:'PH',fr:'Philippines',en:'Philippines',dial:'+63'},
-  {iso:'PL',fr:'Pologne',en:'Poland',dial:'+48'},
-  {iso:'PT',fr:'Portugal',en:'Portugal',dial:'+351'},
-  {iso:'QA',fr:'Qatar',en:'Qatar',dial:'+974'},
-  {iso:'DO',fr:'Rép. dominicaine',en:'Dominican Republic',dial:'+1809'},
-  {iso:'RO',fr:'Roumanie',en:'Romania',dial:'+40'},
-  {iso:'GB',fr:'Royaume-Uni',en:'United Kingdom',dial:'+44'},
-  {iso:'RU',fr:'Russie',en:'Russia',dial:'+7'},
-  {iso:'RW',fr:'Rwanda',en:'Rwanda',dial:'+250'},
-  {iso:'KN',fr:'Saint-Kitts-et-Nevis',en:'Saint Kitts and Nevis',dial:'+1869'},
-  {iso:'LC',fr:'Sainte-Lucie',en:'Saint Lucia',dial:'+1758'},
-  {iso:'VC',fr:'Saint-Vincent',en:'Saint Vincent and the Grenadines',dial:'+1784'},
-  {iso:'WS',fr:'Samoa',en:'Samoa',dial:'+685'},
-  {iso:'SM',fr:'Saint-Marin',en:'San Marino',dial:'+378'},
-  {iso:'ST',fr:'Sao Tomé-et-Principe',en:'Sao Tome and Principe',dial:'+239'},
-  {iso:'SN',fr:'Sénégal',en:'Senegal',dial:'+221'},
-  {iso:'RS',fr:'Serbie',en:'Serbia',dial:'+381'},
-  {iso:'SC',fr:'Seychelles',en:'Seychelles',dial:'+248'},
-  {iso:'SL',fr:'Sierra Leone',en:'Sierra Leone',dial:'+232'},
-  {iso:'SG',fr:'Singapour',en:'Singapore',dial:'+65'},
-  {iso:'SK',fr:'Slovaquie',en:'Slovakia',dial:'+421'},
-  {iso:'SI',fr:'Slovénie',en:'Slovenia',dial:'+386'},
-  {iso:'SB',fr:'Îles Salomon',en:'Solomon Islands',dial:'+677'},
-  {iso:'SO',fr:'Somalie',en:'Somalia',dial:'+252'},
-  {iso:'SD',fr:'Soudan',en:'Sudan',dial:'+249'},
-  {iso:'SS',fr:'Soudan du Sud',en:'South Sudan',dial:'+211'},
-  {iso:'LK',fr:'Sri Lanka',en:'Sri Lanka',dial:'+94'},
-  {iso:'SE',fr:'Suède',en:'Sweden',dial:'+46'},
-  {iso:'CH',fr:'Suisse',en:'Switzerland',dial:'+41'},
-  {iso:'SR',fr:'Suriname',en:'Suriname',dial:'+597'},
-  {iso:'SY',fr:'Syrie',en:'Syria',dial:'+963'},
-  {iso:'TJ',fr:'Tadjikistan',en:'Tajikistan',dial:'+992'},
-  {iso:'TW',fr:'Taïwan',en:'Taiwan',dial:'+886'},
-  {iso:'TZ',fr:'Tanzanie',en:'Tanzania',dial:'+255'},
-  {iso:'TD',fr:'Tchad',en:'Chad',dial:'+235'},
-  {iso:'CZ',fr:'Tchéquie',en:'Czech Republic',dial:'+420'},
-  {iso:'TH',fr:'Thaïlande',en:'Thailand',dial:'+66'},
-  {iso:'TL',fr:'Timor-Leste',en:'Timor-Leste',dial:'+670'},
-  {iso:'TG',fr:'Togo',en:'Togo',dial:'+228'},
-  {iso:'TO',fr:'Tonga',en:'Tonga',dial:'+676'},
-  {iso:'TT',fr:'Trinité-et-Tobago',en:'Trinidad and Tobago',dial:'+1868'},
-  {iso:'TN',fr:'Tunisie',en:'Tunisia',dial:'+216'},
-  {iso:'TM',fr:'Turkménistan',en:'Turkmenistan',dial:'+993'},
-  {iso:'TR',fr:'Turquie',en:'Turkey',dial:'+90'},
-  {iso:'TV',fr:'Tuvalu',en:'Tuvalu',dial:'+688'},
-  {iso:'UA',fr:'Ukraine',en:'Ukraine',dial:'+380'},
-  {iso:'UY',fr:'Uruguay',en:'Uruguay',dial:'+598'},
-  {iso:'VU',fr:'Vanuatu',en:'Vanuatu',dial:'+678'},
-  {iso:'VA',fr:'Vatican',en:'Vatican',dial:'+379'},
-  {iso:'VE',fr:'Venezuela',en:'Venezuela',dial:'+58'},
-  {iso:'VN',fr:'Viêt Nam',en:'Vietnam',dial:'+84'},
-  {iso:'YE',fr:'Yémen',en:'Yemen',dial:'+967'},
-  {iso:'ZM',fr:'Zambie',en:'Zambia',dial:'+260'},
-  {iso:'ZW',fr:'Zimbabwe',en:'Zimbabwe',dial:'+263'},
-  {iso:'US',fr:'États-Unis',en:'United States',dial:'+1'},
-];
+/* ── Cameroun uniquement ─────────────────────────── */
+var currentCountry = {iso:'CM', fr:'Cameroun', en:'Cameroon', dial:'+237'};
 
-/* ── Flag emoji ──────────────────────────────────── */
-function flag(iso){
-  if(!iso||iso.length!==2) return '🌐';
-  return iso.toUpperCase().split('').map(function(c){return String.fromCodePoint(c.charCodeAt(0)+127397);}).join('');
-}
-
-/* ── [NOUVEAU] Config des niveaux géographiques ──────────────── */
+/* ── Config des niveaux géographiques ──────────────── */
 var GEO_LEVELS = {
   region: { sel:'select-region', txt:'txt-region', hid:'h_region',  gid:'h_reg_gid',  loader:'regLoader'    },
   dept:   { sel:'select-dept',   txt:'txt-dept',   hid:'h_dept',    gid:'h_dept_gid', loader:'deptLoader'   },
   arr:    { sel:'select-arr',    txt:'txt-arr',    hid:'h_arrond',  gid:'h_arr_gid',  loader:'arrondLoader' }
 };
-
-/* ── [NOUVEAU] Map ISO→geonameId (remplie depuis /geo/pays) ── */
-var isoToGid = {};
-
-/* ── [NOUVEAU] Map ISO→dial depuis le tableau local ─────────── */
-var DIAL_MAP = {};
-COUNTRIES.forEach(function(c){ DIAL_MAP[c.iso] = c.dial; });
-
-/* ── Tom Select pays — chargé depuis /geo/pays (250 pays) ──── */
-var countryTS, currentCountry = null;
-
-function initCountrySelect(){
-  // Initialise Tom Select vide, puis charge les 250 pays depuis l'API
-  countryTS = new TomSelect('#pays_select',{
-    valueField:'value', labelField:'nom', searchField:['nom'],
-    options: [],
-    maxOptions: 300,
-    placeholder: 'Rechercher un pays...',
-    render:{
-      option: function(d,e){
-        return '<div style="display:flex;align-items:center;gap:8px">'
-          +'<span style="font-size:18px">'+flag(d.value)+'</span>'
-          +'<span>'+e(d.nom)+'</span>'
-          +(d.dial?'<span style="color:rgba(255,255,255,.35);font-size:11px;margin-left:auto">'+e(d.dial)+'</span>':'')
-          +'</div>';
-      },
-      item: function(d,e){ return '<div>'+flag(d.value)+' '+e(d.nom)+'</div>'; },
-      no_results: function(){ return '<div class="no-results" style="padding:10px;color:#555">Aucun résultat</div>'; }
-    },
-    onChange: function(v){ onCountryChange(v); }
-  });
-
-  // Charge les 250 pays depuis le proxy GeoNames (cache 30j côté serveur)
-  fetch('/geo/pays')
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      isoToGid = {};
-      var opts = data.map(function(c){
-        isoToGid[c.iso] = c.id;
-        return { value:c.iso, nom:c.nom, dial:DIAL_MAP[c.iso]||'', gid:c.id };
-      });
-      countryTS.addOptions(opts);
-      countryTS.refreshOptions(false);
-      // Restaurer old() si retour de validation
-      @if(old('iso_pays'))
-        countryTS.setValue('{{ old("iso_pays") }}');
-      @endif
-    })
-    .catch(function(){
-      // Fallback : charger depuis le tableau JS local
-      var opts = COUNTRIES.map(function(c){
-        return {value:c.iso, nom:c.fr, dial:c.dial, gid:0};
-      });
-      countryTS.addOptions(opts);
-      countryTS.refreshOptions(false);
-    });
-}
-
-/* loadGeonamesMap gardé pour compatibilité (no-op, déjà fait dans initCountrySelect) */
-function loadGeonamesMap(){}
-
-function onCountryChange(iso){
-  if(!iso) return;
-  var c = COUNTRIES.find(function(x){ return x.iso===iso; });
-  if(!c) return;
-  currentCountry = c;
-  document.getElementById('h_iso').value  = iso;
-  document.getElementById('h_dial').value = c.dial;
-  document.getElementById('h_nat').value  = c.fr;
-  document.getElementById('h_pays').value = c.fr;
-  var pn = document.getElementById('h_pays_nom'); if(pn) pn.value = c.fr;
-  var b  = document.getElementById('dialBadge');
-  b.textContent = flag(iso)+' '+c.dial; b.classList.add('loaded');
-
-  // [NOUVEAU] Stocker geonameId du pays
-  var gid = isoToGid[iso];
-  var hpg = document.getElementById('h_pays_gid'); if(hpg) hpg.value = gid||'';
-
-  // Réinitialiser tous les sous-niveaux
-  ['region','dept','arr','ville'].forEach(resetGeoLevel);
-
-  if(!gid) return;
-
-  // Cascade : pays → région → département → arrondissement
-  loadGeoLevel('regions', gid, 'region', function(regGid){
-    ['dept','arr'].forEach(resetGeoLevel);
-    loadGeoLevel('departements', regGid, 'dept', function(deptGid){
-      resetGeoLevel('arr');
-      loadGeoLevel('arrondissements', deptGid, 'arr', null);
-    });
-  });
-}
 
 /* ── [NOUVEAU] Réinitialise un niveau géo ─────────────────── */
 function resetGeoLevel(level){
@@ -877,8 +585,6 @@ function loadGeoLevel(endpoint, geonameId, level, onSelect){
 }
 
 function xss(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-/* resetSel gardé pour compatibilité */
-function resetSel(id,ph){var s=document.getElementById(id);if(s&&s.tomselect)s.tomselect.destroy();}
 
 /* ── Steps ───────────────────────────────────────── */
 var curStep=1,TOTAL=5;
@@ -907,7 +613,7 @@ function validateStep(n){
     return true;
   }
   if(n===2){
-    if(!countryTS||!countryTS.getValue()){alert('Veuillez sélectionner un pays.');return false;}
+    // Pays = Cameroun (fixe)
     if(!document.getElementById('telephone').value.trim()){markErr('telephone','Le téléphone est requis');return false;}
     return true;
   }
@@ -935,8 +641,8 @@ function buildRecap(){
   document.getElementById('recapName').textContent=prenom+' '+nom;
   document.getElementById('recapRole').textContent=roleEl.options[roleEl.selectedIndex].text;
   document.getElementById('r_email').textContent=document.getElementById('email').value||'—';
-  document.getElementById('r_tel').textContent=(document.getElementById('h_dial').value||'')+' '+document.getElementById('telephone').value;
-  document.getElementById('r_pays').textContent=currentCountry?flag(currentCountry.iso)+' '+currentCountry.fr:'—';
+  document.getElementById('r_tel').textContent='+237 '+document.getElementById('telephone').value;
+  document.getElementById('r_pays').textContent='🇨🇲 Cameroun';
   document.getElementById('r_region').textContent=document.getElementById('h_region').value||'—';
   document.getElementById('r_dept').textContent=document.getElementById('h_dept').value||'—';
   document.getElementById('r_arrond').textContent=document.getElementById('h_arrond').value||'—';
@@ -1030,9 +736,17 @@ function previewPhoto(inp){
   }
 })();
 
-/* ── Init ────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded',function(){
-  initCountrySelect(); // charge les 250 pays + geonameIds depuis /geo/pays
+/* ── Init — cascade Cameroun au chargement ─────── */
+document.addEventListener('DOMContentLoaded', function(){
+  // Déclencher la cascade région→département→arrondissement pour le Cameroun
+  // geonameId Cameroun = 2233387
+  loadGeoLevel('regions', 2233387, 'region', function(regGid){
+    ['dept','arr'].forEach(resetGeoLevel);
+    loadGeoLevel('departements', regGid, 'dept', function(deptGid){
+      resetGeoLevel('arr');
+      loadGeoLevel('arrondissements', deptGid, 'arr', null);
+    });
+  });
 });
 </script>
 </body>
