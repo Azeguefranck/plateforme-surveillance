@@ -137,11 +137,11 @@ color:#00ffcc;
 }
 
 .logout{
-background:#1a0808;
-border:1.5px solid #ff3333;
+background:#130b0b;
+border:1.5px solid #c0392b;
 padding:10px 16px;
 border-radius:10px;
-color:#ff5555;
+color:#c0392b;
 font-weight:700;
 cursor:pointer;
 font-size:13px;
@@ -151,7 +151,7 @@ gap:7px;
 transition:.2s;
 }
 .logout:hover{
-background:#ff3333;
+background:#c0392b;
 color:#fff;
 }
 

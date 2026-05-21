@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\ParametresController;
 use App\Http\Controllers\ServeursController;
 use App\Http\Controllers\SallesController;
+use App\Http\Controllers\GeoController;
 
 
 
@@ -208,6 +209,12 @@ Route::post('/profil/password', [ProfilController::class, 'changePassword']);
 Route::post('/profil/photo',    [ProfilController::class, 'uploadPhoto']);
 Route::view('/utilisateurs','utilisateurs');
 Route::view('/cameras-ip','cameras-ip');
+// [NOUVEAU] Routes proxy GeoNames (username jamais exposé côté client)
+Route::get('/geo/pays',                        [GeoController::class, 'getPays']);
+Route::get('/geo/regions/{geonameId}',         [GeoController::class, 'getRegions']);
+Route::get('/geo/departements/{geonameId}',    [GeoController::class, 'getDepartements']);
+Route::get('/geo/arrondissements/{geonameId}', [GeoController::class, 'getArrondissements']);
+Route::get('/geo/villes/{geonameId}',          [GeoController::class, 'getVilles']);
 Route::get('/salles',          [SallesController::class, 'index']);
 Route::post('/salles',         [SallesController::class, 'store']);
 Route::delete('/salles/{id}',  [SallesController::class, 'destroy']);
@@ -224,6 +231,85 @@ Route::get('/parametres',         [ParametresController::class, 'show']);
 Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
 Route::view('/rapports','rapports');
 
+// ── Actions admin par email (token sécurisé, 48h, usage unique) ──────────────
+Route::get('/admin/validate-user/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    $bad  = '<html><body style="font-family:Arial;background:#0b1120;color:#ff5733;text-align:center;padding:60px">';
+    if (!$user)
+        return response($bad.'<h1>❌ Lien invalide</h1><p style="color:#aaa">Ce lien est invalide ou a déjà été utilisé.</p></body></html>');
+    if ($user->token_expires_at && \Carbon\Carbon::parse($user->token_expires_at)->isPast())
+        return response($bad.'<h1>⏳ Lien expiré</h1><p style="color:#aaa">Ce lien a expiré (valable 48h). Demandez une nouvelle inscription.</p></body></html>');
+
+    DB::table('users')->where('id', $user->id)->update([
+        'validation_status' => 'valide',
+        'admin_token'       => null,
+        'token_expires_at'  => null,
+        'updated_at'        => now(),
+    ]);
+    try {
+        Mail::raw(
+            "Bonjour {$user->prenom} {$user->nom},\n\n" .
+            "✅ Votre compte a été VALIDÉ par l'administrateur.\n\n" .
+            "Vous pouvez maintenant vous connecter : " . url('/login') . "\n\n" .
+            "Surveillance des salles serveurs",
+            fn($m) => $m->to($user->email)->subject('✅ Compte activé — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {}
+    return response('<html><body style="font-family:Arial;background:#0b1120;color:#33ff88;text-align:center;padding:60px"><h1>✅ Compte validé</h1><p style="color:#fff">'.$user->prenom.' '.$user->nom.' peut maintenant se connecter.</p><p style="color:#aaa">Email de confirmation envoyé.</p></body></html>');
+});
+
+Route::get('/admin/refuse-user/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    $bad  = '<html><body style="font-family:Arial;background:#0b1120;color:#ff5733;text-align:center;padding:60px">';
+    if (!$user)
+        return response($bad.'<h1>❌ Lien invalide</h1><p style="color:#aaa">Ce lien est invalide ou a déjà été utilisé.</p></body></html>');
+    if ($user->token_expires_at && \Carbon\Carbon::parse($user->token_expires_at)->isPast())
+        return response($bad.'<h1>⏳ Lien expiré</h1><p style="color:#aaa">Ce lien a expiré (valable 48h).</p></body></html>');
+
+    DB::table('users')->where('id', $user->id)->update([
+        'validation_status' => 'refuse',
+        'admin_token'       => null,
+        'token_expires_at'  => null,
+        'updated_at'        => now(),
+    ]);
+    try {
+        Mail::raw(
+            "Bonjour {$user->prenom} {$user->nom},\n\n" .
+            "❌ Votre demande d'inscription a été REFUSÉE par l'administrateur.\n\n" .
+            "Si vous pensez qu'il s'agit d'une erreur, contactez l'administrateur.\n\n" .
+            "Surveillance des salles serveurs",
+            fn($m) => $m->to($user->email)->subject('❌ Inscription refusée — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {}
+    return response('<html><body style="font-family:Arial;background:#0b1120;color:#ff5733;text-align:center;padding:60px"><h1>❌ Inscription refusée</h1><p style="color:#fff">'.$user->prenom.' '.$user->nom.' a été notifié par email.</p></body></html>');
+});
+
+Route::get('/admin/pending-user/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    $bad  = '<html><body style="font-family:Arial;background:#0b1120;color:#ff5733;text-align:center;padding:60px">';
+    if (!$user)
+        return response($bad.'<h1>❌ Lien invalide</h1><p style="color:#aaa">Ce lien est invalide ou a déjà été utilisé.</p></body></html>');
+    if ($user->token_expires_at && \Carbon\Carbon::parse($user->token_expires_at)->isPast())
+        return response($bad.'<h1>⏳ Lien expiré</h1><p style="color:#aaa">Ce lien a expiré (valable 48h).</p></body></html>');
+
+    DB::table('users')->where('id', $user->id)->update([
+        'validation_status' => 'en_attente',
+        'admin_token'       => null,
+        'token_expires_at'  => null,
+        'updated_at'        => now(),
+    ]);
+    try {
+        Mail::raw(
+            "Bonjour {$user->prenom} {$user->nom},\n\n" .
+            "⏳ Votre dossier d'inscription est EN COURS D'EXAMEN par l'administrateur.\n\n" .
+            "Vous recevrez un email dès que votre compte sera activé.\n\n" .
+            "Surveillance des salles serveurs",
+            fn($m) => $m->to($user->email)->subject('⏳ Dossier en cours d\'examen — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {}
+    return response('<html><body style="font-family:Arial;background:#0b1120;color:#ffd633;text-align:center;padding:60px"><h1>⏳ Dossier en attente</h1><p style="color:#fff">'.$user->prenom.' '.$user->nom.' a été notifié que son dossier est en cours d\'examen.</p></body></html>');
+});
+
 // ── AJAX : modifier statut utilisateur ────────────────────────────────────
 Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
@@ -234,6 +320,8 @@ Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $i
 
     $target = DB::table('users')->where('id', $id)->first();
     if (!$target) return response()->json(['error' => 'Utilisateur introuvable'], 404);
+    if ($target->id == 1 || $target->role === 'superadmin')
+        return response()->json(['error' => 'Impossible de modifier le compte administrateur principal.'], 403);
 
     DB::table('users')->where('id', $id)->update(['validation_status' => $status]);
 
@@ -254,6 +342,9 @@ Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $i
 // ── AJAX : supprimer utilisateur ───────────────────────────────────────────
 Route::delete('/user/{id}', function ($id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    $target = DB::table('users')->where('id', $id)->first();
+    if ($target && ($target->id == 1 || $target->role === 'superadmin'))
+        return response()->json(['error' => 'Impossible de supprimer le compte administrateur principal.'], 403);
     DB::table('users')->where('id', $id)->delete();
     return response()->json(['success' => true, 'message' => 'Utilisateur supprimé.']);
 });

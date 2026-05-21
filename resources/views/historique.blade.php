@@ -149,7 +149,40 @@ table{display:block;overflow-x:auto}
         </div>
     </div>
     <button class="btn btn-blue" onclick="loadHistory()">&#8635; Filtrer</button>
-    <button class="btn btn-neon" onclick="exportHistory()">&#8595; CSV</button>
+</div>
+
+<!-- Export formats -->
+<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px">
+  <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:12px">&#8595; Exporter l'historique</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px">
+    <div onclick="exportHistory('csv')"   title="Tableur universel" style="background:#07102a;border:1px solid rgba(51,255,136,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,255,136,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128202;</div><div style="font-size:10px;font-weight:700;color:var(--neon)">CSV</div><div style="font-size:9px;color:#555">Tableur</div>
+    </div>
+    <div onclick="exportHistory('json')"  title="JSON API" style="background:#07102a;border:1px solid rgba(51,181,255,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,181,255,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#123;&#125;</div><div style="font-size:10px;font-weight:700;color:var(--blue)">JSON</div><div style="font-size:9px;color:#555">API</div>
+    </div>
+    <div onclick="exportHistory('xml')"   title="XML" style="background:#07102a;border:1px solid rgba(255,214,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,214,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#60;/&#62;</div><div style="font-size:10px;font-weight:700;color:var(--warn)">XML</div><div style="font-size:9px;color:#555">Échange</div>
+    </div>
+    <div onclick="exportHistory('xlsx')"  title="Excel 2007+" style="background:#07102a;border:1px solid rgba(51,255,136,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,255,136,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128202;</div><div style="font-size:10px;font-weight:700;color:#00cc66">XLSX</div><div style="font-size:9px;color:#555">Excel</div>
+    </div>
+    <div onclick="exportHistory('txt')"   title="Texte brut" style="background:#07102a;border:1px solid rgba(170,170,170,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(170,170,170,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128220;</div><div style="font-size:10px;font-weight:700;color:#aaa">TXT</div><div style="font-size:9px;color:#555">Brut</div>
+    </div>
+    <div onclick="exportHistory('sql')"   title="SQL INSERT" style="background:#07102a;border:1px solid rgba(255,153,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,153,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128190;</div><div style="font-size:10px;font-weight:700;color:#ff9933">SQL</div><div style="font-size:9px;color:#555">INSERT</div>
+    </div>
+    <div onclick="exportHistory('docx')"  title="Document Word" style="background:#07102a;border:1px solid rgba(51,181,255,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,181,255,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128196;</div><div style="font-size:10px;font-weight:700;color:var(--blue)">DOCX</div><div style="font-size:9px;color:#555">Word</div>
+    </div>
+    <div onclick="exportHistory('zip')"   title="Archive tous formats" style="background:#07102a;border:1px solid rgba(255,214,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,214,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128230;</div><div style="font-size:10px;font-weight:700;color:var(--warn)">ZIP</div><div style="font-size:9px;color:#555">Archive</div>
+    </div>
+    <div onclick="window.open('/rapports/print?type='+(currentTab==='alertes'?'alertes':'mesures')+'&debut='+document.getElementById('hDebut').value+'&fin='+document.getElementById('hFin').value,'_blank')" title="Imprimer / PDF" style="background:#07102a;border:1px solid rgba(255,87,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,87,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128438;</div><div style="font-size:10px;font-weight:700;color:var(--danger)">PDF</div><div style="font-size:9px;color:#555">Imprimer</div>
+    </div>
+  </div>
 </div>
 
 <!-- Stats strip -->
@@ -400,12 +433,15 @@ function filterTable() {
     });
 }
 
-function exportHistory() {
-    const debut = document.getElementById('hDebut').value;
-    const fin   = document.getElementById('hFin').value;
-    const type  = currentTab === 'alertes' ? 'alertes' : 'mesures';
-    window.location.href = `/rapports/export?type=${type}&format=csv&debut=${debut}&fin=${fin}`;
-    if (typeof notify === 'function') notify('Téléchargement CSV en cours...','i',2500);
+function exportHistory(format) {
+    format = format || 'csv';
+    const debut   = document.getElementById('hDebut').value;
+    const fin     = document.getElementById('hFin').value;
+    const salleId = document.getElementById('hSalle')?.value || '';
+    const type    = currentTab === 'alertes' ? 'alertes' : 'mesures';
+    window.location.href = `/rapports/export?type=${type}&format=${format}&debut=${debut}&fin=${fin}&salle_id=${salleId}`;
+    const labels = {csv:'CSV',json:'JSON',xml:'XML',xlsx:'Excel',txt:'Texte',sql:'SQL',docx:'Word',zip:'Archive ZIP'};
+    if (typeof notify === 'function') notify('Téléchargement ' + (labels[format]||format.toUpperCase()) + ' en cours...','i',2500);
 }
 
 // Load salles into dropdown

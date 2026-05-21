@@ -28,6 +28,10 @@ class AuthController extends Controller
             'pays'     => 'required|string',
         ]);
 
+        // Génération du token sécurisé pour les boutons d'action dans l'email admin
+        $adminToken    = bin2hex(random_bytes(32));
+        $tokenExpires  = now()->addHours(48);
+
         // Photo de profil
         $photoPath = null;
         if ($request->hasFile('photo_profil')) {
@@ -46,6 +50,13 @@ class AuthController extends Controller
             'telephone'        => $request->telephone,
             'indicatif_tel'    => $request->indicatif_tel,
             'pays'             => $request->pays,
+            'pays_code'         => $request->iso_pays,
+            'pays_nom'          => $request->pays_nom ?: $request->pays,
+            'pays_geoname_id'   => $request->pays_geoname_id ?: null,
+            'region_geoname_id' => $request->region_geoname_id ?: null,
+            'dept_geoname_id'   => $request->dept_geoname_id ?: null,
+            'arr_geoname_id'    => $request->arr_geoname_id ?: null,
+            'ville'             => $request->ville ?: $request->ville_residence,
             'iso_pays'         => $request->iso_pays,
             'region'           => $request->region,
             'departement'      => $request->departement,
@@ -57,6 +68,9 @@ class AuthController extends Controller
             'organisation'     => $request->organisation,
             'role'             => $request->role ?? 'utilisateur',
             'photo_profil'     => $photoPath,
+            'lieu_naissance'   => $request->lieu_naissance,
+            'admin_token'      => $adminToken,
+            'token_expires_at' => $tokenExpires,
             'password'         => Hash::make($request->password),
             'validation_status'=> 'en_attente',
             'created_at'       => now(),
@@ -82,9 +96,11 @@ class AuthController extends Controller
         } catch (\Exception $e) {}
 
         // Email HTML professionnel à l'administrateur avec 3 boutons d'action
-        $validerUrl  = url('/valider/'  . $userId);
-        $refuserUrl  = url('/refuser/'  . $userId);
-        $attenteUrl  = url('/attente/'  . $userId);
+        // On utilise l'hôte réel de la requête, pas APP_URL (évite 127.0.0.1 dans les emails)
+        $baseUrl     = $request->getSchemeAndHttpHost();
+        $validerUrl  = $baseUrl . '/admin/validate-user/' . $adminToken;
+        $refuserUrl  = $baseUrl . '/admin/refuse-user/'   . $adminToken;
+        $attenteUrl  = $baseUrl . '/admin/pending-user/'  . $adminToken;
         $adminEmail  = 'franckazegue0007@gmail.com';
 
         $esc = fn($v) => htmlspecialchars($v ?? '—', ENT_QUOTES, 'UTF-8');
@@ -117,7 +133,7 @@ class AuthController extends Controller
             . '.f{background:#060d1f;padding:14px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35}'
             . '</style></head><body>'
             . '<div class="w">'
-            . '<div class="h"><h1 class="hl">&#9889; SUPSERVER</h1><div class="hs">PLATEFORME IoT &mdash; SURVEILLANCE SALLES SERVEURS</div></div>'
+            . '<div class="h"><h1 class="hl">&#128274; NOUVELLE INSCRIPTION</h1><div class="hs">SURVEILLANCE DES SALLES SERVEURS</div></div>'
             . '<div class="b">'
             . '<div><span class="badge">&#128290; NOUVELLE INSCRIPTION</span></div>'
             . '<div class="st">Informations utilisateur</div>'
@@ -125,6 +141,11 @@ class AuthController extends Controller
             . '<tr><td class="k">Nom complet</td><td class="v">' . $p . ' ' . $n . '</td></tr>'
             . '<tr><td class="k">Email</td><td class="v">' . $em . '</td></tr>'
             . '<tr><td class="k">T&eacute;l&eacute;phone</td><td class="v">' . $tel . '</td></tr>'
+            . '<tr><td class="k">Sexe</td><td class="v">' . $esc($request->sexe) . '</td></tr>'
+            . '<tr><td class="k">Date de naissance</td><td class="v">' . $esc($request->date_naissance) . '</td></tr>'
+            . '<tr><td class="k">Lieu de naissance</td><td class="v">' . $esc($request->lieu_naissance) . '</td></tr>'
+            . '<tr><td class="k">Nationalit&eacute;</td><td class="v">' . $esc($request->nationalite) . '</td></tr>'
+            . '<tr><td class="k">Statut matrimonial</td><td class="v">' . $esc($request->statut_matrimonial) . '</td></tr>'
             . '<tr><td class="k">Pays</td><td class="v">' . $esc($request->pays) . '</td></tr>'
             . '<tr><td class="k">R&eacute;gion</td><td class="v">' . $esc($request->region) . '</td></tr>'
             . '<tr><td class="k">D&eacute;partement</td><td class="v">' . $esc($request->departement) . '</td></tr>'
@@ -133,6 +154,7 @@ class AuthController extends Controller
             . '<tr><td class="k">Profession</td><td class="v">' . $esc($request->profession) . '</td></tr>'
             . '<tr><td class="k">Organisation</td><td class="v">' . $esc($request->organisation) . '</td></tr>'
             . '<tr><td class="k">R&ocirc;le demand&eacute;</td><td class="v">' . $esc($request->role ?? 'utilisateur') . '</td></tr>'
+            . '<tr><td class="k">Photo de profil</td><td class="v">' . ($photoPath ? '&#10003; Oui ('.$photoPath.')' : 'Non') . '</td></tr>'
             . '<tr><td class="k">Date inscription</td><td class="v">' . now()->format('d/m/Y H:i:s') . '</td></tr>'
             . '</table>'
             . '<div class="acts">'

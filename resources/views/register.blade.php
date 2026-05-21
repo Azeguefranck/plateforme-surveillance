@@ -81,6 +81,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,san
 .finp::placeholder{color:rgba(255,255,255,.2);}
 .finp[readonly]{color:rgba(255,255,255,.4);cursor:default;}
 select.finp option{background:#0c1c34;color:#fff;}
+.dob-grid{display:grid;grid-template-columns:1fr 1.6fr 1.3fr;gap:6px;}
 
 /* Tom Select dark */
 .ts-wrapper .ts-control{background:rgba(0,0,0,.35)!important;border:1px solid rgba(57,255,20,.15)!important;
@@ -224,10 +225,13 @@ select.finp option{background:#0c1c34;color:#fff;}
 
       <form action="/register-user" method="POST" enctype="multipart/form-data" id="regForm" novalidate>
         @csrf
-        <input type="hidden" name="iso_pays"      id="h_iso">
-        <input type="hidden" name="indicatif_tel" id="h_dial">
-        <input type="hidden" name="nationalite"   id="h_nat">
+        <input type="hidden" name="iso_pays"         id="h_iso">
+        <input type="hidden" name="indicatif_tel"  id="h_dial">
+        <input type="hidden" name="nationalite"    id="h_nat">
         <input type="hidden" name="pays"           id="h_pays">
+        {{-- [NOUVEAU] GeoNames IDs --}}
+        <input type="hidden" name="pays_geoname_id"   id="h_pays_gid">
+        <input type="hidden" name="pays_nom"           id="h_pays_nom">
 
         {{-- ══ STEP 1 : IDENTITÉ ══ --}}
         <div class="step-pane active" id="pane1">
@@ -261,7 +265,34 @@ select.finp option{background:#0c1c34;color:#fff;}
             </div>
             <div class="fld">
               <label class="flbl">Date de naissance</label>
-              <input class="finp" type="date" name="date_naissance" value="{{ old('date_naissance') }}" max="{{ date('Y-m-d') }}">
+              <div class="dob-grid">
+                <select class="finp" id="dp-day">
+                  <option value="">Jour</option>
+                </select>
+                <select class="finp" id="dp-month">
+                  <option value="">Mois</option>
+                  <option value="01">Janvier</option>
+                  <option value="02">Février</option>
+                  <option value="03">Mars</option>
+                  <option value="04">Avril</option>
+                  <option value="05">Mai</option>
+                  <option value="06">Juin</option>
+                  <option value="07">Juillet</option>
+                  <option value="08">Août</option>
+                  <option value="09">Septembre</option>
+                  <option value="10">Octobre</option>
+                  <option value="11">Novembre</option>
+                  <option value="12">Décembre</option>
+                </select>
+                <select class="finp" id="dp-year">
+                  <option value="">Année</option>
+                </select>
+              </div>
+              <input type="hidden" name="date_naissance" id="dob-hidden" value="{{ old('date_naissance') }}">
+            </div>
+            <div class="fld">
+              <label class="flbl">Lieu de naissance</label>
+              <input class="finp" type="text" name="lieu_naissance" placeholder="Ville et pays de naissance" value="{{ old('lieu_naissance') }}">
             </div>
             <div class="fld f-full">
               <label class="flbl">Statut matrimonial</label>
@@ -289,10 +320,12 @@ select.finp option{background:#0c1c34;color:#fff;}
           <div class="pane-title">🌍 Localisation géographique</div>
           <div class="pane-sub">Votre pays, région et adresse</div>
           <div class="fg">
+            {{-- Pays --}}
             <div class="fld f-full">
               <label class="flbl">Pays <span class="req">*</span></label>
               <select id="pays_select" name="_pays_ts" placeholder="Rechercher un pays..."></select>
             </div>
+            {{-- Téléphone --}}
             <div class="fld f-full">
               <label class="flbl">Téléphone <span class="req">*</span></label>
               <div class="dial-row">
@@ -300,44 +333,44 @@ select.finp option{background:#0c1c34;color:#fff;}
                 <input class="finp" type="tel" name="telephone" id="telephone" placeholder="Numéro de téléphone" style="flex:1" value="{{ old('telephone') }}">
               </div>
             </div>
-            {{-- Niveau 2 : Région --}}
+            {{-- [NOUVEAU] Niveau 2 : Région (Tom Select ou texte libre) --}}
             <div class="fld">
               <label class="flbl">🌐 Région / Province / État</label>
-              <select class="finp" name="region" id="region_sel" disabled>
-                <option value="">— Choisir un pays d'abord —</option>
-              </select>
               <div class="loader" id="regLoader"><div class="spin"></div> Chargement des régions...</div>
+              <select id="select-region" placeholder="— Choisir un pays d'abord —"></select>
+              <input class="finp" id="txt-region" type="text" placeholder="Saisir la région..." style="display:none">
+              <input type="hidden" name="region"            id="h_region"  value="{{ old('region') }}">
+              <input type="hidden" name="region_geoname_id" id="h_reg_gid" value="{{ old('region_geoname_id') }}">
             </div>
-            {{-- Niveau 3 : Département --}}
+            {{-- [NOUVEAU] Niveau 3 : Département (Tom Select ou texte libre) --}}
             <div class="fld">
               <label class="flbl">🏛️ Département / District / Comté</label>
-              <select class="finp" name="departement" id="dept_sel" disabled>
-                <option value="">— Choisir une région d'abord —</option>
-              </select>
-              <div class="loader" id="deptLoader"><div class="spin"></div> Chargement des départements...</div>
+              <div class="loader" id="deptLoader"><div class="spin"></div> Chargement...</div>
+              <select id="select-dept" placeholder="— Choisir une région d'abord —"></select>
+              <input class="finp" id="txt-dept" type="text" placeholder="Saisir le département..." style="display:none">
+              <input type="hidden" name="departement"     id="h_dept"     value="{{ old('departement') }}">
+              <input type="hidden" name="dept_geoname_id" id="h_dept_gid" value="{{ old('dept_geoname_id') }}">
             </div>
-            {{-- Niveau 4 : Arrondissement --}}
+            {{-- [NOUVEAU] Niveau 4 : Arrondissement (Tom Select ou texte libre) --}}
             <div class="fld">
               <label class="flbl">🏘️ Arrondissement / Commune</label>
-              <input type="hidden" name="arrondissement" id="h_arrond" value="{{ old('arrondissement') }}">
-              <select class="finp" id="arrond_sel" style="display:none">
-                <option value="">— Sélectionner un arrondissement —</option>
-              </select>
-              <input class="finp" id="arrond_txt" type="text" placeholder="Ex: Yaoundé 1er, Lyon 3e, District 1..." value="{{ old('arrondissement') }}">
-              <div class="loader" id="arrondLoader" style="display:none"><div class="spin"></div> Chargement...</div>
+              <div class="loader" id="arrondLoader"><div class="spin"></div> Chargement...</div>
+              <select id="select-arr" placeholder="— Choisir un département d'abord —"></select>
+              <input class="finp" id="txt-arr" type="text" placeholder="Saisir l'arrondissement..." style="display:none">
+              <input type="hidden" name="arrondissement"  id="h_arrond"   value="{{ old('arrondissement') }}">
+              <input type="hidden" name="arr_geoname_id"  id="h_arr_gid"  value="{{ old('arr_geoname_id') }}">
             </div>
-            {{-- Niveau 5 : Ville --}}
+            {{-- Niveau 5 : Ville / Résidence (saisie libre) --}}
             <div class="fld">
               <label class="flbl">🏙️ Ville / Résidence</label>
-              <select class="finp" name="ville_residence" id="ville_sel" disabled>
-                <option value="">— Choisir un département d'abord —</option>
-              </select>
-              <div class="loader" id="villeLoader"><div class="spin"></div> Chargement des villes...</div>
+              <input class="finp" type="text" name="ville_residence" id="h_ville" placeholder="Ex: Yaoundé, Douala, Paris..." value="{{ old('ville_residence') }}">
             </div>
+            {{-- Quartier --}}
             <div class="fld">
               <label class="flbl">Quartier</label>
               <input class="finp" type="text" name="quartier" placeholder="Ex: Bastos, Montmartre, Downtown..." value="{{ old('quartier') }}">
             </div>
+            {{-- Adresse --}}
             <div class="fld">
               <label class="flbl">Adresse complète</label>
               <input class="finp" type="text" name="adresse" placeholder="Rue, numéro, bâtiment..." value="{{ old('adresse') }}">
@@ -678,169 +711,174 @@ function flag(iso){
   return iso.toUpperCase().split('').map(function(c){return String.fromCodePoint(c.charCodeAt(0)+127397);}).join('');
 }
 
-/* ── Tom Select ──────────────────────────────────── */
-var countryTS, currentCountry=null;
+/* ── [NOUVEAU] Config des niveaux géographiques ──────────────── */
+var GEO_LEVELS = {
+  region: { sel:'select-region', txt:'txt-region', hid:'h_region',  gid:'h_reg_gid',  loader:'regLoader'    },
+  dept:   { sel:'select-dept',   txt:'txt-dept',   hid:'h_dept',    gid:'h_dept_gid', loader:'deptLoader'   },
+  arr:    { sel:'select-arr',    txt:'txt-arr',    hid:'h_arrond',  gid:'h_arr_gid',  loader:'arrondLoader' }
+};
+
+/* ── [NOUVEAU] Map ISO→geonameId (remplie depuis /geo/pays) ── */
+var isoToGid = {};
+
+/* ── [NOUVEAU] Map ISO→dial depuis le tableau local ─────────── */
+var DIAL_MAP = {};
+COUNTRIES.forEach(function(c){ DIAL_MAP[c.iso] = c.dial; });
+
+/* ── Tom Select pays — chargé depuis /geo/pays (250 pays) ──── */
+var countryTS, currentCountry = null;
 
 function initCountrySelect(){
-  var opts=COUNTRIES.map(function(c){
-    return {value:c.iso,text:flag(c.iso)+' '+c.fr,fr:c.fr,en:c.en,dial:c.dial};
-  });
-  countryTS=new TomSelect('#pays_select',{
-    valueField:'value',labelField:'text',searchField:['fr','en'],
-    options:opts,
+  // Initialise Tom Select vide, puis charge les 250 pays depuis l'API
+  countryTS = new TomSelect('#pays_select',{
+    valueField:'value', labelField:'nom', searchField:['nom'],
+    options: [],
+    maxOptions: 300,
+    placeholder: 'Rechercher un pays...',
     render:{
-      option:function(d,e){
-        return '<div style="display:flex;align-items:center;gap:8px">'+
-          '<span style="font-size:18px">'+d.text.split(' ')[0]+'</span>'+
-          '<span>'+e(d.fr)+'</span>'+
-          '<span style="color:rgba(255,255,255,.35);font-size:11px;margin-left:auto">'+e(d.dial)+'</span></div>';
+      option: function(d,e){
+        return '<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:18px">'+flag(d.value)+'</span>'
+          +'<span>'+e(d.nom)+'</span>'
+          +(d.dial?'<span style="color:rgba(255,255,255,.35);font-size:11px;margin-left:auto">'+e(d.dial)+'</span>':'')
+          +'</div>';
       },
-      item:function(d,e){return '<div>'+d.text.split(' ')[0]+' '+e(d.fr)+'</div>';}
+      item: function(d,e){ return '<div>'+flag(d.value)+' '+e(d.nom)+'</div>'; },
+      no_results: function(){ return '<div class="no-results" style="padding:10px;color:#555">Aucun résultat</div>'; }
     },
-    onChange:function(v){onCountryChange(v);}
+    onChange: function(v){ onCountryChange(v); }
   });
+
+  // Charge les 250 pays depuis le proxy GeoNames (cache 30j côté serveur)
+  fetch('/geo/pays')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      isoToGid = {};
+      var opts = data.map(function(c){
+        isoToGid[c.iso] = c.id;
+        return { value:c.iso, nom:c.nom, dial:DIAL_MAP[c.iso]||'', gid:c.id };
+      });
+      countryTS.addOptions(opts);
+      countryTS.refreshOptions(false);
+      // Restaurer old() si retour de validation
+      @if(old('iso_pays'))
+        countryTS.setValue('{{ old("iso_pays") }}');
+      @endif
+    })
+    .catch(function(){
+      // Fallback : charger depuis le tableau JS local
+      var opts = COUNTRIES.map(function(c){
+        return {value:c.iso, nom:c.fr, dial:c.dial, gid:0};
+      });
+      countryTS.addOptions(opts);
+      countryTS.refreshOptions(false);
+    });
 }
+
+/* loadGeonamesMap gardé pour compatibilité (no-op, déjà fait dans initCountrySelect) */
+function loadGeonamesMap(){}
 
 function onCountryChange(iso){
   if(!iso) return;
-  var c=COUNTRIES.find(function(x){return x.iso===iso;});
+  var c = COUNTRIES.find(function(x){ return x.iso===iso; });
   if(!c) return;
-  currentCountry=c;
-  document.getElementById('h_iso').value=iso;
-  document.getElementById('h_dial').value=c.dial;
-  document.getElementById('h_nat').value=c.fr;
-  document.getElementById('h_pays').value=c.fr;
-  var b=document.getElementById('dialBadge');
-  b.textContent=flag(iso)+' '+c.dial; b.classList.add('loaded');
-  resetSel('region_sel','— Chargement des régions... —');
-  resetSel('dept_sel','— Choisir une région d\'abord —');
-  resetSel('ville_sel','— Choisir un département d\'abord —');
-  resetArrond();
-  loadRegions(c.en);
-}
+  currentCountry = c;
+  document.getElementById('h_iso').value  = iso;
+  document.getElementById('h_dial').value = c.dial;
+  document.getElementById('h_nat').value  = c.fr;
+  document.getElementById('h_pays').value = c.fr;
+  var pn = document.getElementById('h_pays_nom'); if(pn) pn.value = c.fr;
+  var b  = document.getElementById('dialBadge');
+  b.textContent = flag(iso)+' '+c.dial; b.classList.add('loaded');
 
-function loadRegions(countryEn){
-  var sel=document.getElementById('region_sel');
-  var ld=document.getElementById('regLoader');
-  sel.disabled=true; ld.classList.add('show');
-  fetch('/api/geo/states/'+encodeURIComponent(countryEn))
-    .then(function(r){return r.json();})
-    .then(function(data){
-      ld.classList.remove('show');
-      sel.innerHTML='<option value="">— Sélectionner une région —</option>';
-      if(data&&data.length){
-        data.forEach(function(s){sel.innerHTML+='<option value="'+xss(s)+'">'+xss(s)+'</option>';});
-        sel.disabled=false;
-      } else {
-        sel.innerHTML='<option value="">— Aucune région —</option>';
-        loadCities(currentCountry.en,null);
-      }
-    }).catch(function(){ld.classList.remove('show');});
-}
+  // [NOUVEAU] Stocker geonameId du pays
+  var gid = isoToGid[iso];
+  var hpg = document.getElementById('h_pays_gid'); if(hpg) hpg.value = gid||'';
 
-document.addEventListener('DOMContentLoaded',function(){
-  // Région → Département
-  document.getElementById('region_sel').addEventListener('change',function(){
-    var reg = this.value;
-    resetSel('dept_sel','— Choisir une région d\'abord —');
-    resetSel('ville_sel','— Choisir un département d\'abord —');
-    resetArrond();
-    if(reg && currentCountry) loadDepts(currentCountry.en, reg);
+  // Réinitialiser tous les sous-niveaux
+  ['region','dept','arr','ville'].forEach(resetGeoLevel);
+
+  if(!gid) return;
+
+  // Cascade : pays → région → département → arrondissement
+  loadGeoLevel('regions', gid, 'region', function(regGid){
+    ['dept','arr'].forEach(resetGeoLevel);
+    loadGeoLevel('departements', regGid, 'dept', function(deptGid){
+      resetGeoLevel('arr');
+      loadGeoLevel('arrondissements', deptGid, 'arr', null);
+    });
   });
-  // Département → Arrondissement + Ville
-  document.getElementById('dept_sel').addEventListener('change',function(){
-    var dept = this.value;
-    resetSel('ville_sel','— Choisir un département d\'abord —');
-    resetArrond();
-    if(dept && currentCountry){
-      loadArronds(currentCountry.en, dept);
-      loadVilles(currentCountry.en, dept);
-    }
-  });
-  // Sync arrondissement hidden input
-  document.getElementById('arrond_sel').addEventListener('change',function(){
-    document.getElementById('h_arrond').value=this.value;
-  });
-  document.getElementById('arrond_txt').addEventListener('input',function(){
-    document.getElementById('h_arrond').value=this.value;
-  });
-});
-
-/* ── Niveau 3 : Département (via state-cities) ── */
-function loadDepts(countryEn, region){
-  var sel=document.getElementById('dept_sel');
-  var ld=document.getElementById('deptLoader');
-  sel.disabled=true; sel.innerHTML='<option value="">— Chargement... —</option>';
-  ld.classList.add('show');
-  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(region))
-    .then(function(r){return r.json();})
-    .then(function(data){
-      ld.classList.remove('show');
-      sel.innerHTML='<option value="">— Sélectionner un département —</option>';
-      if(data && data.length){
-        data.slice(0,500).forEach(function(v){sel.innerHTML+='<option value="'+xss(v)+'">'+xss(v)+'</option>';});
-        sel.disabled=false;
-      } else {
-        sel.innerHTML='<option value="">— Aucune donnée (saisie libre) —</option>';
-        sel.disabled=false;
-      }
-    }).catch(function(){ld.classList.remove('show'); sel.disabled=false;});
 }
 
-/* ── Niveau 4 : Arrondissement (via subcities, fallback text) ── */
-function loadArronds(countryEn, dept){
-  var sel=document.getElementById('arrond_sel');
-  var txt=document.getElementById('arrond_txt');
-  var ld=document.getElementById('arrondLoader');
-  var hid=document.getElementById('h_arrond');
-  sel.style.display='none'; txt.style.display='none';
-  ld.style.display='flex'; hid.value='';
-  fetch('/api/geo/subcities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
-    .then(function(r){return r.json();})
-    .then(function(data){
-      ld.style.display='none';
-      if(data && data.length){
-        sel.innerHTML='<option value="">— Sélectionner un arrondissement —</option>';
-        data.slice(0,400).forEach(function(v){sel.innerHTML+='<option value="'+xss(v)+'">'+xss(v)+'</option>';});
-        sel.style.display=''; txt.style.display='none';
-      } else {
-        sel.style.display='none'; txt.style.display='';
-        txt.placeholder='Saisir l\'arrondissement / commune...';
-      }
-    }).catch(function(){ld.style.display='none'; txt.style.display='';});
+/* ── [NOUVEAU] Réinitialise un niveau géo ─────────────────── */
+function resetGeoLevel(level){
+  var cfg = GEO_LEVELS[level]; if(!cfg) return;
+  var sel = document.getElementById(cfg.sel);
+  var txt = document.getElementById(cfg.txt);
+  if(sel){ if(sel.tomselect) sel.tomselect.destroy(); sel.innerHTML=''; sel.style.display='none'; }
+  if(txt){ txt.style.display='none'; txt.value=''; txt.oninput=null; }
+  var h = document.getElementById(cfg.hid); if(h) h.value='';
+  var g = cfg.gid ? document.getElementById(cfg.gid) : null; if(g) g.value='';
 }
 
-/* ── Niveau 5 : Ville (via state-cities du département) ── */
-function loadVilles(countryEn, dept){
-  var sel=document.getElementById('ville_sel');
-  var ld=document.getElementById('villeLoader');
-  sel.disabled=true; sel.innerHTML='<option value="">— Chargement... —</option>';
-  ld.classList.add('show');
-  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
-    .then(function(r){return r.json();})
-    .then(function(data){
-      ld.classList.remove('show');
-      sel.innerHTML='<option value="">— Sélectionner une ville —</option>';
-      if(data && data.length){
-        data.slice(0,300).forEach(function(v){sel.innerHTML+='<option value="'+xss(v)+'">'+xss(v)+'</option>';});
-        sel.disabled=false;
-      } else {
-        sel.innerHTML='<option value="">— Saisir manuellement —</option>';
-        sel.disabled=false;
-      }
-    }).catch(function(){ld.classList.remove('show'); sel.disabled=false;});
-}
+/* ── [NOUVEAU] Charge un niveau via proxy GeoNames ──────────── */
+function loadGeoLevel(endpoint, geonameId, level, onSelect){
+  var cfg = GEO_LEVELS[level]; if(!cfg) return;
+  var sel    = document.getElementById(cfg.sel);
+  var txt    = document.getElementById(cfg.txt);
+  var loader = document.getElementById(cfg.loader);
 
-function resetArrond(){
-  var sel=document.getElementById('arrond_sel');
-  var txt=document.getElementById('arrond_txt');
-  sel.style.display='none'; sel.innerHTML='<option value="">—</option>';
-  txt.style.display=''; txt.value='';
-  document.getElementById('h_arrond').value='';
+  // Cacher, montrer loader
+  if(sel){ if(sel.tomselect) sel.tomselect.destroy(); sel.innerHTML=''; sel.style.display='none'; }
+  if(txt) txt.style.display='none';
+  if(loader) loader.classList.add('show');
+
+  fetch('/geo/'+endpoint+'/'+geonameId)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(loader) loader.classList.remove('show');
+      if(data && data.length > 0){
+        // Tom Select avec les données GeoNames
+        if(sel){
+          sel.style.display = '';
+          new TomSelect('#'+cfg.sel, {
+            valueField:'id', labelField:'nom', searchField:['nom'],
+            options: data,
+            placeholder: '— Sélectionner —',
+            allowEmptyOption: true,
+            create: false,
+            onChange: function(val){
+              if(!val) return;
+              var item = data.find(function(d){ return String(d.id)===String(val); });
+              var h = document.getElementById(cfg.hid); if(h) h.value = item ? item.nom : '';
+              var g = cfg.gid ? document.getElementById(cfg.gid) : null; if(g) g.value = val;
+              if(onSelect) onSelect(val);
+            }
+          });
+        }
+      } else {
+        // Fallback : champ texte libre
+        if(sel) sel.style.display='none';
+        if(txt){
+          txt.style.display='';
+          txt.disabled = false;
+          txt.oninput = function(){
+            var h = document.getElementById(cfg.hid); if(h) h.value=this.value;
+            if(onSelect && this.value) onSelect('free_'+this.value);
+          };
+        }
+      }
+    })
+    .catch(function(){
+      if(loader) loader.classList.remove('show');
+      if(sel) sel.style.display='none';
+      if(txt){ txt.style.display=''; txt.disabled=false; }
+    });
 }
 
 function xss(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function resetSel(id,ph){var s=document.getElementById(id);if(s){s.innerHTML='<option value="">'+ph+'</option>';s.disabled=true;}}
+/* resetSel gardé pour compatibilité */
+function resetSel(id,ph){var s=document.getElementById(id);if(s&&s.tomselect)s.tomselect.destroy();}
 
 /* ── Steps ───────────────────────────────────────── */
 var curStep=1,TOTAL=5;
@@ -899,8 +937,8 @@ function buildRecap(){
   document.getElementById('r_email').textContent=document.getElementById('email').value||'—';
   document.getElementById('r_tel').textContent=(document.getElementById('h_dial').value||'')+' '+document.getElementById('telephone').value;
   document.getElementById('r_pays').textContent=currentCountry?flag(currentCountry.iso)+' '+currentCountry.fr:'—';
-  document.getElementById('r_region').textContent=document.getElementById('region_sel').value||'—';
-  document.getElementById('r_dept').textContent=document.getElementById('dept_sel').value||'—';
+  document.getElementById('r_region').textContent=document.getElementById('h_region').value||'—';
+  document.getElementById('r_dept').textContent=document.getElementById('h_dept').value||'—';
   document.getElementById('r_arrond').textContent=document.getElementById('h_arrond').value||'—';
   document.getElementById('r_prof').textContent=document.querySelector('[name=profession]').value||'—';
   document.getElementById('r_org').textContent=document.querySelector('[name=organisation]').value||'—';
@@ -952,12 +990,49 @@ function previewPhoto(inp){
   r.readAsDataURL(inp.files[0]);
 }
 
+/* ── Date picker (jour / mois / année) ────────────── */
+(function(){
+  function daysInMonth(m,y){return m?new Date(y||2000,parseInt(m),0).getDate():31;}
+  function fillDays(n,cur){
+    var s=document.getElementById('dp-day');if(!s)return;
+    s.innerHTML='<option value="">Jour</option>';
+    for(var d=1;d<=n;d++){var o=document.createElement('option');o.value=String(d).padStart(2,'0');o.textContent=d;s.appendChild(o);}
+    if(cur)s.value=cur;
+  }
+  function syncHidden(){
+    var d=document.getElementById('dp-day'),m=document.getElementById('dp-month'),y=document.getElementById('dp-year'),h=document.getElementById('dob-hidden');
+    if(!d||!m||!y||!h)return;
+    h.value=(y.value&&m.value&&d.value)?y.value+'-'+m.value+'-'+d.value:'';
+  }
+  function onMonthYear(){
+    var d=document.getElementById('dp-day'),m=document.getElementById('dp-month'),y=document.getElementById('dp-year');
+    if(!d||!m||!y)return;
+    fillDays(daysInMonth(m.value,y.value),d.value);
+    syncHidden();
+  }
+  var yearSel=document.getElementById('dp-year');
+  if(yearSel){
+    var now=new Date().getFullYear();
+    for(var yr=now;yr>=now-120;yr--){var o=document.createElement('option');o.value=yr;o.textContent=yr;yearSel.appendChild(o);}
+  }
+  fillDays(31,'');
+  var ms=document.getElementById('dp-month'),ys=document.getElementById('dp-year'),ds=document.getElementById('dp-day');
+  if(ms)ms.onchange=onMonthYear;
+  if(ys)ys.onchange=onMonthYear;
+  if(ds)ds.onchange=syncHidden;
+  // Pre-populate from old() value
+  var old=document.getElementById('dob-hidden');
+  if(old&&old.value&&/^\d{4}-\d{2}-\d{2}$/.test(old.value)){
+    var pts=old.value.split('-');
+    if(ys)ys.value=pts[0];
+    if(ms)ms.value=pts[1];
+    fillDays(daysInMonth(pts[1],pts[0]),pts[2]);
+  }
+})();
+
 /* ── Init ────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded',function(){
-  initCountrySelect();
-  @if(old('iso_pays'))
-    countryTS.setValue('{{ old("iso_pays") }}');
-  @endif
+  initCountrySelect(); // charge les 250 pays + geonameIds depuis /geo/pays
 });
 </script>
 </body>
