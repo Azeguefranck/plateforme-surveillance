@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-"""
-serial_relay.py — Arduino USB Serial -> API Laravel
-DTR=False : ne reset PAS l'Arduino a l'ouverture du port.
-
-Lancer  : python3 serial_relay.py
-Fond    : nohup python3 serial_relay.py >> /tmp/relay.log 2>&1 &
-Arreter : pkill -f serial_relay.py
-UPLOAD  : pkill -f serial_relay.py  AVANT de telecharger dans Arduino IDE
-"""
+# Lit les données Arduino sur USB et les envoie à l'API Laravel.
+# Lancer  : python3 serial_relay.py
+# Fond    : nohup python3 serial_relay.py >> /tmp/relay.log 2>&1 &
+# Arrêter : pkill -f serial_relay.py
 
 import serial
 import json
@@ -24,12 +19,12 @@ PORTS     = ["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyUSB0", "/dev/ttyUSB1"]
 
 
 def ouvrir_port(port: str):
-    """Ouvre le port Serie SANS asserter DTR (evite le reset Arduino)."""
+    # DTR=False pour ne pas réinitialiser l'Arduino à l'ouverture du port
     s = serial.Serial()
     s.port     = port
     s.baudrate = BAUD_RATE
     s.timeout  = 5
-    s.dtr      = False   # NE PAS reset l'Arduino a l'ouverture
+    s.dtr      = False
     s.rts      = False
     s.open()
     time.sleep(0.5)
@@ -72,7 +67,7 @@ def traiter_ligne(line: str):
         return
 
     try:
-        # Arduino snprintf ne supporte pas %f sur AVR → remplace "?" par 0
+        # Arduino AVR ne supporte pas %f dans snprintf, remplace "?" par 0
         line_clean = re.sub(r':\s*\?', ':0', line)
         data = json.loads(line_clean)
     except json.JSONDecodeError:
@@ -82,7 +77,6 @@ def traiter_ligne(line: str):
     msg_type = data.get("type", "")
     ts       = time.strftime("%H:%M:%S")
 
-    # Données live (cycle 2s) → fichier JSON, pas en base de données
     if msg_type == "live":
         live = {
             "temperature": data.get("temperature", 0),
@@ -101,7 +95,6 @@ def traiter_ligne(line: str):
             pass
         return
 
-    # Donnees capteurs (cycle 30s) → POST /api/capteurs
     if msg_type == "donnees":
         payload = {
             "temperature": data.get("temperature", 0),
@@ -114,18 +107,17 @@ def traiter_ligne(line: str):
         }
         ok, alertes = post_capteurs(payload)
         if ok:
-            t    = payload["temperature"]
-            h    = payload["humidite"]
-            g    = payload["gaz"]
-            i    = payload["courant"]
-            p    = payload["puissance"]
-            pir  = payload["pir"]
+            t   = payload["temperature"]
+            h   = payload["humidite"]
+            g   = payload["gaz"]
+            i   = payload["courant"]
+            p   = payload["puissance"]
+            pir = payload["pir"]
             extra = f"  | {alertes} alerte(s)" if alertes else ""
-            print(f"[OK]  {ts}  T={t}C  H={h}%  Gaz={g}  I={i}A  P={p}W  PIR={pir}{extra}", flush=True)
+            print(f"[OK]  {ts}  T:{t}C  H:{h}%  G:{g}  I:{i}A  P:{p}W  PIR:{pir}{extra}", flush=True)
         else:
             print(f"[ERR] {ts}  {alertes}", flush=True)
 
-    # Intrusion PIR immediate → POST avec pir=1 pour email serveur
     elif msg_type == "alerte" and data.get("categorie") == "INTRUSION":
         payload = {
             "temperature": data.get("temperature", 0),
@@ -139,7 +131,6 @@ def traiter_ligne(line: str):
         ok, _ = post_capteurs(payload)
         print(f"[PIR] {ts}  INTRUSION -> email {'OK' if ok else 'ERREUR'}", flush=True)
 
-    # Autres alertes seuils → log (email gere cote serveur via donnees)
     elif msg_type == "alerte":
         cat = data.get("categorie", "?")
         niv = data.get("niveau", "?")
@@ -147,21 +138,20 @@ def traiter_ligne(line: str):
 
 
 def run():
-    print(f"[RELAY] Recherche port Arduino...", flush=True)
+    print(f"[RELAY] Recherche du port Arduino...", flush=True)
 
     port = trouver_port()
     if not port:
-        print("[RELAY] Aucun port trouve. Branchez l'Arduino et relancez.", flush=True)
+        print("[RELAY] Aucun port trouvé. Branchez l'Arduino et relancez.", flush=True)
         sys.exit(1)
 
     print(f"[RELAY] {time.strftime('%H:%M:%S')}  {port}  ->  {API_URL}", flush=True)
-    print(f"[RELAY] DTR=False (Arduino ne reset pas a l'ouverture)", flush=True)
-    print("-" * 60, flush=True)
+    print(f"[RELAY] DTR=False (pas de reset à l'ouverture)", flush=True)
 
     while True:
         try:
             ser = ouvrir_port(port)
-            print(f"[RELAY] Port ouvert. Attente donnees...", flush=True)
+            print(f"[RELAY] Port ouvert. En attente de données...", flush=True)
             buf = b""
             while True:
                 try:
@@ -180,7 +170,7 @@ def run():
                         try:
                             traiter_ligne(line)
                         except Exception as ex:
-                            print(f"[RELAY] Erreur traitement: {ex}", flush=True)
+                            print(f"[RELAY] Erreur: {ex}", flush=True)
                 else:
                     buf += byte
                     if len(buf) > 600:
@@ -190,7 +180,7 @@ def run():
             print(f"[RELAY] Reconnexion dans 5s... ({e})", flush=True)
             time.sleep(5)
         except KeyboardInterrupt:
-            print("\n[RELAY] Arret.", flush=True)
+            print("\n[RELAY] Arrêt.", flush=True)
             sys.exit(0)
 
 
