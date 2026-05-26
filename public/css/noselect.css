@@ -1,0 +1,380 @@
+/*
+ * ================================================================
+ *  PLATEFORME SURVEILLANCE — Anti-sélection globale
+ *  Ce fichier est chargé EN PREMIER sur toutes les pages.
+ *  Il désactive la sélection de texte sur tous les éléments
+ *  non-formulaire et réactive correctement les champs de saisie.
+ * ================================================================
+ */
+
+/* ── 1. Désactivation globale ── */
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ── 2. Désactivation drag involontaire ── */
+img,
+svg,
+canvas,
+video {
+  -webkit-user-drag: none;
+          user-drag: none;
+  pointer-events: auto;
+}
+
+/* ── 3. Curseur par défaut sur les éléments non-cliquables ── */
+body,
+div,
+section,
+article,
+aside,
+header,
+footer,
+main,
+nav,
+span,
+p,
+h1, h2, h3, h4, h5, h6,
+small,
+strong,
+em,
+b,
+i,
+li,
+ul,
+ol,
+dl,
+dt,
+dd,
+table,
+thead,
+tbody,
+tfoot,
+tr,
+td,
+th,
+caption,
+label,
+figure,
+figcaption,
+blockquote,
+pre,
+code {
+  cursor: default;
+}
+
+/* ── 4. Curseur pointer sur éléments interactifs ── */
+button,
+a,
+[onclick],
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[tabindex]:not([tabindex="-1"]),
+.btn,
+.btn-action,
+.btn-add,
+.btn-edit,
+.btn-del,
+.btn-send,
+.btn-filter,
+.btn-gen,
+.btn-export,
+.btn-sm,
+.btn-cam,
+.btn-cam,
+.page-btn,
+.filter-btn,
+.tab,
+.resoudre-btn,
+.logout,
+.hamburger,
+.modal-close,
+.period-btn,
+.sidebar a,
+.topbar a,
+[data-toggle],
+[data-dismiss],
+[data-target] {
+  cursor: pointer !important;
+}
+
+/* ── 5. Réactivation complète pour les champs de saisie ── */
+input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="color"],
+textarea,
+select,
+[contenteditable],
+[contenteditable="true"],
+.form-control,
+.form-input,
+.f-ctrl,
+.iti__selected-flag,
+.ts-input,
+.ts-dropdown,
+.ts-dropdown-content {
+  -webkit-user-select: text !important;
+     -moz-user-select: text !important;
+      -ms-user-select: text !important;
+          user-select: text !important;
+  -webkit-touch-callout: default !important;
+  cursor: text;
+}
+
+/* select garde le cursor pointer */
+select {
+  cursor: pointer;
+}
+
+/* ── 6. Éléments spéciaux : garder text pour copier valeurs ── */
+.sensor-val,
+.stat-num,
+.kpi-val,
+.number,
+.stat-val,
+.live-time,
+.datetime {
+  -webkit-user-select: text;
+     -moz-user-select: text;
+          user-select: text;
+  cursor: default;
+}
+
+/* ── 7. Désactivation surlignage tableau ── */
+table,
+.tbl,
+.avg-table,
+.tbl thead,
+.tbl tbody,
+.tbl tr,
+.tbl th,
+.tbl td {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 8. Désactivation sélection sidebar & topbar ── */
+.sidebar,
+.sidebar a,
+.sidebar a *,
+.topbar,
+.topbar *,
+.logo,
+.hamburger,
+.hamburger * {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 9. Désactivation sélection cartes dashboard ── */
+.card,
+.stat-card,
+.kpi-card,
+.kpi-box,
+.sensor-card,
+.alert-card,
+.alert-item,
+.cam-card,
+.rpt-card,
+.stat-box,
+.panel,
+.section-card,
+.gsm-item,
+.sys-item,
+.filter-panel,
+.exports-panel,
+.table-wrap,
+.chart-panel,
+.live-header,
+.page-header,
+.filter-bar,
+.toolbar,
+.stats-bar,
+.stat-row,
+.kpi-row,
+.kpi-grid,
+.bottom-grid,
+.sensors-grid,
+.cards-row,
+.table-box {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 10. Désactivation badges & labels ── */
+.badge,
+.badge-niv,
+.badge-crit,
+.badge-warn,
+.badge-ok,
+.badge-info,
+.badge-sent,
+.badge-fail,
+.badge-pend,
+.badge-valide,
+.badge-attente,
+.badge-refuse,
+.badge-bloque,
+.badge-admin,
+.badge-user,
+.badge-active,
+.badge-inactive,
+.badge-CRITIQUE,
+.badge-AVERTISSEMENT,
+.badge-INFO,
+.sms-badge,
+.resolu-badge,
+.gsm-badge,
+.cam-live-badge,
+.cam-status-badge,
+.cam-tag,
+.flash,
+.flash-msg,
+.flash-success,
+.flash-error,
+.section-title,
+.page-title,
+.panel-title,
+.filter-title,
+.live-label,
+.stat-label,
+.kpi-label,
+.kpi-sub,
+.stat-lbl,
+.filter-label,
+.f-label,
+.form-label,
+.lbl,
+.sensor-label,
+.sensor-unit,
+.sensor-status,
+.alert-type,
+.alert-val,
+.alert-msg,
+.alert-time,
+.alert-meta,
+.refresh-info,
+.total-info,
+.info-text,
+.live-dot,
+.loading-cell,
+.loading-msg,
+.empty-state,
+.no-data,
+.empty-cell,
+.empty-row {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 11. Boutons : jamais de sélection ── */
+button,
+.btn,
+.btn-action,
+.btn-valider,
+.btn-refuser,
+.btn-attente,
+.btn-add,
+.btn-edit,
+.btn-del,
+.btn-send,
+.btn-filter,
+.btn-gen,
+.btn-export,
+.btn-sm,
+.btn-refresh,
+.btn-export-csv,
+.btn-cam,
+.btn-toggle,
+.page-btn,
+.filter-btn,
+.period-btn,
+.tab,
+.resoudre-btn,
+.btn-resolve,
+.btn-submit,
+.btn-save-cam,
+.btn-all-resolve,
+.logout,
+.hamburger,
+.modal-close,
+.btn-csv,
+.btn-json,
+.btn-pdf,
+.btn-txt {
+  -webkit-user-select: none !important;
+          user-select: none !important;
+  cursor: pointer !important;
+}
+
+/* ── 12. Ancres : jamais de sélection ── */
+a {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 13. Évite les highlights mobiles (iOS/Android) ── */
+button,
+a,
+[onclick] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* ── 14. Modals & overlays ── */
+.modal,
+.modal-bg,
+.modal-header,
+.modal-title,
+.modal-body,
+.modal-close,
+.sb-overlay,
+.wrapper,
+.main {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 15. Historique SMS ── */
+.sms-wrap,
+.sms-wrap *:not(input):not(textarea):not(select) {
+  -webkit-user-select: none;
+          user-select: none;
+}
+
+/* ── 16. Prevent text highlight on double-click menus ── */
+.sidebar a:active,
+button:active,
+a:active {
+  background-color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 17. Pagination & navigation ── */
+.pagination,
+.pagination *,
+.tabs,
+.tabs *,
+.filter-bar,
+.filter-bar *:not(input):not(select):not(textarea) {
+  -webkit-user-select: none;
+          user-select: none;
+}

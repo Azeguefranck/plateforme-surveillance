@@ -159,13 +159,6 @@ Plateforme intelligente de surveillance des salles serveurs :
 SE CONNECTER
 </a>
 
-<a href="/register" class="btn blue">
-INSCRIPTION UTILISATEUR
-</a>
-
-<a href="/register" class="btn orange">
-INSCRIPTION ADMINISTRATEUR
-</a>
 
 </div>
 

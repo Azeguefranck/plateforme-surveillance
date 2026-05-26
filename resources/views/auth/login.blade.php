@@ -90,11 +90,6 @@ SE CONNECTER
 
 </form>
 
-<br>
-
-<a href="/register">
-Créer un compte
-</a>
 
 </div>
 
