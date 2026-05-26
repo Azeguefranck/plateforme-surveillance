@@ -7,105 +7,80 @@ use Illuminate\Support\Facades\DB;
 
 class SallesController extends Controller
 {
-    private function generateCode(): string
-    {
-        $last = DB::table('salles')
-            ->orderBy('id', 'desc')
-            ->value('code');
-
-        if (!$last) {
-            return 'SALLE-001';
-        }
-
-        // Extraire le numéro depuis le dernier code (ex: SALLE-042 → 42)
-        $parts = explode('-', $last);
-        $num   = isset($parts[1]) ? (int)$parts[1] : 0;
-        return 'SALLE-' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
-    }
-
     public function index()
     {
-        DB::statement("CREATE TABLE IF NOT EXISTS `salles` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `code` varchar(20) NOT NULL,
-            `nom` varchar(255) NOT NULL,
-            `description` text DEFAULT NULL,
-            `localisation` varchar(255) DEFAULT NULL,
-            `capacite` int(11) DEFAULT NULL,
-            `responsable` varchar(255) DEFAULT NULL,
-            `statut` varchar(50) NOT NULL DEFAULT 'actif',
-            `niveau_securite` varchar(50) NOT NULL DEFAULT 'standard',
-            `statut_reseau` varchar(50) NOT NULL DEFAULT 'connecte',
-            `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `code` (`code`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $user = session('user');
+        if (!$user) return redirect('/login');
 
-        $salles = DB::table('salles')->orderBy('id', 'desc')->get();
+        $salles = collect();
+        $stats  = ['total' => 0, 'actives' => 0, 'inactives' => 0, 'maintenance' => 0];
 
-        $total      = $salles->count();
-        $actives    = $salles->where('statut', 'actif')->count();
-        $maintenance = $salles->where('statut', 'maintenance')->count();
-
-        $totalServeurs = 0;
         try {
-            $totalServeurs = DB::table('serveurs')->count();
-        } catch (\Exception $e) {
-            $totalServeurs = 0;
-        }
+            $salles = DB::table('salles')->orderBy('nom')->get();
+            $stats  = [
+                'total'       => DB::table('salles')->count(),
+                'actives'     => DB::table('salles')->where('statut', 'active')->count(),
+                'inactives'   => DB::table('salles')->where('statut', 'inactive')->count(),
+                'maintenance' => DB::table('salles')->where('statut', 'maintenance')->count(),
+            ];
+        } catch (\Exception $e) {}
 
-        $stats = [
-            'total'          => $total,
-            'actives'        => $actives,
-            'maintenance'    => $maintenance,
-            'total_serveurs' => $totalServeurs,
-        ];
+        // Dernière mesure pour afficher temp/hum globale
+        $derniereMesure = null;
+        try {
+            $derniereMesure = DB::table('mesures')->latest()->first();
+        } catch (\Exception $e) {}
 
-        return view('salles', compact('salles', 'stats'));
+        return view('salles', compact('user', 'salles', 'stats', 'derniereMesure'));
     }
 
-    public function store(Request $r)
+    public function store(Request $request)
     {
-        $code = $this->generateCode();
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
+        $request->validate(['nom' => 'required|string|max:150']);
 
         DB::table('salles')->insert([
-            'code'           => $code,
-            'nom'            => $r->input('nom'),
-            'description'    => $r->input('description') ?: null,
-            'localisation'   => $r->input('localisation') ?: null,
-            'capacite'       => $r->input('capacite') !== '' ? (int)$r->input('capacite') : null,
-            'responsable'    => $r->input('responsable') ?: null,
-            'statut'         => $r->input('statut', 'actif'),
-            'niveau_securite' => $r->input('niveau_securite', 'standard'),
-            'statut_reseau'  => $r->input('statut_reseau', 'connecte'),
-            'created_at'     => now(),
-            'updated_at'     => now(),
+            'nom'               => $request->nom,
+            'code'              => $request->code,
+            'localisation'      => $request->localisation,
+            'responsable'       => $request->responsable,
+            'capacite_serveurs' => (int) ($request->capacite_serveurs ?? 0),
+            'statut'            => $request->statut ?? 'active',
+            'description'       => $request->description,
+            'created_at'        => now(),
+            'updated_at'        => now(),
         ]);
 
-        return redirect('/salles')->with('success', "Salle {$code} créée avec succès.");
-    }
-
-    public function update(Request $r, $id)
-    {
-        DB::table('salles')->where('id', $id)->update([
-            'nom'            => $r->input('nom'),
-            'description'    => $r->input('description') ?: null,
-            'localisation'   => $r->input('localisation') ?: null,
-            'capacite'       => $r->input('capacite') !== '' ? (int)$r->input('capacite') : null,
-            'responsable'    => $r->input('responsable') ?: null,
-            'statut'         => $r->input('statut', 'actif'),
-            'niveau_securite' => $r->input('niveau_securite', 'standard'),
-            'statut_reseau'  => $r->input('statut_reseau', 'connecte'),
-            'updated_at'     => now(),
-        ]);
-
-        return redirect('/salles')->with('success', 'Salle mise à jour avec succès.');
+        return back()->with('success_salle', 'Salle ajoutée avec succès.');
     }
 
     public function destroy($id)
     {
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
         DB::table('salles')->where('id', $id)->delete();
-        return redirect('/salles')->with('success', 'Salle supprimée avec succès.');
+        return back()->with('success_salle', 'Salle supprimée.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
+        DB::table('salles')->where('id', $id)->update([
+            'nom'               => $request->nom,
+            'code'              => $request->code,
+            'localisation'      => $request->localisation,
+            'responsable'       => $request->responsable,
+            'capacite_serveurs' => (int) ($request->capacite_serveurs ?? 0),
+            'statut'            => $request->statut ?? 'active',
+            'description'       => $request->description,
+            'updated_at'        => now(),
+        ]);
+
+        return back()->with('success_salle', 'Salle mise à jour.');
     }
 }

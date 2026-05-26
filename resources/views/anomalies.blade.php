@@ -1,342 +1,233 @@
 @extends('layouts.app')
 
 @section('content')
-
 <style>
-@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.anom-wrap{animation:fadeIn .4s ease;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--card:#0e1a38;--border:#1e2f5a;}
+.pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.pg-title{font-size:22px;font-weight:700;color:var(--danger)}
+.btn{padding:8px 15px;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px;transition:.18s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
+.btn-neon:hover{background:var(--neon);color:#000}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#000}
+.btn-red{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn-red:hover{background:var(--danger);color:#fff}
+.btn-gray{background:transparent;border:1px solid #2a3a5a;color:#666}
+.btn-gray:hover{border-color:#aaa;color:#aaa}
 
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-.page-title{font-size:20px;font-weight:bold;color:var(--text);display:flex;align-items:center;gap:10px;}
-.page-title i{color:var(--danger);}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.scard .v{font-size:24px;font-weight:800;margin-bottom:3px}
+.scard .l{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px}
+.scard.r .v{color:var(--danger)} .scard.w .v{color:var(--warn)} .scard.g .v{color:var(--neon)} .scard.b .v{color:var(--blue)}
 
-/* ── KPI ── */
-.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
-.kpi-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1 1 130px;min-width:120px;}
-.kpi-box .num{font-size:26px;font-weight:bold;}
-.kpi-box .lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
-.kpi-box.crit .num{color:var(--danger);}
-.kpi-box.warn .num{color:#d97706;}
-.kpi-box.ok   .num{color:var(--accent);}
-.kpi-box.blue .num{color:var(--info);}
+.anomalies-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:22px}
+.anomaly-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:.2s;position:relative;overflow:hidden}
+.anomaly-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.anomaly-card.critique::before{background:var(--danger);box-shadow:0 0 10px var(--danger)}
+.anomaly-card.warning::before{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.anomaly-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.anomaly-card.resolved{opacity:.45}
+.a-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-left:12px}
+.a-title{font-size:14px;font-weight:700;color:#fff}
+.a-time{font-size:10px;color:#555;white-space:nowrap}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;margin-top:2px}
+.badge-critique{background:rgba(255,87,51,.12);color:var(--danger);border:1px solid rgba(255,87,51,.25)}
+.badge-warning{background:rgba(255,214,51,.12);color:var(--warn);border:1px solid rgba(255,214,51,.25)}
+.badge-resolved{background:rgba(51,255,136,.08);color:#33ff88aa;border:1px solid rgba(51,255,136,.15)}
+.a-body{padding-left:12px;margin-bottom:12px}
+.a-msg{font-size:12px;color:#aaa;margin-bottom:8px}
+.a-solution{font-size:11px;color:#556;background:#07102a;border-radius:7px;padding:8px 10px;border-left:3px solid var(--neon)}
+.a-solution strong{color:var(--neon)}
+.a-footer{display:flex;gap:7px;padding-left:12px;flex-wrap:wrap}
+.empty-state{text-align:center;padding:60px 20px;color:#555}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
 
-/* ── Filter bar ── */
-.filter-bar{
-  background:var(--card);border:1px solid var(--border);border-radius:12px;
-  padding:14px 18px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
-}
-.f-group{display:flex;flex-direction:column;gap:5px;flex:1 1 140px;}
-.f-label{font-size:11px;font-weight:bold;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
-.f-ctrl{
-  background:#0a1525;border:1.5px solid var(--border);border-radius:8px;
-  color:var(--text);padding:8px 12px;font-size:13px;outline:none;transition:border-color .2s;
-}
-.f-ctrl:focus{border-color:var(--accent);}
-.f-ctrl option{background:#0a1525;}
-.btn-filter{
-  background:var(--accent);color:#060c1a;border:none;border-radius:8px;
-  padding:9px 18px;font-weight:bold;font-size:13px;cursor:pointer;transition:.2s;
-  display:inline-flex;align-items:center;gap:6px;align-self:flex-end;
-}
-.btn-filter:hover{background:#249040;}
+.sensors-alert{background:var(--card);border:1px solid rgba(255,87,51,.3);border-radius:14px;padding:18px;margin-bottom:20px}
+.sensors-alert h3{font-size:14px;font-weight:700;color:var(--danger);margin-bottom:12px}
+.sensor-rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.sensor-row{background:#07102a;border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
+.sensor-row .sname{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.sensor-row .sval{font-size:18px;font-weight:800}
+.sensor-row .sval.ok{color:var(--neon)} .sensor-row .sval.warn{color:var(--warn)} .sensor-row .sval.crit{color:var(--danger)}
+.sensor-row .sunit{font-size:10px;color:#666}
 
-/* ── Toolbar ── */
-.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
-.info-text{font-size:12px;color:var(--muted);}
-.toolbar-btns{display:flex;gap:8px;}
-.btn-sm{
-  padding:7px 14px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;transition:.2s;
-  display:inline-flex;align-items:center;gap:6px;border:1.5px solid;
-}
-.btn-refresh{background:transparent;color:var(--muted);border-color:var(--border);}
-.btn-refresh:hover{color:var(--text);border-color:var(--muted);}
-.btn-export{background:rgba(47,168,79,.15);color:var(--accent);border-color:var(--accent);}
-.btn-export:hover{background:var(--accent);color:#060c1a;}
-.btn-all-resolve{background:rgba(46,134,193,.15);color:var(--info);border-color:var(--info);}
-.btn-all-resolve:hover{background:var(--info);color:white;}
-
-/* ── Table ── */
-.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.tbl{width:100%;border-collapse:collapse;font-size:13px;}
-.tbl th{background:#091527;padding:12px 14px;text-align:left;color:var(--muted);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
-.tbl td{padding:11px 14px;border-bottom:1px solid rgba(24,38,64,.6);color:var(--text);vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tbody tr:hover td{background:rgba(47,168,79,.03);}
-
-.badge-crit{background:#3d0000;color:#ef4444;border:1px solid rgba(239,68,68,.4);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:bold;display:inline-block;}
-.badge-warn{background:#3d2800;color:#f59e0b;border:1px solid rgba(245,158,11,.4);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:bold;display:inline-block;}
-.badge-info{background:rgba(46,134,193,.15);color:#2e86c1;border:1px solid rgba(46,134,193,.4);padding:3px 10px;border-radius:10px;font-size:11px;display:inline-block;}
-.badge-ok{background:rgba(47,168,79,.15);color:var(--accent);border:1px solid rgba(47,168,79,.4);padding:3px 10px;border-radius:10px;font-size:11px;display:inline-block;}
-
-.type-icon{display:inline-flex;align-items:center;gap:6px;}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger);display:inline-block;animation:blink 1s infinite;}
-
-.btn-resolve{
-  background:rgba(47,168,79,.1);color:var(--accent);border:1px solid rgba(47,168,79,.3);
-  border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:bold;transition:.2s;
-}
-.btn-resolve:hover{background:var(--accent);color:#060c1a;}
-.btn-resolve:disabled{opacity:.5;cursor:not-allowed;}
-
-.empty-cell{text-align:center;padding:50px;color:var(--muted);}
-
-/* ── Pagination ── */
-.pagination{display:flex;justify-content:center;gap:8px;padding:16px;flex-wrap:wrap;}
-.page-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:#091527;color:var(--muted);cursor:pointer;font-size:13px;transition:.2s;}
-.page-btn:hover,.page-btn.active{background:var(--border);color:white;border-color:var(--accent);}
-.page-btn:disabled{opacity:.4;cursor:not-allowed;}
-
-@media(max-width:768px){
-  .table-wrap{overflow-x:auto;}
-  .tbl{min-width:700px;}
-}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)};.anomalies-grid{grid-template-columns:1fr}}
 </style>
 
-<div class="anom-wrap">
-
-<div class="page-header">
-  <div class="page-title">
-    <i class="fa-solid fa-triangle-exclamation"></i> Anomalies
-    <div class="live-dot" title="Données en temps réel"></div>
-  </div>
-  <div style="display:flex;gap:8px;">
-    <button class="btn-sm btn-export" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export</button>
-    <a href="/rapports/export/alertes" class="btn-sm btn-export" style="text-decoration:none;"><i class="fa-solid fa-download"></i> CSV complet</a>
-  </div>
+<div class="pg-header">
+    <div class="pg-title">&#9888; Anomalies &amp; Solutions</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-neon" onclick="loadAnomalies()">&#8635; Actualiser</button>
+        <button class="btn btn-gray" onclick="marquerTout()">&#10003; Tout résoudre</button>
+        <a href="/rapports/export?type=alertes&format=csv&debut={{ now()->subDays(30)->toDateString() }}&fin={{ now()->toDateString() }}" class="btn btn-gray" style="text-decoration:none">&#8595; Export CSV</a>
+        <button class="btn btn-gray" onclick="window.open('/rapports/print?type=alertes&debut={{ now()->subDays(30)->toDateString() }}&fin={{ now()->toDateString() }}','_blank')">&#128438; PDF</button>
+    </div>
 </div>
 
-<!-- KPI -->
-<div class="kpi-row">
-  <div class="kpi-box crit">
-    <div class="num" id="kpi-crit">—</div>
-    <div class="lbl">Critiques</div>
-  </div>
-  <div class="kpi-box warn">
-    <div class="num" id="kpi-warn">—</div>
-    <div class="lbl">Avertissements</div>
-  </div>
-  <div class="kpi-box blue">
-    <div class="num" id="kpi-nonres">—</div>
-    <div class="lbl">Non résolues</div>
-  </div>
-  <div class="kpi-box ok">
-    <div class="num" id="kpi-today">—</div>
-    <div class="lbl">Aujourd'hui</div>
-  </div>
-  <div class="kpi-box">
-    <div class="num" id="kpi-total" style="color:var(--text);">—</div>
-    <div class="lbl">Total</div>
-  </div>
+<!-- Stats -->
+<div class="stats-row">
+    <div class="scard r"><div class="v" id="stCrit">—</div><div class="l">Critiques</div></div>
+    <div class="scard w"><div class="v" id="stWarn">—</div><div class="l">Warnings</div></div>
+    <div class="scard g"><div class="v" id="stResolved">—</div><div class="l">Résolues</div></div>
+    <div class="scard b"><div class="v" id="stTotal">—</div><div class="l">Total</div></div>
 </div>
 
-<!-- Filtres -->
-<div class="filter-bar">
-  <div class="f-group">
-    <label class="f-label">Niveau</label>
-    <select class="f-ctrl" id="f-niv">
-      <option value="">Tous</option>
-      <option value="CRITIQUE">Critique</option>
-      <option value="AVERTISSEMENT">Avertissement</option>
-    </select>
-  </div>
-  <div class="f-group">
-    <label class="f-label">Date début</label>
-    <input class="f-ctrl" type="date" id="f-debut">
-  </div>
-  <div class="f-group">
-    <label class="f-label">Date fin</label>
-    <input class="f-ctrl" type="date" id="f-fin">
-  </div>
-  <div class="f-group">
-    <label class="f-label">Par page</label>
-    <select class="f-ctrl" id="f-limit">
-      <option value="25">25</option>
-      <option value="50" selected>50</option>
-      <option value="100">100</option>
-    </select>
-  </div>
-  <button class="btn-filter" onclick="charger(1)"><i class="fa-solid fa-magnifying-glass"></i> Filtrer</button>
+<!-- Live sensor alerts -->
+<div class="sensors-alert" id="sensorAlerts" style="display:none">
+    <h3>&#128308; Capteurs en état anormal (temps réel)</h3>
+    <div class="sensor-rows" id="sensorRows"></div>
 </div>
 
-<!-- Toolbar -->
-<div class="toolbar">
-  <span class="info-text" id="info-text">Chargement...</span>
-  <div class="toolbar-btns">
-    <button class="btn-sm btn-refresh" onclick="charger(pageCourante)"><i class="fa-solid fa-rotate"></i> Actualiser</button>
-    <button class="btn-sm btn-all-resolve" onclick="toutResoudre()"><i class="fa-solid fa-check-double"></i> Tout résoudre</button>
-  </div>
-</div>
-
-<!-- Table -->
-<div class="table-wrap">
-  <table class="tbl">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Date & Heure</th>
-        <th>Type</th>
-        <th>Valeur</th>
-        <th>Niveau</th>
-        <th>Description</th>
-        <th>Mail</th>
-        <th>Statut</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="anom-body">
-      <tr><td colspan="9" class="empty-cell">Chargement...</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="pagination" id="pagination"></div>
-
+<!-- Anomalies grid -->
+<div id="anomaliesGrid" class="anomalies-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:#33b5ff">Chargement des anomalies...</div>
 </div>
 
 <script>
-let pageCourante = 1;
-let dernierData  = [];
+var SEUILS = {temperature:{warn:35,crit:40},humidite:{warn:75,crit:85},gaz:{warn:300,crit:500},courant:{warn:10,crit:15},puissance:{warn:3000,crit:5000}};
 
-const typeIcons = {
-  temperature: 'fa-temperature-three-quarters',
-  humidite:    'fa-droplet',
-  gaz:         'fa-wind',
-  courant:     'fa-bolt',
-  puissance:   'fa-plug',
-  intrusion:   'fa-person-walking',
-  pir:         'fa-person-walking',
+var SOLUTIONS = {
+    temperature: {
+        warning:  'Vérifier la ventilation. Surveiller la montée thermique.',
+        critique: 'URGENT: Activation du refroidissement d\'urgence. Réduire la charge des serveurs.'
+    },
+    humidite: {
+        warning:  'Vérifier le système de climatisation. Surveiller l\'hygrométrie.',
+        critique: 'URGENT: Risque de condensation. Activer la déshumidification d\'urgence.'
+    },
+    gaz: {
+        warning:  'Ventiler la salle. Vérifier les équipements.',
+        critique: 'URGENT: Évacuation possible. Vérifier les détecteurs CO2/fumée. Appeler les secours si nécessaire.'
+    },
+    courant: {
+        warning:  'Vérifier la charge électrique. Équilibrer les circuits.',
+        critique: 'URGENT: Risque de surcharge. Couper les équipements non essentiels.'
+    },
+    puissance: {
+        warning:  'Optimiser la consommation. Vérifier les équipements énergivores.',
+        critique: 'URGENT: Dépassement capacité électrique. Couper certains serveurs immédiatement.'
+    }
 };
 
-async function charger(page) {
-  pageCourante = page;
-  const niv    = document.getElementById('f-niv').value;
-  const debut  = document.getElementById('f-debut').value;
-  const fin    = document.getElementById('f-fin').value;
-  const limit  = document.getElementById('f-limit').value;
-  const tbody  = document.getElementById('anom-body');
-  const info   = document.getElementById('info-text');
+var ICONS = {temperature:'🌡️',humidite:'💧',gaz:'☁️',courant:'⚡',puissance:'💡'};
+var allAnomalies = [];
 
-  tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">Chargement...</td></tr>';
-  info.textContent = 'Chargement...';
+function loadAnomalies() {
+    fetch('/api/alertes-recentes?limit=100')
+        .then(function(r){return r.json();})
+        .then(function(alertes) {
+            allAnomalies = alertes;
+            var crit = alertes.filter(function(a){return a.niveau==='critique';}).length;
+            var warn = alertes.filter(function(a){return a.niveau==='warning';}).length;
+            var res  = alertes.filter(function(a){return a.lu;}).length;
+            document.getElementById('stCrit').textContent    = crit;
+            document.getElementById('stWarn').textContent    = warn;
+            document.getElementById('stResolved').textContent = res;
+            document.getElementById('stTotal').textContent   = alertes.length;
+            renderAnomalies(alertes);
+        }).catch(function(){});
 
-  try {
-    let url = `/api/anomalies?page=${page}&limit=${limit}`;
-    if (niv)   url += '&niveau=' + encodeURIComponent(niv);
-    if (debut) url += '&debut='  + debut;
-    if (fin)   url += '&fin='    + fin;
+    fetch('/api/dashboard-data')
+        .then(function(r){return r.json();})
+        .then(function(d) {
+            var m = d.derniere_mesure || {};
+            var alerts = [];
+            var keys = ['temperature','humidite','gaz','courant','puissance'];
+            keys.forEach(function(k) {
+                if (m[k] == null) return;
+                var s = SEUILS[k]; if (!s) return;
+                var cls = m[k] >= s.crit ? 'crit' : (m[k] >= s.warn ? 'warn' : 'ok');
+                if (cls !== 'ok') {
+                    alerts.push({k:k, v:m[k], cls:cls});
+                }
+            });
+            var box = document.getElementById('sensorAlerts');
+            var rows = document.getElementById('sensorRows');
+            if (alerts.length) {
+                box.style.display = '';
+                rows.innerHTML = alerts.map(function(a) {
+                    return '<div class="sensor-row"><div class="sname">'+(ICONS[a.k]||'')+'&nbsp;'+a.k+'</div>'
+                        + '<div class="sval '+a.cls+'">'+a.v+'</div>'
+                        + '<div class="sunit">— '+a.cls.toUpperCase()+'</div></div>';
+                }).join('');
+            } else {
+                box.style.display = 'none';
+            }
+        }).catch(function(){});
+}
 
-    const r = await fetch(url);
-    const j = await r.json();
-    dernierData = j.data || [];
-
-    // KPI
-    const s = j.stats || {};
-    document.getElementById('kpi-crit').textContent   = s.critiques  || 0;
-    document.getElementById('kpi-warn').textContent   = (s.total||0) - (s.critiques||0);
-    document.getElementById('kpi-nonres').textContent = s.non_resolu || 0;
-    document.getElementById('kpi-today').textContent  = s.today       || 0;
-    document.getElementById('kpi-total').textContent  = s.total       || 0;
-
-    info.textContent = `${(j.total||0).toLocaleString('fr-FR')} anomalie(s) — Page ${j.page||1}/${j.last_page||1}`;
-
-    if (!dernierData.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-cell"><i class="fa-solid fa-circle-check" style="font-size:28px;display:block;margin-bottom:8px;color:var(--accent);"></i>Aucune anomalie trouvée</td></tr>';
-      return;
+function renderAnomalies(alertes) {
+    var grid = document.getElementById('anomaliesGrid');
+    if (!alertes.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Aucune anomalie détectée.<br>Tous les systèmes sont opérationnels.</p></div>';
+        return;
     }
+    grid.innerHTML = alertes.map(function(a) {
+        var d = new Date(a.created_at).toLocaleString('fr-FR');
+        var capteur = (a.message||'').match(/(température|humidité|gaz|courant|puissance|pir|mouvement|tension)/i);
+        capteur = capteur ? capteur[0].toLowerCase() : 'système';
+        var sKey = Object.keys(SOLUTIONS).find(function(k){return capteur.includes(k);}) || null;
+        var solution = sKey ? SOLUTIONS[sKey][a.niveau] : 'Analyser et résoudre l\'anomalie. Contacter l\'équipe technique si nécessaire.';
+        var icon = ICONS[sKey] || '⚠️';
 
-    tbody.innerHTML = dernierData.map(a => {
-      const dt    = a.created_at ? new Date(a.created_at).toLocaleString('fr-FR') : '—';
-      const niv   = (a.niveau || 'INFO').toUpperCase();
-      const badge = niv === 'CRITIQUE'      ? `<span class="badge-crit">${niv}</span>`
-                  : niv === 'AVERTISSEMENT' ? `<span class="badge-warn">${niv}</span>`
-                  : `<span class="badge-info">${niv}</span>`;
-      const icon  = typeIcons[a.type] || 'fa-circle-exclamation';
-      const sms   = a.envoi_sms ? '<span class="badge-ok">Mail</span>' : '<span style="color:var(--muted);font-size:11px;">—</span>';
-      const stat  = a.resolu
-        ? '<span class="badge-ok">Résolu</span>'
-        : '<span class="badge-warn">Ouvert</span>';
-      const btnRes = a.resolu
-        ? '<span style="color:var(--muted);font-size:11px;">✓</span>'
-        : `<button class="btn-resolve" id="res-${a.id}" onclick="resoudre(${a.id},this)"><i class="fa-solid fa-check"></i></button>`;
-      const msg = (a.message || '—').replace(/RISQUES:/,'<span style="color:#f59e0b">RISQUES:</span>').replace(/SOLUTIONS:/,'<span style="color:var(--accent)">SOLUTIONS:</span>');
-      return `<tr id="row-${a.id}">
-        <td style="color:var(--muted)">${a.id}</td>
-        <td style="font-size:12px;white-space:nowrap;">${dt}</td>
-        <td><div class="type-icon"><i class="fa-solid ${icon}" style="color:var(--accent);"></i>${a.type||'—'}</div></td>
-        <td style="font-weight:bold;color:#ffd633;">${a.valeur||'—'}</td>
-        <td>${badge}</td>
-        <td style="font-size:12px;max-width:300px;">${msg}</td>
-        <td>${sms}</td>
-        <td>${stat}</td>
-        <td>${btnRes}</td>
-      </tr>`;
+        return '<div class="anomaly-card '+(a.niveau||'warning')+' '+(a.lu?'resolved':'')+'" id="anom_'+a.id+'">'
+            + '<div class="a-header">'
+            +   '<div><div class="a-title">'+icon+' '+(a.message||'').substring(0,60)+'</div>'
+            +       '<span class="badge badge-'+(a.niveau||'warning')+'">'+(a.niveau||'warning')+'</span>'
+            +       (a.lu ? '&nbsp;<span class="badge badge-resolved">Résolu</span>' : '')
+            +   '</div>'
+            +   '<div class="a-time">'+d+'</div>'
+            + '</div>'
+            + '<div class="a-body">'
+            +   '<div class="a-msg">'+(a.message||'')+'</div>'
+            +   '<div class="a-solution"><strong>Solution :</strong> '+solution+'</div>'
+            + '</div>'
+            + '<div class="a-footer">'
+            + (!a.lu ? '<button class="btn btn-neon" onclick="resoudre(this,'+a.id+')" style="font-size:11px;padding:6px 12px">&#10003; Résoudre</button>' : '')
+            + '<button class="btn btn-red" onclick="supprimerAnom(this,'+a.id+')" style="font-size:11px;padding:6px 12px">&#10005; Supprimer</button>'
+            + '</div>'
+            + '</div>';
     }).join('');
-
-    buildPagination(j.page||1, j.last_page||1);
-  } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-cell" style="color:var(--danger)">Erreur de chargement</td></tr>';
-  }
 }
 
-async function resoudre(id, btn) {
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-  try {
-    await fetch(`/api/alertes/${id}/resoudre`, { method: 'POST' });
-    const row = document.getElementById('row-' + id);
-    if (row) {
-      row.querySelectorAll('td')[7].innerHTML = '<span class="badge-ok">Résolu</span>';
-      row.style.opacity = '.6';
-    }
-    btn.outerHTML = '<span style="color:var(--accent);font-size:11px;">✓</span>';
-    await charger(pageCourante);
-  } catch(e) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-  }
+function resoudre(btn, id) {
+    btnLoad(btn);
+    csrfFetch('/api/alertes/lire', {method:'POST', body:JSON.stringify({id:id})})
+        .then(function(r){return r.json();})
+        .then(function() {
+            btnLoad(btn, false);
+            var card = document.getElementById('anom_'+id);
+            if (card) card.classList.add('resolved');
+            notify('Anomalie marquée comme résolue.','s');
+            loadAnomalies();
+        }).catch(function(){btnLoad(btn,false);notify('Erreur réseau.','e');});
 }
 
-async function toutResoudre() {
-  const ok = await CyberConfirm.show({title:'Résoudre toutes les anomalies',message:'Marquer toutes les anomalies comme résolues ? Cette action est irréversible.',icon:'fa-solid fa-check-double',confirmText:'Tout résoudre',confirmColor:'success'});
-  if (!ok) return;
-  try {
-    const ids = dernierData.filter(a => !a.resolu).map(a => a.id);
-    await Promise.all(ids.map(id => fetch(`/api/alertes/${id}/resoudre`, { method: 'POST' })));
-    charger(1);
-  } catch(e) {}
+function supprimerAnom(btn, id) {
+    confirmDlg('Supprimer cette anomalie ?','Cette anomalie sera définitivement retirée de l\'historique. Cette action est irréversible.',{type:'danger',icon:'🗑️',confirmText:'Supprimer'}).then(function(ok){
+        if (!ok) return;
+        btnLoad(btn);
+        csrfFetch('/alerte/'+id, {method:'DELETE'})
+            .then(function(r){return r.json();})
+            .then(function(d){
+                if (d.success) {
+                    var card = document.getElementById('anom_'+id);
+                    if (card) { card.style.opacity='0'; card.style.transition='opacity .25s'; setTimeout(function(){card.remove();},260); }
+                    notify('Anomalie supprimée.','s');
+                } else { btnLoad(btn,false); notify('Erreur.','e'); }
+            }).catch(function(){btnLoad(btn,false);notify('Erreur réseau.','e');});
+    });
 }
 
-function buildPagination(cur, last) {
-  const pag = document.getElementById('pagination');
-  if (last <= 1) { pag.innerHTML = ''; return; }
-  const pages = [];
-  pages.push(`<button class="page-btn" onclick="charger(${Math.max(1,cur-1)})" ${cur===1?'disabled':''}>← Préc</button>`);
-  let s = Math.max(1,cur-2), e = Math.min(last,cur+2);
-  if (s>1) pages.push('<span style="color:var(--muted);padding:0 4px;">…</span>');
-  for (let p=s;p<=e;p++) pages.push(`<button class="page-btn ${p===cur?'active':''}" onclick="charger(${p})">${p}</button>`);
-  if (e<last) pages.push('<span style="color:var(--muted);padding:0 4px;">…</span>');
-  pages.push(`<button class="page-btn" onclick="charger(${Math.min(last,cur+1)})" ${cur===last?'disabled':''}>Suiv →</button>`);
-  pag.innerHTML = pages.join('');
+function marquerTout() {
+    csrfFetch('/api/alertes/lire', {method:'POST', body:JSON.stringify({id:'all'})})
+        .then(function(){notify('Toutes les anomalies marquées comme résolues.','s'); loadAnomalies();})
+        .catch(function(){notify('Erreur.','e');});
 }
 
-function exportCSV() {
-  if (!dernierData.length) { alert('Aucune donnée à exporter'); return; }
-  const headers = ['ID','Date','Type','Niveau','Valeur','Message','Mail','Resolu'];
-  const rows = dernierData.map(a => [
-    a.id, '"'+(a.created_at||'')+'"', a.type||'', a.niveau||'',
-    '"'+(a.valeur||'')+'"', '"'+((a.message||'').replace(/"/g,'""'))+'"',
-    a.envoi_sms?'OUI':'NON', a.resolu?'OUI':'NON'
-  ].join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  const link = document.createElement('a');
-  link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  link.download = 'anomalies_' + new Date().toISOString().slice(0,10) + '.csv';
-  link.click();
-}
-
-charger(1);
-setInterval(() => charger(pageCourante), 15000);
+loadAnomalies();
+setInterval(loadAnomalies, 10000);
 </script>
-
 @endsection

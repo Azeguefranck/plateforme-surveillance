@@ -3,947 +3,751 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inscription — Plateforme Surveillance</title>
-
-<link rel="stylesheet" href="/css/noselect.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
-
+<title>Inscription — Plateforme de Surveillance</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
 <style>
-/* ── Reset & base ───────────────────────────────────────── */
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#050816;--card:#101935;--card2:#0b1225;
-  --border:#1f2d5e;--vert:#39ff14;--amber:#f59e0b;
-  --rouge:#ef4444;--bleu:#33b5ff;--text:#d1d5db;--muted:#6b7280;
+  --bg:#040d1a;--bg2:#071426;--card:#0c1c34;--card2:#0f2040;
+  --green:#39ff14;--cyan:#00d4ff;
+  --bd:rgba(57,255,20,.18);--bd2:rgba(0,212,255,.2);
+  --text:#cde0f5;--muted:rgba(205,224,245,.4);
 }
-body{background:var(--bg);color:white;min-height:100vh;padding-bottom:40px;}
+html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,sans-serif;color:var(--text);}
 
-/* ── Navbar ─────────────────────────────────────────────── */
-.navbar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:16px 40px;background:rgba(8,17,38,.97);
-  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;
-  flex-wrap:wrap;gap:10px;
-}
-.logo{font-size:20px;font-weight:bold;color:var(--vert);letter-spacing:2px;text-decoration:none;}
-.nav-btns{display:flex;gap:10px;}
-.btn-nav{
-  padding:9px 22px;border-radius:9px;font-size:14px;font-weight:bold;
-  text-decoration:none;transition:.25s;border:2px solid var(--vert);
-}
-.btn-nav.outline{color:var(--vert);background:transparent;}
-.btn-nav.outline:hover{background:var(--vert);color:var(--bg);}
-.btn-nav.solid{background:var(--vert);color:var(--bg);}
-.btn-nav.solid:hover{background:#25cc0e;}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(57,255,20,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,20,.02) 1px,transparent 1px);
+  background-size:48px 48px;}
+.bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:400px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(57,255,20,.06) 0%,transparent 70%);pointer-events:none;z-index:0;}
 
-/* ── Carte formulaire ───────────────────────────────────── */
-.form-wrap{max-width:920px;margin:30px auto;padding:0 16px;}
-.card{background:var(--card);border-radius:20px;padding:44px;border:1px solid var(--border);}
-.card-title{font-size:26px;font-weight:bold;color:var(--vert);text-align:center;margin-bottom:6px;}
-.card-sub{color:var(--muted);text-align:center;font-size:14px;margin-bottom:32px;}
+.reg-page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:30px 16px 50px;}
 
-/* ── Sections ───────────────────────────────────────────── */
-.section{
-  border-top:1px solid var(--border);
-  margin-top:28px;padding-top:20px;
-}
-.section-head{
-  display:flex;align-items:center;gap:10px;
-  font-size:12px;font-weight:bold;letter-spacing:2px;
-  text-transform:uppercase;color:var(--vert);margin-bottom:18px;
-}
-.section-head i{font-size:14px;}
+/* Header */
+.reg-header{text-align:center;margin-bottom:28px;animation:fadeDown .6s ease;}
+.reg-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:8px;}
+.reg-logo-icon{width:38px;height:38px;border-radius:8px;background:rgba(57,255,20,.08);border:1.5px solid var(--green);
+  box-shadow:0 0 14px rgba(57,255,20,.25);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.reg-logo-text{font-size:14px;font-weight:700;letter-spacing:4px;color:var(--green);}
+.reg-title{font-size:26px;font-weight:900;letter-spacing:.1em;color:#fff;text-transform:uppercase;}
+.reg-sub{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-top:4px;}
 
-/* ── Grilles ────────────────────────────────────────────── */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-.full{grid-column:1/-1;}
+/* Card */
+.reg-card{width:100%;max-width:860px;background:var(--card);border:1px solid var(--bd);border-radius:20px;
+  overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5);animation:fadeUp .7s ease .1s both;}
 
-/* ── Champ ──────────────────────────────────────────────── */
-.field{display:flex;flex-direction:column;gap:6px;}
-.field label{
-  display:flex;align-items:center;gap:7px;
-  font-size:12px;font-weight:bold;color:var(--muted);
-  text-transform:uppercase;letter-spacing:.8px;
-}
-.field label i{color:var(--vert);font-size:12px;width:14px;text-align:center;}
-.opt{font-weight:normal;color:#4b5563;font-size:10px;margin-left:3px;}
+/* Steps header */
+.steps-header{background:var(--card2);padding:20px 28px 0;border-bottom:1px solid var(--bd);}
+.steps-row{display:flex;align-items:center;justify-content:center;overflow-x:auto;}
+.step-item{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:100px;position:relative;flex:1;cursor:pointer;}
+.step-item::before{content:'';position:absolute;top:16px;left:calc(50% + 16px);right:calc(-50% + 16px);height:2px;
+  background:rgba(255,255,255,.08);transition:background .4s;z-index:0;}
+.step-item:last-child::before{display:none;}
+.step-item.done::before,.step-item.active::before{background:var(--green);}
+.step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.12);
+  color:var(--muted);transition:all .35s;position:relative;z-index:1;}
+.step-item.done  .step-num{background:var(--green);border-color:var(--green);color:#000;}
+.step-item.active .step-num{background:transparent;border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(57,255,20,.4);}
+.step-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  transition:color .3s;white-space:nowrap;padding-bottom:12px;}
+.step-item.done  .step-label{color:var(--green);}
+.step-item.active .step-label{color:#fff;}
+.prog-bar{height:3px;background:rgba(255,255,255,.05);}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .5s ease;box-shadow:0 0 8px rgba(57,255,20,.4);}
 
-input,select,textarea{
-  background:var(--card2);border:1.5px solid var(--border);
-  border-radius:9px;padding:11px 14px;color:white;font-size:14px;
-  width:100%;outline:none;transition:border-color .2s;
-}
-input:focus,select:focus,textarea:focus{border-color:var(--vert);}
-input::placeholder,textarea::placeholder{color:#4b5563;}
-select option{background:var(--card2);color:white;}
-textarea{resize:vertical;min-height:80px;}
+/* Body */
+.reg-body{padding:30px 32px;}
+@media(max-width:600px){.reg-body{padding:20px 16px;}}
+.step-pane{display:none;animation:fadeIn .35s ease;}
+.step-pane.active{display:block;}
+.pane-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:.04em;}
+.pane-sub{font-size:12px;color:var(--muted);margin-bottom:22px;}
 
-/* ── Tom Select ─────────────────────────────────────────── */
-.ts-wrapper.single .ts-control{
-  background:var(--card2)!important;border:1.5px solid var(--border)!important;
-  border-radius:9px!important;color:white!important;
-  padding:11px 14px!important;min-height:44px!important;cursor:text!important;
-}
-.ts-wrapper.single.focus .ts-control{border-color:var(--vert)!important;box-shadow:none!important;}
-.ts-dropdown{background:var(--card2)!important;border:1.5px solid var(--border)!important;border-radius:9px!important;}
-.ts-dropdown .option{color:white!important;padding:10px 14px!important;}
-.ts-dropdown .option:hover,.ts-dropdown .option.active{background:var(--border)!important;}
-.ts-dropdown .option.selected{background:#0f3020!important;}
-.ts-control input{background:transparent!important;color:white!important;border:none!important;padding:0!important;}
-.ts-control .placeholder{color:#4b5563!important;}
-.ts-control .item{color:white!important;}
+/* Grid */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.fg.col1{grid-template-columns:1fr;}
+@media(max-width:640px){.fg{grid-template-columns:1fr;}}
+.f-full{grid-column:1/-1;}
 
-/* ── intl-tel-input ─────────────────────────────────────── */
-.iti{width:100%;}
-.iti__tel-input{
-  background:var(--card2)!important;border:1.5px solid var(--border)!important;
-  border-radius:9px!important;color:white!important;
-  padding:11px 14px 11px 62px!important;width:100%!important;
-}
-.iti__tel-input:focus{border-color:var(--vert)!important;outline:none;}
-.iti__selected-flag{background:transparent!important;padding-left:10px!important;}
-.iti__country-list{background:var(--card2)!important;border:1.5px solid var(--border)!important;color:white!important;}
-.iti__country:hover,.iti__country.iti__highlight{background:var(--border)!important;}
-.iti__search-input{background:var(--card)!important;color:white!important;border-color:var(--border)!important;}
-.iti__divider{border-color:var(--border)!important;}
-.iti__dial-code{color:var(--muted)!important;}
+/* Field */
+.fld{display:flex;flex-direction:column;gap:5px;}
+.flbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(57,255,20,.7);font-weight:700;}
+.flbl .req{color:#ff5a5a;margin-left:2px;}
+.finp{background:rgba(0,0,0,.35);border:1px solid rgba(57,255,20,.15);border-radius:8px;padding:11px 13px;
+  color:#fff;font-size:13px;transition:border-color .25s,box-shadow .25s;outline:none;width:100%;}
+.finp:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(57,255,20,.08);}
+.finp::placeholder{color:rgba(255,255,255,.2);}
+.finp[readonly]{color:rgba(255,255,255,.4);cursor:default;}
+select.finp option{background:#0c1c34;color:#fff;}
+.dob-grid{display:grid;grid-template-columns:1fr 1.6fr 1.3fr;gap:6px;}
 
-/* ── Photo ──────────────────────────────────────────────── */
-.photo-zone{
-  display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:6px;
-}
-#photo-preview{
-  width:110px;height:110px;border-radius:50%;object-fit:cover;
-  border:3px solid var(--vert);cursor:pointer;background:var(--card2);
-  transition:box-shadow .3s;
-}
-#photo-preview:hover{box-shadow:0 0 20px rgba(57,255,20,.4);}
-.photo-btn{
-  display:inline-flex;align-items:center;gap:7px;cursor:pointer;
-  color:var(--vert);font-size:13px;font-weight:bold;
-  background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.3);
-  border-radius:8px;padding:7px 16px;transition:.2s;
-}
-.photo-btn:hover{background:rgba(57,255,20,.15);}
-#photo-input{display:none;}
+/* Tom Select dark */
+.ts-wrapper .ts-control{background:rgba(0,0,0,.35)!important;border:1px solid rgba(57,255,20,.15)!important;
+  border-radius:8px!important;color:#fff!important;padding:10px 12px!important;min-height:44px!important;font-size:13px!important;}
+.ts-wrapper.focus .ts-control{border-color:var(--green)!important;box-shadow:0 0 0 3px rgba(57,255,20,.08)!important;}
+.ts-wrapper .ts-dropdown{background:#0c1c34!important;border:1px solid var(--bd)!important;border-radius:10px!important;
+  margin-top:4px!important;box-shadow:0 8px 30px rgba(0,0,0,.6)!important;overflow:hidden;}
+.ts-wrapper .ts-dropdown .option{padding:10px 14px!important;color:var(--text)!important;font-size:13px!important;display:flex;align-items:center;gap:8px;}
+.ts-wrapper .ts-dropdown .option:hover,.ts-wrapper .ts-dropdown .option.active{background:rgba(57,255,20,.1)!important;color:#fff!important;}
+.ts-wrapper .ts-control input{color:#fff!important;background:transparent!important;}
 
-/* ── Indicateur force mot de passe ──────────────────────── */
-.strength-bar{height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden;}
-.strength-fill{height:100%;width:0;border-radius:2px;transition:width .3s,background .3s;}
-.strength-label{font-size:11px;margin-top:4px;color:var(--muted);}
+/* Photo */
+.photo-zone{display:flex;align-items:center;gap:16px;padding:16px;background:rgba(0,0,0,.25);
+  border:2px dashed rgba(57,255,20,.2);border-radius:12px;cursor:pointer;transition:border-color .25s;grid-column:1/-1;}
+.photo-zone:hover{border-color:var(--green);}
+.photo-preview{width:72px;height:72px;border-radius:50%;background:rgba(57,255,20,.07);
+  border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:28px;}
+.photo-preview img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.photo-info .photo-title{font-size:13px;color:#fff;margin-bottom:4px;}
+.photo-info .photo-sub{font-size:11px;color:var(--muted);}
 
-/* ── Spinner de chargement ──────────────────────────────── */
-.geo-row{display:flex;align-items:center;gap:8px;width:100%;}
-.geo-row>*:first-child{flex:1;min-width:0;}
-.spinner{
-  display:none;width:20px;height:20px;flex-shrink:0;
-  border:2px solid var(--border);border-top-color:var(--vert);
-  border-radius:50%;animation:spin .7s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
+/* Dial */
+.dial-row{display:flex;gap:8px;align-items:flex-end;}
+.dial-badge{flex-shrink:0;height:44px;min-width:80px;background:rgba(57,255,20,.07);border:1px solid var(--bd);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+  color:var(--green);letter-spacing:.04em;transition:all .25s;}
+.dial-badge.loaded{box-shadow:0 0 10px rgba(57,255,20,.2);}
 
-/* État champ géo : select vs text */
-.geo-select{display:none;}
-.geo-text{display:block;}
-.geo-select.active,.geo-text.active{display:block;}
-.geo-select:not(.active){display:none!important;}
-.geo-text:not(.active){display:none!important;}
+/* Loader */
+.loader{display:none;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:4px;}
+.loader.show{display:flex;}
+.spin{width:12px;height:12px;border:2px solid rgba(57,255,20,.2);border-top-color:var(--green);
+  border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Alertes ────────────────────────────────────────────── */
-.alert{padding:13px 16px;border-radius:10px;margin-bottom:20px;font-size:14px;}
-.alert-error{background:#450a0a;border:1px solid var(--rouge);color:#fca5a5;}
-.alert-success{background:#052e16;border:1px solid #22c55e;color:#86efac;}
+/* Section divider */
+.sec-div{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;}
+.sec-div-line{flex:1;height:1px;background:var(--bd);}
+.sec-div-text{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(57,255,20,.5);}
 
-/* ── Bouton soumettre ────────────────────────────────────── */
-.btn-submit{
-  width:100%;padding:16px;background:var(--vert);color:var(--bg);
-  border:none;border-radius:11px;font-size:16px;font-weight:bold;
-  cursor:pointer;margin-top:28px;transition:.25s;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-}
-.btn-submit:hover{background:#25cc0e;box-shadow:0 0 20px rgba(57,255,20,.3);}
+/* Password */
+.pwd-bars{display:flex;gap:3px;margin-top:5px;}
+.pwd-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.07);transition:background .3s;}
+.s1,.s2{background:#ff4444;}.s3{background:#ffaa00;}.s4,.s5{background:#39ff14;}
+.pwd-hint{font-size:10px;margin-top:3px;color:var(--muted);}
+.eye-wrap{position:relative;}
+.eye-wrap .finp{padding-right:40px;}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;
+  color:rgba(57,255,20,.45);font-size:15px;line-height:1;transition:color .2s;padding:0;}
+.eye-btn:hover{color:var(--green);}
 
-/* ── Responsive ─────────────────────────────────────────── */
-@media(max-width:650px){
-  .navbar{padding:14px 20px;}
-  .card{padding:24px 16px;}
-  .g2,.g3{grid-template-columns:1fr;}
-}
+/* Recap */
+.recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:rgba(0,0,0,.25);
+  border-radius:12px;padding:16px;border:1px solid var(--bd);}
+@media(max-width:600px){.recap-grid{grid-template-columns:1fr;}}
+.recap-item{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:8px;background:rgba(57,255,20,.03);}
+.recap-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(57,255,20,.5);}
+.recap-val{font-size:13px;color:#fff;word-break:break-word;}
+.recap-avatar{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:14px;
+  background:rgba(0,212,255,.04);border:1px solid var(--bd2);border-radius:12px;}
+.recap-avatar-img{width:56px;height:56px;border-radius:50%;border:2px solid var(--cyan);
+  background:rgba(0,212,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;}
+.recap-avatar-img img{width:100%;height:100%;object-fit:cover;}
+.recap-name{font-size:18px;font-weight:700;color:#fff;}
+.recap-role{font-size:11px;color:var(--cyan);letter-spacing:.06em;margin-top:3px;}
+.conf-badge{background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.3);border-radius:12px;
+  padding:16px;display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.conf-badge-icon{font-size:28px;}
+.conf-badge-text{font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;}
+.cgu-row{display:flex;align-items:flex-start;gap:10px;padding:12px;background:rgba(0,0,0,.2);
+  border-radius:10px;border:1px solid var(--bd);margin-bottom:8px;}
+.cgu-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--green);cursor:pointer;
+  background:transparent;flex-shrink:0;margin-top:1px;appearance:none;-webkit-appearance:none;
+  display:flex;align-items:center;justify-content:center;}
+.cgu-check:checked{background:var(--green);}
+.cgu-check:checked::after{content:'✓';font-size:11px;color:#000;font-weight:900;}
+.cgu-label{font-size:12px;color:var(--muted);}
+
+/* Flash */
+.flash{padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:13px;display:flex;align-items:center;gap:10px;}
+.flash-err{background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);color:#ff6060;}
+
+/* Buttons */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;
+  border-top:1px solid var(--bd);flex-wrap:wrap;gap:12px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:8px;font-size:13px;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none;transition:all .25s ease;outline:none;}
+.btn-prev{background:transparent;color:var(--muted);border:1.5px solid rgba(255,255,255,.1);}
+.btn-prev:hover{border-color:rgba(255,255,255,.3);color:#fff;}
+.btn-next{background:transparent;color:var(--green);border:1.5px solid var(--green);box-shadow:0 0 14px rgba(57,255,20,.15);}
+.btn-next:hover{background:rgba(57,255,20,.1);box-shadow:0 0 26px rgba(57,255,20,.4);transform:translateY(-2px);color:#fff;}
+.btn-submit{background:var(--green);color:#000;font-weight:900;border:none;box-shadow:0 0 20px rgba(57,255,20,.4);}
+.btn-submit:hover{background:#5fff3a;transform:translateY(-2px);box-shadow:0 0 36px rgba(57,255,20,.6);}
+.btn-skip{background:none;border:none;font-size:11px;color:var(--muted);letter-spacing:.06em;cursor:pointer;text-transform:uppercase;padding:4px 8px;}
+.btn-skip:hover{color:#fff;}
+
+/* Footer */
+.reg-footer{text-align:center;margin-top:22px;font-size:13px;color:var(--muted);animation:fadeUp .6s ease .3s both;}
+.reg-footer a{color:var(--cyan);text-decoration:none;}
+.reg-footer a:hover{color:#fff;}
+
+/* Err */
+.finp.err{border-color:#ff5a5a!important;}
+.err-msg{font-size:11px;color:#ff6060;margin-top:3px;}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+@keyframes fadeUp  {from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none}}
+@keyframes fadeIn  {from{opacity:0;transform:scale(.98)}       to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-  <a class="logo" href="/accueil">SURVEILLANCE</a>
-  <div class="nav-btns">
-    <a href="/accueil" class="btn-nav outline"><i class="fa-solid fa-house" style="margin-right:6px;"></i>Accueil</a>
-    <a href="/login"   class="btn-nav solid"><i class="fa-solid fa-right-to-bracket" style="margin-right:6px;"></i>Connexion</a>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="reg-page">
+
+  <div class="reg-header">
+    <h1 class="reg-title">Créer votre compte</h1>
+    <p class="reg-sub">Plateforme mondiale de surveillance des salles serveurs</p>
   </div>
-</nav>
 
-<div class="form-wrap">
-<div class="card">
+  <div class="reg-card">
 
-  <div class="card-title"><i class="fa-solid fa-user-plus" style="margin-right:10px;"></i>Créer un compte</div>
-  <div class="card-sub">Remplissez le formulaire — accès activé après validation administrateur</div>
-
-  @if($errors->any())
-  <div class="alert alert-error">
-    <i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i><strong>Erreurs :</strong><br>
-    @foreach($errors->all() as $e)&nbsp;&nbsp;• {{ $e }}<br>@endforeach
-  </div>
-  @endif
-
-  @if(session('error'))
-  <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i>{{ session('error') }}</div>
-  @endif
-
-  <form method="POST" action="/register-user" enctype="multipart/form-data" id="reg-form">
-  @csrf
-
-  {{-- ── PHOTO ────────────────────────────────────────── --}}
-  <div class="section" style="border:none;margin-top:0;padding-top:0;">
-    <div class="section-head"><i class="fa-solid fa-camera"></i>Photo de profil <span class="opt">(optionnel)</span></div>
-    <div class="photo-zone">
-      <img id="photo-preview"
-        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 110'%3E%3Ccircle cx='55' cy='40' r='22' fill='%231f2d5e'/%3E%3Cellipse cx='55' cy='90' rx='35' ry='25' fill='%231f2d5e'/%3E%3C/svg%3E"
-        alt="Photo" onclick="document.getElementById('photo-input').click()">
-      <label class="photo-btn" for="photo-input">
-        <i class="fa-solid fa-upload"></i> Choisir une photo
-      </label>
-      <input type="file" id="photo-input" name="photo_profil" accept="image/*">
-      <small style="color:var(--muted);font-size:11px;">JPG, PNG, WEBP — max 3 Mo</small>
+    <div class="steps-header">
+      <div class="steps-row">
+        <div class="step-item active" data-s="1"><div class="step-num">1</div><div class="step-label">Identité</div></div>
+        <div class="step-item" data-s="2"><div class="step-num">2</div><div class="step-label">Localisation</div></div>
+        <div class="step-item" data-s="3"><div class="step-num">3</div><div class="step-label">Professionnel</div></div>
+        <div class="step-item" data-s="4"><div class="step-num">4</div><div class="step-label">Compte</div></div>
+        <div class="step-item" data-s="5"><div class="step-num">5</div><div class="step-label">Confirmation</div></div>
+      </div>
     </div>
-  </div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:20%"></div></div>
 
-  {{-- ── IDENTITÉ ──────────────────────────────────────── --}}
-  <div class="section">
-    <div class="section-head"><i class="fa-solid fa-id-card"></i>Informations personnelles</div>
-    <div class="g2">
+    <div class="reg-body">
 
-      <div class="field">
-        <label><i class="fa-solid fa-user"></i>Nom <span style="color:var(--rouge)">*</span></label>
-        <input type="text" name="nom" value="{{ old('nom') }}" required placeholder="Ex: DUPONT">
-      </div>
+      @if($errors->any())
+        <div class="flash flash-err">❌ {{ $errors->first() }}</div>
+      @endif
 
-      <div class="field">
-        <label><i class="fa-solid fa-user"></i>Prénom <span style="color:var(--rouge)">*</span></label>
-        <input type="text" name="prenom" value="{{ old('prenom') }}" required placeholder="Ex: Jean">
-      </div>
+      <form action="/register-user" method="POST" enctype="multipart/form-data" id="regForm" novalidate>
+        @csrf
+        <input type="hidden" name="iso_pays"        id="h_iso"      value="CM">
+        <input type="hidden" name="indicatif_tel"  id="h_dial"     value="+237">
+        <input type="hidden" name="nationalite"    id="h_nat"      value="Camerounaise">
+        <input type="hidden" name="pays"           id="h_pays"     value="Cameroun">
+        <input type="hidden" name="pays_geoname_id" id="h_pays_gid" value="2233387">
+        <input type="hidden" name="pays_nom"        id="h_pays_nom" value="Cameroun">
 
-      <div class="field">
-        <label><i class="fa-solid fa-venus-mars"></i>Sexe <span style="color:var(--rouge)">*</span></label>
-        <select name="sexe" required>
-          <option value="">— Sélectionner —</option>
-          <option value="homme"  {{ old('sexe')=='homme'  ?'selected':'' }}>Homme</option>
-          <option value="femme"  {{ old('sexe')=='femme'  ?'selected':'' }}>Femme</option>
-          <option value="autre"  {{ old('sexe')=='autre'  ?'selected':'' }}>Autre / Non précisé</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-cake-candles"></i>Date de naissance <span style="color:var(--rouge)">*</span></label>
-        <input type="date" name="date_naissance" value="{{ old('date_naissance') }}" required
-               max="{{ date('Y-m-d', strtotime('-16 years')) }}">
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-ring"></i>Situation matrimoniale <span class="opt">(optionnel)</span></label>
-        <select name="statut_matrimonial">
-          <option value="">— Sélectionner —</option>
-          <option value="celibataire" {{ old('statut_matrimonial')=='celibataire'?'selected':'' }}>Célibataire</option>
-          <option value="marie"       {{ old('statut_matrimonial')=='marie'      ?'selected':'' }}>Marié(e)</option>
-          <option value="divorce"     {{ old('statut_matrimonial')=='divorce'    ?'selected':'' }}>Divorcé(e)</option>
-          <option value="veuf"        {{ old('statut_matrimonial')=='veuf'       ?'selected':'' }}>Veuf / Veuve</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-flag"></i>Nationalité <span class="opt">(auto)</span></label>
-        <input type="text" name="nationalite" id="field-nationalite"
-               value="{{ old('nationalite') }}" placeholder="Auto-rempli selon le pays" readonly
-               style="cursor:default;background:#080f1e;">
-      </div>
-
-    </div>
-  </div>
-
-  {{-- ── CONTACT ───────────────────────────────────────── --}}
-  <div class="section">
-    <div class="section-head"><i class="fa-solid fa-address-book"></i>Contact</div>
-    <div class="g2">
-
-      <div class="field">
-        <label><i class="fa-solid fa-envelope"></i>Adresse email <span style="color:var(--rouge)">*</span></label>
-        <input type="email" name="email" value="{{ old('email') }}" required placeholder="exemple@email.com" autocomplete="email">
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-phone"></i>Téléphone <span style="color:var(--rouge)">*</span></label>
-        <input type="tel" id="phone-input" name="telephone" value="{{ old('telephone') }}"
-               required placeholder="6XX XXX XXX">
-        <input type="hidden" id="phone-full" name="telephone_international">
-      </div>
-
-    </div>
-  </div>
-
-  {{-- ── LOCALISATION ──────────────────────────────────── --}}
-  <div class="section">
-    <div class="section-head"><i class="fa-solid fa-location-dot"></i>Localisation géographique</div>
-
-    {{-- Pays --}}
-    <div class="field" style="margin-bottom:16px;">
-      <label><i class="fa-solid fa-earth-africa"></i>Pays <span style="color:var(--rouge)">*</span></label>
-      <div id="country-loading" style="color:var(--muted);font-size:13px;padding:8px 0;">
-        <i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;color:var(--vert);"></i>Chargement des pays…
-      </div>
-      <select id="country-select" name="pays" required style="display:none;">
-        <option value="">🌍  Rechercher un pays…</option>
-      </select>
-      <input type="hidden" id="field-code-pays" name="code_pays" value="{{ old('code_pays') }}">
-    </div>
-
-    <div class="g2">
-
-      {{-- Région / Province / État --}}
-      <div class="field">
-        <label><i class="fa-solid fa-map"></i><span id="lbl-region">Région / Province / État</span></label>
-        <div class="geo-row">
-          <select id="sel-region" name="etat" class="geo-select">
-            <option value="">— Sélectionner un pays d'abord —</option>
-          </select>
-          <input type="text" id="txt-region" name="etat_libre" class="geo-text active"
-                 value="{{ old('etat_libre') }}" placeholder="Région / Province / État">
-          <div class="spinner" id="spin-region"></div>
+        {{-- ══ STEP 1 : IDENTITÉ ══ --}}
+        <div class="step-pane active" id="pane1">
+          <div class="pane-title">👤 Identité personnelle</div>
+          <div class="pane-sub">Vos informations de base</div>
+          <div class="fg">
+            <div class="photo-zone" onclick="document.getElementById('photoInput').click()">
+              <div class="photo-preview" id="photoPrev">📷</div>
+              <div class="photo-info">
+                <div class="photo-title">Photo de profil (optionnel)</div>
+                <div class="photo-sub">Cliquez pour choisir · JPG, PNG · Max 2 Mo</div>
+              </div>
+              <input type="file" name="photo_profil" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+            </div>
+            <div class="fld">
+              <label class="flbl">Prénom <span class="req">*</span></label>
+              <input class="finp" type="text" name="prenom" id="prenom" placeholder="Votre prénom" value="{{ old('prenom') }}">
+            </div>
+            <div class="fld">
+              <label class="flbl">Nom <span class="req">*</span></label>
+              <input class="finp" type="text" name="nom" id="nom" placeholder="Votre nom de famille" value="{{ old('nom') }}">
+            </div>
+            <div class="fld">
+              <label class="flbl">Sexe</label>
+              <select class="finp" name="sexe">
+                <option value="">— Sélectionner —</option>
+                <option value="M" {{ old('sexe')=='M'?'selected':'' }}>Homme</option>
+                <option value="F" {{ old('sexe')=='F'?'selected':'' }}>Femme</option>
+                <option value="A" {{ old('sexe')=='A'?'selected':'' }}>Autre</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label class="flbl">Date de naissance</label>
+              <div class="dob-grid">
+                <select class="finp" id="dp-day">
+                  <option value="">Jour</option>
+                </select>
+                <select class="finp" id="dp-month">
+                  <option value="">Mois</option>
+                  <option value="01">Janvier</option>
+                  <option value="02">Février</option>
+                  <option value="03">Mars</option>
+                  <option value="04">Avril</option>
+                  <option value="05">Mai</option>
+                  <option value="06">Juin</option>
+                  <option value="07">Juillet</option>
+                  <option value="08">Août</option>
+                  <option value="09">Septembre</option>
+                  <option value="10">Octobre</option>
+                  <option value="11">Novembre</option>
+                  <option value="12">Décembre</option>
+                </select>
+                <select class="finp" id="dp-year">
+                  <option value="">Année</option>
+                </select>
+              </div>
+              <input type="hidden" name="date_naissance" id="dob-hidden" value="{{ old('date_naissance') }}">
+            </div>
+            <div class="fld">
+              <label class="flbl">Lieu de naissance</label>
+              <input class="finp" type="text" name="lieu_naissance" placeholder="Ville et pays de naissance" value="{{ old('lieu_naissance') }}">
+            </div>
+            <div class="fld f-full">
+              <label class="flbl">Statut matrimonial</label>
+              <select class="finp" name="statut_matrimonial">
+                <option value="">— Sélectionner —</option>
+                <option value="celibataire">Célibataire</option>
+                <option value="marie">Marié(e)</option>
+                <option value="divorce">Divorcé(e)</option>
+                <option value="veuf">Veuf / Veuve</option>
+                <option value="en_couple">En couple</option>
+              </select>
+            </div>
+          </div>
+          <div class="nav-row">
+            <span></span>
+            <div style="display:flex;align-items:center;gap:12px">
+              <button type="button" class="btn-skip" onclick="goStep(2)">Passer →</button>
+              <button type="button" class="btn btn-next" onclick="nextStep()">Suivant →</button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {{-- Département --}}
-      <div class="field">
-        <label><i class="fa-solid fa-map-pin"></i><span id="lbl-dept">Département</span></label>
-        <div class="geo-row">
-          <select id="sel-dept" name="departement" class="geo-select">
-            <option value="">— Sélectionner une région d'abord —</option>
-          </select>
-          <input type="text" id="txt-dept" name="departement_libre" class="geo-text active"
-                 value="{{ old('departement_libre') }}" placeholder="Département / District">
-          <div class="spinner" id="spin-dept"></div>
+        {{-- ══ STEP 2 : LOCALISATION ══ --}}
+        <div class="step-pane" id="pane2">
+          <div class="pane-title">🌍 Localisation géographique</div>
+          <div class="pane-sub">Votre pays, région et adresse</div>
+          <div class="fg">
+            {{-- Pays — Cameroun uniquement --}}
+            <div class="fld f-full">
+              <label class="flbl">Pays</label>
+              <div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.35);border:1px solid rgba(57,255,20,.25);border-radius:8px;padding:11px 13px;">
+                <span style="font-size:20px">🇨🇲</span>
+                <span style="color:#fff;font-size:13px;font-weight:600;">Cameroun</span>
+                <span style="color:rgba(255,255,255,.35);font-size:11px;margin-left:auto">+237</span>
+              </div>
+            </div>
+            {{-- Téléphone --}}
+            <div class="fld f-full">
+              <label class="flbl">Téléphone <span class="req">*</span></label>
+              <div class="dial-row">
+                <div class="dial-badge loaded" id="dialBadge">🇨🇲 +237</div>
+                <input class="finp" type="tel" name="telephone" id="telephone" placeholder="Numéro de téléphone" style="flex:1" value="{{ old('telephone') }}">
+              </div>
+            </div>
+            {{-- [NOUVEAU] Niveau 2 : Région (Tom Select ou texte libre) --}}
+            <div class="fld">
+              <label class="flbl">🌐 Région / Province / État</label>
+              <div class="loader" id="regLoader"><div class="spin"></div> Chargement des régions...</div>
+              <select id="select-region" placeholder="— Choisir un pays d'abord —"></select>
+              <input class="finp" id="txt-region" type="text" placeholder="Saisir la région..." style="display:none">
+              <input type="hidden" name="region"            id="h_region"  value="{{ old('region') }}">
+              <input type="hidden" name="region_geoname_id" id="h_reg_gid" value="{{ old('region_geoname_id') }}">
+            </div>
+            {{-- [NOUVEAU] Niveau 3 : Département (Tom Select ou texte libre) --}}
+            <div class="fld">
+              <label class="flbl">🏛️ Département / District / Comté</label>
+              <div class="loader" id="deptLoader"><div class="spin"></div> Chargement...</div>
+              <select id="select-dept" placeholder="— Choisir une région d'abord —"></select>
+              <input class="finp" id="txt-dept" type="text" placeholder="Saisir le département..." style="display:none">
+              <input type="hidden" name="departement"     id="h_dept"     value="{{ old('departement') }}">
+              <input type="hidden" name="dept_geoname_id" id="h_dept_gid" value="{{ old('dept_geoname_id') }}">
+            </div>
+            {{-- [NOUVEAU] Niveau 4 : Arrondissement (Tom Select ou texte libre) --}}
+            <div class="fld">
+              <label class="flbl">🏘️ Arrondissement / Commune</label>
+              <div class="loader" id="arrondLoader"><div class="spin"></div> Chargement...</div>
+              <select id="select-arr" placeholder="— Choisir un département d'abord —"></select>
+              <input class="finp" id="txt-arr" type="text" placeholder="Saisir l'arrondissement..." style="display:none">
+              <input type="hidden" name="arrondissement"  id="h_arrond"   value="{{ old('arrondissement') }}">
+              <input type="hidden" name="arr_geoname_id"  id="h_arr_gid"  value="{{ old('arr_geoname_id') }}">
+            </div>
+            {{-- Niveau 5 : Ville / Résidence (saisie libre) --}}
+            <div class="fld">
+              <label class="flbl">🏙️ Ville / Résidence</label>
+              <input class="finp" type="text" name="ville_residence" id="h_ville" placeholder="Ex: Yaoundé, Douala, Paris..." value="{{ old('ville_residence') }}">
+            </div>
+            {{-- Quartier --}}
+            <div class="fld">
+              <label class="flbl">Quartier</label>
+              <input class="finp" type="text" name="quartier" placeholder="Ex: Bastos, Montmartre, Downtown..." value="{{ old('quartier') }}">
+            </div>
+            {{-- Adresse --}}
+            <div class="fld">
+              <label class="flbl">Adresse complète</label>
+              <input class="finp" type="text" name="adresse" placeholder="Rue, numéro, bâtiment..." value="{{ old('adresse') }}">
+            </div>
+          </div>
+          <div class="nav-row">
+            <button type="button" class="btn btn-prev" onclick="goStep(1)">← Retour</button>
+            <button type="button" class="btn btn-next" onclick="nextStep()">Suivant →</button>
+          </div>
         </div>
-      </div>
 
-      {{-- Arrondissement / Commune --}}
-      <div class="field">
-        <label><i class="fa-solid fa-city"></i><span id="lbl-arro">Arrondissement / Commune</span></label>
-        <div class="geo-row">
-          <select id="sel-arro" name="arrondissement" class="geo-select">
-            <option value="">— Sélectionner un département d'abord —</option>
-          </select>
-          <input type="text" id="txt-arro" name="arrondissement_libre" class="geo-text active"
-                 value="{{ old('arrondissement_libre') }}" placeholder="Arrondissement / Commune">
-          <div class="spinner" id="spin-arro"></div>
+        {{-- ══ STEP 3 : PROFESSIONNEL ══ --}}
+        <div class="step-pane" id="pane3">
+          <div class="pane-title">💼 Informations professionnelles</div>
+          <div class="pane-sub">Votre activité et votre rôle</div>
+          <div class="fg">
+            <div class="fld">
+              <label class="flbl">Profession</label>
+              <input class="finp" type="text" name="profession" placeholder="Ex: Ingénieur réseau, Admin système..." value="{{ old('profession') }}">
+            </div>
+            <div class="fld">
+              <label class="flbl">Organisation / Entreprise</label>
+              <input class="finp" type="text" name="organisation" placeholder="Nom de l'entreprise..." value="{{ old('organisation') }}">
+            </div>
+            <div class="fld f-full">
+              <label class="flbl">Rôle sur la plateforme</label>
+              <select class="finp" name="role" id="role_sel">
+                <option value="utilisateur"    {{ old('role','utilisateur')=='utilisateur'   ?'selected':'' }}>👤 Utilisateur standard</option>
+                <option value="technicien"     {{ old('role')=='technicien'   ?'selected':'' }}>🔧 Technicien</option>
+                <option value="superviseur"    {{ old('role')=='superviseur'  ?'selected':'' }}>📊 Superviseur</option>
+                <option value="administrateur" {{ old('role')=='administrateur'?'selected':'' }}>🛡️ Administrateur</option>
+                <option value="prestataire"    {{ old('role')=='prestataire'  ?'selected':'' }}>🏢 Prestataire</option>
+                <option value="invite"         {{ old('role')=='invite'       ?'selected':'' }}>👁️ Invité (lecture seule)</option>
+              </select>
+            </div>
+          </div>
+          <div class="nav-row">
+            <button type="button" class="btn btn-prev" onclick="goStep(2)">← Retour</button>
+            <button type="button" class="btn btn-next" onclick="nextStep()">Suivant →</button>
+          </div>
         </div>
-      </div>
 
-      {{-- Ville --}}
-      <div class="field">
-        <label><i class="fa-solid fa-building"></i>Ville</label>
-        <div class="geo-row">
-          <select id="sel-ville" name="ville" class="geo-select">
-            <option value="">— Sélectionner d'abord une région —</option>
-          </select>
-          <input type="text" id="txt-ville" name="ville_libre" class="geo-text active"
-                 value="{{ old('ville_libre') }}" placeholder="Ville">
-          <div class="spinner" id="spin-ville"></div>
+        {{-- ══ STEP 4 : COMPTE ══ --}}
+        <div class="step-pane" id="pane4">
+          <div class="pane-title">🔐 Informations de connexion</div>
+          <div class="pane-sub">Votre email et mot de passe sécurisé</div>
+          <div class="fg col1">
+            <div class="fld">
+              <label class="flbl">Adresse email <span class="req">*</span></label>
+              <input class="finp" type="email" name="email" id="email" placeholder="vous@exemple.com"
+                     value="{{ old('email') }}" oninput="checkEmail(this.value)" autocomplete="email">
+              <div class="err-msg" id="emailErr"></div>
+            </div>
+            <div class="fld">
+              <label class="flbl">Mot de passe <span class="req">*</span></label>
+              <div class="eye-wrap">
+                <input class="finp" type="password" name="password" id="password"
+                       placeholder="Minimum 8 caractères" oninput="checkPwd(this.value)" autocomplete="new-password">
+                <button type="button" class="eye-btn" onclick="toggleEye('password',this)">👁</button>
+              </div>
+              <div class="pwd-bars">
+                <div class="pwd-bar" id="pb1"></div><div class="pwd-bar" id="pb2"></div>
+                <div class="pwd-bar" id="pb3"></div><div class="pwd-bar" id="pb4"></div>
+                <div class="pwd-bar" id="pb5"></div>
+              </div>
+              <div class="pwd-hint" id="pwdHint">Minimum 8 caractères</div>
+            </div>
+            <div class="fld">
+              <label class="flbl">Confirmer le mot de passe <span class="req">*</span></label>
+              <div class="eye-wrap">
+                <input class="finp" type="password" name="password_confirmation" id="pwdConf"
+                       placeholder="Répéter le mot de passe" oninput="checkMatch()" autocomplete="new-password">
+                <button type="button" class="eye-btn" onclick="toggleEye('pwdConf',this)">👁</button>
+              </div>
+              <div class="err-msg" id="matchErr"></div>
+            </div>
+          </div>
+          <div class="nav-row">
+            <button type="button" class="btn btn-prev" onclick="goStep(3)">← Retour</button>
+            <button type="button" class="btn btn-next" onclick="nextStep()">Vérifier →</button>
+          </div>
         </div>
-      </div>
 
-      {{-- Quartier --}}
-      <div class="field">
-        <label><i class="fa-solid fa-house-flag"></i>Quartier <span class="opt">(optionnel)</span></label>
-        <input type="text" name="quartier" value="{{ old('quartier') }}" placeholder="Quartier / Secteur">
-      </div>
+        {{-- ══ STEP 5 : CONFIRMATION ══ --}}
+        <div class="step-pane" id="pane5">
+          <div class="pane-title">✅ Confirmation</div>
+          <div class="pane-sub">Vérifiez vos informations avant de soumettre</div>
+          <div class="conf-badge">
+            <div class="conf-badge-icon">🔔</div>
+            <div class="conf-badge-text">
+              Votre compte sera soumis à <strong>validation par l'administrateur</strong>.<br>
+              Un email de confirmation sera envoyé à l'adresse indiquée.
+            </div>
+          </div>
+          <div class="recap-grid" id="recapGrid">
+            <div class="recap-avatar">
+              <div class="recap-avatar-img" id="recapAvatarImg">👤</div>
+              <div><div class="recap-name" id="recapName">—</div><div class="recap-role" id="recapRole">—</div></div>
+            </div>
+            <div class="recap-item"><div class="recap-label">Email</div><div class="recap-val" id="r_email">—</div></div>
+            <div class="recap-item"><div class="recap-label">Téléphone</div><div class="recap-val" id="r_tel">—</div></div>
+            <div class="recap-item"><div class="recap-label">Pays</div><div class="recap-val" id="r_pays">—</div></div>
+            <div class="recap-item"><div class="recap-label">Région</div><div class="recap-val" id="r_region">—</div></div>
+            <div class="recap-item"><div class="recap-label">Département</div><div class="recap-val" id="r_dept">—</div></div>
+            <div class="recap-item"><div class="recap-label">Arrondissement</div><div class="recap-val" id="r_arrond">—</div></div>
+            <div class="recap-item"><div class="recap-label">Profession</div><div class="recap-val" id="r_prof">—</div></div>
+            <div class="recap-item"><div class="recap-label">Organisation</div><div class="recap-val" id="r_org">—</div></div>
+          </div>
+          <div style="margin-top:18px">
+            <div class="cgu-row">
+              <input type="checkbox" class="cgu-check" id="cgu" required>
+              <label class="cgu-label" for="cgu">
+                J'accepte les conditions d'utilisation et confirme que mes informations sont exactes.
+              </label>
+            </div>
+          </div>
+          <div class="nav-row">
+            <button type="button" class="btn btn-prev" onclick="goStep(4)">← Modifier</button>
+            <button type="submit" class="btn btn-submit">🚀 Créer mon compte</button>
+          </div>
+        </div>
 
-      {{-- Adresse --}}
-      <div class="field">
-        <label><i class="fa-solid fa-road"></i>Adresse complète <span class="opt">(optionnel)</span></label>
-        <input type="text" name="adresse" value="{{ old('adresse') }}" placeholder="Rue, numéro, boîte postale…">
-      </div>
-
+      </form>
     </div>
   </div>
 
-  {{-- ── PROFESSIONNEL ─────────────────────────────────── --}}
-  <div class="section">
-    <div class="section-head"><i class="fa-solid fa-briefcase"></i>Informations professionnelles</div>
-    <div class="g3">
-
-      <div class="field">
-        <label><i class="fa-solid fa-hammer"></i>Profession <span style="color:var(--rouge)">*</span></label>
-        <input type="text" name="profession" value="{{ old('profession') }}" required placeholder="Ex: Ingénieur réseaux">
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-building-columns"></i>Organisation <span class="opt">(optionnel)</span></label>
-        <input type="text" name="organisation" value="{{ old('organisation') }}" placeholder="Entreprise / Université">
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-user-shield"></i>Rôle demandé</label>
-        <select name="role">
-          <option value="utilisateur" {{ old('role','utilisateur')=='utilisateur'?'selected':'' }}>Utilisateur</option>
-          <option value="technicien"  {{ old('role')=='technicien'                ?'selected':'' }}>Technicien</option>
-          <option value="superviseur" {{ old('role')=='superviseur'               ?'selected':'' }}>Superviseur</option>
-        </select>
-      </div>
-
-    </div>
+  <div class="reg-footer">
+    Déjà un compte ? <a href="/login">Se connecter →</a>
   </div>
 
-  {{-- ── SÉCURITÉ ──────────────────────────────────────── --}}
-  <div class="section">
-    <div class="section-head"><i class="fa-solid fa-shield-halved"></i>Sécurité</div>
-    <div class="g2">
-
-      <div class="field">
-        <label><i class="fa-solid fa-lock"></i>Mot de passe <span style="color:var(--rouge)">*</span></label>
-        <input type="password" name="password" id="password-input" required
-               placeholder="Minimum 8 caractères" minlength="8" autocomplete="new-password">
-        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
-        <div class="strength-label" id="strength-label">Saisissez un mot de passe</div>
-      </div>
-
-      <div class="field">
-        <label><i class="fa-solid fa-lock"></i>Confirmer le mot de passe <span style="color:var(--rouge)">*</span></label>
-        <input type="password" name="password_confirmation" id="confirm-input" required
-               placeholder="Répétez le mot de passe" minlength="8" autocomplete="new-password">
-        <div class="strength-label" id="confirm-label">&nbsp;</div>
-      </div>
-
-    </div>
-  </div>
-
-  <button type="submit" class="btn-submit">
-    <i class="fa-solid fa-paper-plane"></i>
-    Envoyer la demande d'inscription
-  </button>
-
-  </form>
 </div>
-</div>
 
-<!-- ─── SCRIPTS ──────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
-
 <script>
-// ════════════════════════════════════════════════════════
-//  DONNÉES CAMEROUN COMPLÈTES (Régions → Départements → Villes)
-// ════════════════════════════════════════════════════════
+/* ── Cameroun uniquement ─────────────────────────── */
+var currentCountry = {iso:'CM', fr:'Cameroun', en:'Cameroon', dial:'+237'};
 
-const CM_DATA = {
-  "Adamaoua": {
-    lbl: "Région de l'Adamaoua",
-    depts: {
-      "Djerem":      ["Tibati","Ngaoundal","Mbitom"],
-      "Faro et Déo": ["Tignère","Mayo-Baléo","Galim-Tignère"],
-      "Mayo-Banyo":  ["Banyo","Gashiga","Kontcha","Mayo-Darlé","Tignère"],
-      "Mbéré":       ["Meiganga","Djohong","Ngaoui","Ngan-Ha"],
-      "Vina":        ["Ngaoundéré","Martap","Mbé","Belel","Nyambaka"]
-    }
-  },
-  "Centre": {
-    lbl: "Région du Centre",
-    depts: {
-      "Haute-Sanaga": ["Nanga Eboko","Minta","Nsem","Lembe-Yezoum"],
-      "Lékié":        ["Monatélé","Sa'a","Obala","Evodoula","Elig-Mfomo","Bot-Makak"],
-      "Mbam-et-Inoubou":["Bafia","Bokito","Kiiki","Kon-Yambetta","Makénéné","Nitoukou","Ombessa"],
-      "Mbam-et-Kim":  ["Ntui","Mbangassina","Ngambe-Tikar","Ngoro"],
-      "Méfou-et-Afamba":["Mfou","Nkolafamba","Awae","Esse","Mbankomo","Ngoumou","Soa"],
-      "Méfou-et-Akono":["Mbalmayo","Akono","Dzeng","Ngomedzap","Nkolmetet"],
-      "Mfoundi":      ["Yaoundé I","Yaoundé II","Yaoundé III","Yaoundé IV","Yaoundé V","Yaoundé VI","Yaoundé VII"],
-      "Nyong-et-Kellé":["Eseka","Makak","Bondjock","Dibang","Ngog-Mapubi","Messondo"],
-      "Nyong-et-Mfoumou":["Akonolinga","Endom","Ayos","Mengueme","Nyakokombo"],
-      "Nyong-et-So'o":["Mbalmayo","Ngomedzap","Bikok","Dzeng","Mengueme"]
-    }
-  },
-  "Est": {
-    lbl: "Région de l'Est",
-    depts: {
-      "Boumba-et-Ngoko":["Moloundou","Salapoumbé","Gari Gombo","Yokadouma"],
-      "Haut-Nyong":["Abong-Mbang","Lomié","Doumaintang","Mboma","Ngoura","Nguelemendouka","Somalomo"],
-      "Kadey":["Batouri","Kette","Mbang","Ndélélé","Ndelele","Ouli"],
-      "Lom-et-Djérem":["Bertoua","Doumé","Batouri","Bélabo","Mandjou","Ngoura"]
-    }
-  },
-  "Extrême-Nord": {
-    lbl: "Région de l'Extrême-Nord",
-    depts: {
-      "Diamaré":["Maroua","Kaélé","Bogo","Dargala","Gazawa","Meri","Mindif","Moutouroua","Ndoukoula","Petté"],
-      "Logone-et-Chari":["Kousseri","Blangoua","Darak","Fotokol","Goulfey","Makary","Waza"],
-      "Mayo-Danay":["Yagoua","Kar-Hay","Kalfou","Maga","Tchatibali","Vélé","Wina"],
-      "Mayo-Kani":["Kaélé","Guidiguis","Mindif","Moulvoudaye","Moutourwa"],
-      "Mayo-Sava":["Mora","Kolofata","Tokombéré"],
-      "Mayo-Tsanaga":["Mokolo","Bourha","Hina","Koza","Mozogo","Roua","Touloum"]
-    }
-  },
-  "Littoral": {
-    lbl: "Région du Littoral",
-    depts: {
-      "Moungo":["Nkongsamba","Loum","Mbanga","Baré-Bakem","Dibombari","Ébone","Manjo","Melong","Njombe-Penja"],
-      "Nkam":["Yabassi","Bafang","Ndom","Ndoumbé","Nékongsamba","Yingui"],
-      "Sanaga-Maritime":["Edea","Dibamba","Dizangue","Mouanko","Ngwei","Nyanon","Pouma"],
-      "Wouri":["Douala I","Douala II","Douala III","Douala IV","Douala V"]
-    }
-  },
-  "Nord": {
-    lbl: "Région du Nord",
-    depts: {
-      "Bénoué":["Garoua","Demsa","Lagdo","Mayo-Hourna","Ngong","Pitoa","Rey-Bouba","Tchéboa","Touroua"],
-      "Faro":["Poli","Beka"],
-      "Mayo-Louti":["Guider","Figuil","Mayo-Oulo"],
-      "Mayo-Rey":["Tcholliré","Madingring","Mayo-Galké","Rey-Bouba","Touboro"]
-    }
-  },
-  "Nord-Ouest": {
-    lbl: "Région du Nord-Ouest",
-    depts: {
-      "Boyo":["Fundong","Belo","Fonfuka","Ndu","Njinikom"],
-      "Bui":["Kumbo","Jakiri","Mbven","Nkambe","Noni","Oku"],
-      "Donga-Mantung":["Nkambe","Ako","Misaje","Ndu","Nwa","Nwa"],
-      "Menchum":["Wum","Furu-Awa","Befang","Esu","Fungom","Zhoa"],
-      "Mezam":["Bamenda","Santa","Bafut","Bali","Tubah","Tubah"],
-      "Momo":["Mbengwi","Batibo","Njikwa","Widikum"],
-      "Ngo-Ketunjia":["Ndop","Babessi","Balikumbat"]
-    }
-  },
-  "Ouest": {
-    lbl: "Région de l'Ouest",
-    depts: {
-      "Bamboutos":["Mbouda","Batcham","Babadjou","Galim","Penka-Michel"],
-      "Haut-Nkam":["Bafang","Bakou","Bana","Bangangté","Bassamba","Bazou","Kekem"],
-      "Hauts-Plateaux":["Baham","Bamendjou","Bangou","Bansoa"],
-      "Koung-Khi":["Bafoussam","Bamenda","Bayangam","Kékem"],
-      "Menoua":["Dschang","Fokoue","Fongo-Tongo","Nkong-Ni","Penka-Michel","Santchou"],
-      "Mifi":["Bafoussam","Balessing","Bamougoum","Batoufam"],
-      "Ndé":["Bangangté","Bazou","Batchingou","Dschang","Tonga"],
-      "Noun":["Foumban","Foumbot","Bangourain","Koutaba","Malantouen","Massangam","Njimom"]
-    }
-  },
-  "Sud": {
-    lbl: "Région du Sud",
-    depts: {
-      "Dja-et-Lobo":["Sangmélima","Bengbis","Djoum","Meyomessala","Meyomessi","Mintom","Oveng"],
-      "Mvila":["Ebolowa","Ambam","Biwong-Bané","Biwong-Mbaï","Efoulan","Kinkala","Ma'an","Ngoulemakong","Olamze"],
-      "Océan":["Kribi","Campo","Grand Batanga","Lokoundjé","Lolodorf","Mvengue","Niété"],
-      "Vallée-du-Ntem":["Ambam","Ma'an","Kye-Ossi","Mengong"]
-    }
-  },
-  "Sud-Ouest": {
-    lbl: "Région du Sud-Ouest",
-    depts: {
-      "Fako":["Buea","Limbe","Muyuka","Tiko","Idenau","Muea"],
-      "Koupé-Manengouba":["Bangem","Nguti","Tombel"],
-      "Lebialem":["Fontem","Alou","Wabane"],
-      "Manyu":["Mamfe","Akwaya","Eyumojock","Tali"],
-      "Meme":["Kumba","Konye","Mbonge","Mundemba"],
-      "Ndian":["Mundemba","Isangele","Ekondo-Titi","Idabato","Kombo-Abedimo","Kombo-Itindi"]
-    }
-  }
+/* ── Config des niveaux géographiques ──────────────── */
+var GEO_LEVELS = {
+  region: { sel:'select-region', txt:'txt-region', hid:'h_region',  gid:'h_reg_gid',  loader:'regLoader'    },
+  dept:   { sel:'select-dept',   txt:'txt-dept',   hid:'h_dept',    gid:'h_dept_gid', loader:'deptLoader'   },
+  arr:    { sel:'select-arr',    txt:'txt-arr',    hid:'h_arrond',  gid:'h_arr_gid',  loader:'arrondLoader' }
 };
 
-// Correspondances noms API ↔ clés CM_DATA
-const CM_API_NAME = "Cameroon";
-const CM_ALIASES  = ["Cameroon","Cameroun","CAMEROUN","CAMEROON"];
-
-// ════════════════════════════════════════════════════════
-//  UTILITAIRES
-// ════════════════════════════════════════════════════════
-
-function flagEmoji(iso2) {
-  if (!iso2 || iso2.length !== 2) return '🌍';
-  try { return String.fromCodePoint(...[...iso2.toUpperCase()].map(c => 0x1F1E0 + c.charCodeAt(0) - 65)); }
-  catch(e) { return '🌍'; }
+/* ── [NOUVEAU] Réinitialise un niveau géo ─────────────────── */
+function resetGeoLevel(level){
+  var cfg = GEO_LEVELS[level]; if(!cfg) return;
+  var sel = document.getElementById(cfg.sel);
+  var txt = document.getElementById(cfg.txt);
+  if(sel){ if(sel.tomselect) sel.tomselect.destroy(); sel.innerHTML=''; sel.style.display='none'; }
+  if(txt){ txt.style.display='none'; txt.value=''; txt.oninput=null; }
+  var h = document.getElementById(cfg.hid); if(h) h.value='';
+  var g = cfg.gid ? document.getElementById(cfg.gid) : null; if(g) g.value='';
 }
 
-function showSpin(id, v) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = v ? 'inline-block' : 'none';
+/* ── [NOUVEAU] Charge un niveau via proxy GeoNames ──────────── */
+function loadGeoLevel(endpoint, geonameId, level, onSelect){
+  var cfg = GEO_LEVELS[level]; if(!cfg) return;
+  var sel    = document.getElementById(cfg.sel);
+  var txt    = document.getElementById(cfg.txt);
+  var loader = document.getElementById(cfg.loader);
+
+  // Cacher, montrer loader
+  if(sel){ if(sel.tomselect) sel.tomselect.destroy(); sel.innerHTML=''; sel.style.display='none'; }
+  if(txt) txt.style.display='none';
+  if(loader) loader.classList.add('show');
+
+  fetch('/geo/'+endpoint+'/'+geonameId)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(loader) loader.classList.remove('show');
+      if(data && data.length > 0){
+        // Tom Select avec les données GeoNames
+        if(sel){
+          sel.style.display = '';
+          new TomSelect('#'+cfg.sel, {
+            valueField:'id', labelField:'nom', searchField:['nom'],
+            options: data,
+            placeholder: '— Sélectionner —',
+            allowEmptyOption: true,
+            create: false,
+            onChange: function(val){
+              if(!val) return;
+              var item = data.find(function(d){ return String(d.id)===String(val); });
+              var h = document.getElementById(cfg.hid); if(h) h.value = item ? item.nom : '';
+              var g = cfg.gid ? document.getElementById(cfg.gid) : null; if(g) g.value = val;
+              if(onSelect) onSelect(val);
+            }
+          });
+        }
+      } else {
+        // Fallback : champ texte libre
+        if(sel) sel.style.display='none';
+        if(txt){
+          txt.style.display='';
+          txt.disabled = false;
+          txt.oninput = function(){
+            var h = document.getElementById(cfg.hid); if(h) h.value=this.value;
+            if(onSelect && this.value) onSelect('free_'+this.value);
+          };
+        }
+      }
+    })
+    .catch(function(){
+      if(loader) loader.classList.remove('show');
+      if(sel) sel.style.display='none';
+      if(txt){ txt.style.display=''; txt.disabled=false; }
+    });
 }
 
-function switchGeo(selectId, textId, useSelect) {
-  const sel = document.getElementById(selectId);
-  const txt = document.getElementById(textId);
-  if (!sel || !txt) return;
-  if (useSelect) {
-    sel.classList.add('active');   txt.classList.remove('active');
-    sel.style.display = 'block';   txt.style.display = 'none';
-  } else {
-    txt.classList.add('active');   sel.classList.remove('active');
-    txt.style.display = 'block';   sel.style.display = 'none';
-  }
-}
+function xss(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function fillSelect(selectId, items, placeholder) {
-  const sel = document.getElementById(selectId);
-  if (!sel) return;
-  sel.innerHTML = `<option value="">${placeholder}</option>`;
-  items.forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = opt.textContent = item;
-    sel.appendChild(opt);
+/* ── Steps ───────────────────────────────────────── */
+var curStep=1,TOTAL=5;
+function goStep(n){
+  document.getElementById('pane'+curStep).classList.remove('active');
+  document.querySelectorAll('.step-item').forEach(function(el){
+    var s=parseInt(el.dataset.s);
+    el.classList.remove('active','done');
+    if(s<n) el.classList.add('done');
+    if(s===n) el.classList.add('active');
   });
+  curStep=n;
+  document.getElementById('pane'+n).classList.add('active');
+  document.getElementById('progFill').style.width=(n/TOTAL*100)+'%';
+  if(n===5) buildRecap();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
+function nextStep(){if(validateStep(curStep)&&curStep<TOTAL) goStep(curStep+1);}
 
-function resetField(selectId, textId, placeholder, defaultPlaceholder) {
-  switchGeo(selectId, textId, false);
-  const txt = document.getElementById(textId);
-  if (txt) { txt.value = ''; txt.placeholder = placeholder || 'Entrez une valeur'; }
-  const sel = document.getElementById(selectId);
-  if (sel) sel.innerHTML = `<option value="">${defaultPlaceholder || '—'}</option>`;
-}
-
-// ════════════════════════════════════════════════════════
-//  CHARGEMENT DES PAYS (restcountries.com + cache)
-// ════════════════════════════════════════════════════════
-
-let countriesData = [];
-let tsCountry = null;
-let currentISO2 = '';
-let isCameroon  = false;
-
-async function loadCountries() {
-  const CACHE_KEY = 'surv_countries_v4';
-  const CACHE_TTL = 86400000;
-
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (raw) {
-      const p = JSON.parse(raw);
-      if (Date.now() - p.ts < CACHE_TTL) countriesData = p.data;
-    }
-  } catch(e) {}
-
-  if (!countriesData.length) {
-    try {
-      const res = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,idd,translations');
-      if (!res.ok) throw new Error();
-      const raw = await res.json();
-      countriesData = raw.map(c => {
-        const root = c.idd?.root || '';
-        const suf  = c.idd?.suffixes;
-        const code = suf && suf.length === 1 ? root + suf[0] : root;
-        return {
-          iso2: c.cca2,
-          name: c.name?.common || c.cca2,
-          nameFr: c.translations?.fra?.common || c.name?.common || c.cca2,
-          phone: code,
-        };
-      }).sort((a, b) => a.nameFr.localeCompare(b.nameFr, 'fr'));
-      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ts: Date.now(), data: countriesData})); } catch(e) {}
-    } catch(err) {
-      // Fallback minimal
-      countriesData = [
-        {iso2:'CM',name:'Cameroon',nameFr:'Cameroun',phone:'+237'},
-        {iso2:'FR',name:'France',nameFr:'France',phone:'+33'},
-        {iso2:'SN',name:'Senegal',nameFr:'Sénégal',phone:'+221'},
-        {iso2:'CI',name:'Ivory Coast',nameFr:"Côte d'Ivoire",phone:'+225'},
-        {iso2:'GA',name:'Gabon',nameFr:'Gabon',phone:'+241'},
-        {iso2:'CD',name:'DR Congo',nameFr:'Congo (RDC)',phone:'+243'},
-        {iso2:'CG',name:'Congo',nameFr:'Congo',phone:'+242'},
-        {iso2:'NG',name:'Nigeria',nameFr:'Nigéria',phone:'+234'},
-        {iso2:'MA',name:'Morocco',nameFr:'Maroc',phone:'+212'},
-        {iso2:'DZ',name:'Algeria',nameFr:'Algérie',phone:'+213'},
-        {iso2:'TN',name:'Tunisia',nameFr:'Tunisie',phone:'+216'},
-        {iso2:'US',name:'United States',nameFr:'États-Unis',phone:'+1'},
-        {iso2:'GB',name:'United Kingdom',nameFr:'Royaume-Uni',phone:'+44'},
-        {iso2:'DE',name:'Germany',nameFr:'Allemagne',phone:'+49'},
-        {iso2:'ML',name:'Mali',nameFr:'Mali',phone:'+223'},
-        {iso2:'BJ',name:'Benin',nameFr:'Bénin',phone:'+229'},
-        {iso2:'TG',name:'Togo',nameFr:'Togo',phone:'+228'},
-        {iso2:'GN',name:'Guinea',nameFr:'Guinée',phone:'+224'},
-        {iso2:'NE',name:'Niger',nameFr:'Niger',phone:'+227'},
-        {iso2:'BF',name:'Burkina Faso',nameFr:'Burkina Faso',phone:'+226'},
-      ];
-    }
+function validateStep(n){
+  if(n===1){
+    var p=document.getElementById('prenom').value.trim();
+    var nm=document.getElementById('nom').value.trim();
+    if(!p){markErr('prenom','Le prénom est requis');return false;}
+    if(!nm){markErr('nom','Le nom est requis');return false;}
+    return true;
   }
-
-  // Initialiser Tom Select
-  document.getElementById('country-loading').style.display = 'none';
-  const selEl = document.getElementById('country-select');
-  selEl.style.display = 'block';
-
-  const options = countriesData.map(c => ({
-    value: c.iso2,
-    label: `${flagEmoji(c.iso2)} ${c.nameFr}`,
-    search: `${c.nameFr} ${c.name} ${c.iso2} ${c.phone}`,
-    phone: c.phone,
-    nameEn: c.name,
-    nameFr: c.nameFr,
-  }));
-
-  const oldVal = '{{ old("code_pays") }}';
-
-  tsCountry = new TomSelect('#country-select', {
-    options,
-    items: oldVal ? [oldVal] : [],
-    valueField: 'value',
-    labelField: 'label',
-    searchField: ['search'],
-    placeholder: '🌍  Rechercher un pays…',
-    render: {
-      option: (d, esc) =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;">
-           <span>${esc(d.label)}</span>
-           <span style="color:var(--muted);font-size:12px;">${esc(d.phone||'')}</span>
-         </div>`,
-      item: (d, esc) =>
-        `<span>${esc(d.label)} <span style="color:var(--muted);font-size:12px;">${esc(d.phone||'')}</span></span>`,
-    },
-    onChange: onCountryChange,
-  });
-
-  if (oldVal) onCountryChange(oldVal);
-}
-
-// ════════════════════════════════════════════════════════
-//  TÉLÉPHONE — intl-tel-input
-// ════════════════════════════════════════════════════════
-
-const phoneEl = document.getElementById('phone-input');
-const iti = window.intlTelInput(phoneEl, {
-  utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js',
-  initialCountry: 'cm',
-  preferredCountries: ['cm','fr','sn','ci','ng','gh','ga','cd','cg','ma','dz'],
-  separateDialCode: true,
-});
-
-// ════════════════════════════════════════════════════════
-//  CHANGEMENT DE PAYS
-// ════════════════════════════════════════════════════════
-
-async function onCountryChange(iso2) {
-  if (!iso2) return;
-  currentISO2 = iso2;
-
-  const found = countriesData.find(c => c.iso2 === iso2);
-  if (!found) return;
-
-  // Nationalité + code
-  document.getElementById('field-nationalite').value  = found.nameFr;
-  document.getElementById('field-code-pays').value    = iso2;
-
-  // Téléphone
-  try { iti.setCountry(iso2.toLowerCase()); } catch(e) {}
-
-  // Réinitialiser niveaux 2-4
-  resetField('sel-region','txt-region','Région / Province / État','— Sélectionner un pays —');
-  resetField('sel-dept',  'txt-dept',  'Département / District',  '— Sélectionner une région —');
-  resetField('sel-arro',  'txt-arro',  'Arrondissement / Commune','— Sélectionner un département —');
-  resetField('sel-ville', 'txt-ville', 'Ville','— Sélectionner —');
-
-  isCameroon = (iso2 === 'CM');
-
-  if (isCameroon) {
-    // Données Cameroun embarquées
-    document.getElementById('lbl-region').textContent = 'Région';
-    document.getElementById('lbl-dept').textContent   = 'Département';
-    document.getElementById('lbl-arro').textContent   = 'Arrondissement';
-    fillSelect('sel-region', Object.keys(CM_DATA), '— Choisir une région —');
-    switchGeo('sel-region','txt-region', true);
-    document.getElementById('sel-region').onchange = onRegionChangeCM;
-  } else {
-    // API countriesnow.space
-    document.getElementById('lbl-region').textContent = 'Région / Province / État';
-    document.getElementById('lbl-dept').textContent   = 'Département / District';
-    document.getElementById('lbl-arro').textContent   = 'Arrondissement / Commune';
-    await loadRegionsAPI(found.nameEn);
+  if(n===2){
+    // Pays = Cameroun (fixe)
+    if(!document.getElementById('telephone').value.trim()){markErr('telephone','Le téléphone est requis');return false;}
+    return true;
   }
+  if(n===4){
+    var em=document.getElementById('email').value.trim();
+    var pw=document.getElementById('password').value;
+    var cf=document.getElementById('pwdConf').value;
+    if(!em||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){document.getElementById('emailErr').textContent='Email invalide';return false;}
+    if(pw.length<8){alert('Mot de passe: minimum 8 caractères');return false;}
+    if(pw!==cf){document.getElementById('matchErr').textContent='Mots de passe différents';return false;}
+    return true;
+  }
+  return true;
+}
+function markErr(id,msg){
+  var el=document.getElementById(id);
+  if(el){el.classList.add('err');el.focus();setTimeout(function(){el.classList.remove('err');},3000);}
 }
 
-// ════════════════════════════════════════════════════════
-//  CAMEROUN — cascade embarquée
-// ════════════════════════════════════════════════════════
+/* ── Recap ───────────────────────────────────────── */
+function buildRecap(){
+  var prenom=document.getElementById('prenom').value;
+  var nom=document.getElementById('nom').value;
+  var roleEl=document.getElementById('role_sel');
+  document.getElementById('recapName').textContent=prenom+' '+nom;
+  document.getElementById('recapRole').textContent=roleEl.options[roleEl.selectedIndex].text;
+  document.getElementById('r_email').textContent=document.getElementById('email').value||'—';
+  document.getElementById('r_tel').textContent='+237 '+document.getElementById('telephone').value;
+  document.getElementById('r_pays').textContent='🇨🇲 Cameroun';
+  document.getElementById('r_region').textContent=document.getElementById('h_region').value||'—';
+  document.getElementById('r_dept').textContent=document.getElementById('h_dept').value||'—';
+  document.getElementById('r_arrond').textContent=document.getElementById('h_arrond').value||'—';
+  document.getElementById('r_prof').textContent=document.querySelector('[name=profession]').value||'—';
+  document.getElementById('r_org').textContent=document.querySelector('[name=organisation]').value||'—';
+  var prevImg=document.getElementById('photoPrev');
+  var rImg=document.getElementById('recapAvatarImg');
+  if(prevImg.querySelector('img')){rImg.innerHTML=prevImg.querySelector('img').outerHTML;}
+  else{rImg.textContent=(prenom.charAt(0)+nom.charAt(0)).toUpperCase()||'👤';}
+}
 
-function onRegionChangeCM() {
-  const region = this.value;
-  resetField('sel-dept',  'txt-dept',  'Département','— Choisir un département —');
-  resetField('sel-arro',  'txt-arro',  'Arrondissement','— Choisir un arrondissement —');
-  resetField('sel-ville', 'txt-ville', 'Ville','— Sélectionner —');
-
-  if (!region || !CM_DATA[region]) return;
-
-  const depts = Object.keys(CM_DATA[region].depts);
-  fillSelect('sel-dept', depts, '— Choisir un département —');
-  switchGeo('sel-dept','txt-dept', true);
-
-  document.getElementById('sel-dept').onchange = function() {
-    const dept = this.value;
-    resetField('sel-arro',  'txt-arro',  'Arrondissement','— Choisir un arrondissement —');
-    resetField('sel-ville', 'txt-ville', 'Ville','—');
-    if (!dept || !CM_DATA[region]?.depts[dept]) return;
-    const arros = CM_DATA[region].depts[dept];
-    fillSelect('sel-arro', arros, '— Choisir un arrondissement —');
-    switchGeo('sel-arro','txt-arro', true);
-    // Villes = texte libre pour Cameroun
-    switchGeo('sel-ville','txt-ville', false);
-    document.getElementById('txt-ville').placeholder = 'Entrez votre ville';
+/* ── Password ────────────────────────────────────── */
+function checkPwd(v){
+  var s=0;
+  if(v.length>=8)s++;if(v.length>=12)s++;
+  if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+  var labels=['','Très faible','Faible','Moyen','Fort','Très fort'];
+  var cols=['','s1','s2','s3','s4','s5'];
+  for(var i=1;i<=5;i++){var b=document.getElementById('pb'+i);b.className='pwd-bar'+(i<=s?' '+cols[s]:'');}
+  var h=document.getElementById('pwdHint');
+  h.textContent=s>0?labels[s]:'Minimum 8 caractères';
+  h.style.color=s>=4?'#39ff14':s>=3?'#ffaa00':'#ff5050';
+  checkMatch();
+}
+function checkMatch(){
+  var p1=document.getElementById('password').value;
+  var p2=document.getElementById('pwdConf').value;
+  var e=document.getElementById('matchErr');
+  if(!p2){e.textContent='';return;}
+  if(p1===p2){e.style.color='#39ff14';e.textContent='✅ Identiques';}
+  else{e.style.color='#ff5050';e.textContent='❌ Ne correspondent pas';}
+}
+function checkEmail(v){
+  var e=document.getElementById('emailErr');
+  if(!v){e.textContent='';return;}
+  e.textContent=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)?'':'Format invalide';
+}
+function toggleEye(id,btn){
+  var i=document.getElementById(id);
+  i.type=i.type==='password'?'text':'password';
+  btn.textContent=i.type==='text'?'🙈':'👁';
+}
+function previewPhoto(inp){
+  if(!inp.files||!inp.files[0]) return;
+  if(inp.files[0].size>2*1024*1024){alert('Max 2 Mo');inp.value='';return;}
+  var r=new FileReader();
+  r.onload=function(e){
+    var p=document.getElementById('photoPrev');
+    p.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
   };
+  r.readAsDataURL(inp.files[0]);
 }
 
-// ════════════════════════════════════════════════════════
-//  AUTRES PAYS — API countriesnow.space
-// ════════════════════════════════════════════════════════
+/* ── Date picker (jour / mois / année) ────────────── */
+(function(){
+  function daysInMonth(m,y){return m?new Date(y||2000,parseInt(m),0).getDate():31;}
+  function fillDays(n,cur){
+    var s=document.getElementById('dp-day');if(!s)return;
+    s.innerHTML='<option value="">Jour</option>';
+    for(var d=1;d<=n;d++){var o=document.createElement('option');o.value=String(d).padStart(2,'0');o.textContent=d;s.appendChild(o);}
+    if(cur)s.value=cur;
+  }
+  function syncHidden(){
+    var d=document.getElementById('dp-day'),m=document.getElementById('dp-month'),y=document.getElementById('dp-year'),h=document.getElementById('dob-hidden');
+    if(!d||!m||!y||!h)return;
+    h.value=(y.value&&m.value&&d.value)?y.value+'-'+m.value+'-'+d.value:'';
+  }
+  function onMonthYear(){
+    var d=document.getElementById('dp-day'),m=document.getElementById('dp-month'),y=document.getElementById('dp-year');
+    if(!d||!m||!y)return;
+    fillDays(daysInMonth(m.value,y.value),d.value);
+    syncHidden();
+  }
+  var yearSel=document.getElementById('dp-year');
+  if(yearSel){
+    var now=new Date().getFullYear();
+    for(var yr=now;yr>=now-120;yr--){var o=document.createElement('option');o.value=yr;o.textContent=yr;yearSel.appendChild(o);}
+  }
+  fillDays(31,'');
+  var ms=document.getElementById('dp-month'),ys=document.getElementById('dp-year'),ds=document.getElementById('dp-day');
+  if(ms)ms.onchange=onMonthYear;
+  if(ys)ys.onchange=onMonthYear;
+  if(ds)ds.onchange=syncHidden;
+  // Pre-populate from old() value
+  var old=document.getElementById('dob-hidden');
+  if(old&&old.value&&/^\d{4}-\d{2}-\d{2}$/.test(old.value)){
+    var pts=old.value.split('-');
+    if(ys)ys.value=pts[0];
+    if(ms)ms.value=pts[1];
+    fillDays(daysInMonth(pts[1],pts[0]),pts[2]);
+  }
+})();
 
-async function loadRegionsAPI(countryNameEn) {
-  showSpin('spin-region', true);
-  try {
-    const res  = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({country: countryNameEn}),
+/* ── Init — cascade Cameroun au chargement ─────── */
+document.addEventListener('DOMContentLoaded', function(){
+  // Déclencher la cascade région→département→arrondissement pour le Cameroun
+  // geonameId Cameroun = 2233387
+  loadGeoLevel('regions', 2233387, 'region', function(regGid){
+    ['dept','arr'].forEach(resetGeoLevel);
+    loadGeoLevel('departements', regGid, 'dept', function(deptGid){
+      resetGeoLevel('arr');
+      loadGeoLevel('arrondissements', deptGid, 'arr', null);
     });
-    const json = await res.json();
-    const states = json?.data?.states;
-    if (!states || !states.length) throw new Error('no states');
-
-    fillSelect('sel-region', states.map(s => s.name), '— Sélectionner une région —');
-    switchGeo('sel-region','txt-region', true);
-
-    document.getElementById('sel-region').onchange = async function() {
-      const state = this.value;
-      resetField('sel-dept', 'txt-dept', 'Département','—');
-      resetField('sel-arro', 'txt-arro', 'Arrondissement','—');
-      resetField('sel-ville','txt-ville','Ville','—');
-      if (!state) return;
-      // Pour les autres pays: charger les villes (pas de département API)
-      switchGeo('sel-dept','txt-dept',false);
-      switchGeo('sel-arro','txt-arro',false);
-      await loadVillesAPI(countryNameEn, state);
-    };
-  } catch(e) {
-    switchGeo('sel-region','txt-region', false);
-    document.getElementById('txt-region').placeholder = 'Région / Province / État';
-  } finally {
-    showSpin('spin-region', false);
-  }
-}
-
-async function loadVillesAPI(countryNameEn, state) {
-  showSpin('spin-ville', true);
-  try {
-    const res  = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({country: countryNameEn, state}),
-    });
-    const json = await res.json();
-    const cities = json?.data;
-    if (!cities || !cities.length) throw new Error('no cities');
-
-    fillSelect('sel-ville', cities, '— Sélectionner une ville —');
-    switchGeo('sel-ville','txt-ville', true);
-  } catch(e) {
-    switchGeo('sel-ville','txt-ville', false);
-    document.getElementById('txt-ville').placeholder = 'Ville';
-  } finally {
-    showSpin('spin-ville', false);
-  }
-}
-
-// ════════════════════════════════════════════════════════
-//  FORCE MOT DE PASSE
-// ════════════════════════════════════════════════════════
-
-document.getElementById('password-input').addEventListener('input', function() {
-  const v = this.value;
-  let s = 0;
-  if (v.length >= 8)           s++;
-  if (v.length >= 12)          s++;
-  if (/[A-Z]/.test(v))        s++;
-  if (/[0-9]/.test(v))        s++;
-  if (/[^A-Za-z0-9]/.test(v)) s++;
-
-  const fill   = document.getElementById('strength-fill');
-  const label  = document.getElementById('strength-label');
-  const pct    = [0,25,45,65,85,100][s];
-  const colors = ['#1f2d5e','#ef4444','#f97316','#eab308','#22c55e','#39ff14'];
-  const labels = ['','Très faible','Faible','Moyen','Fort','Très fort ✓'];
-
-  fill.style.width      = pct + '%';
-  fill.style.background = colors[s];
-  label.textContent     = v ? labels[s] : 'Saisissez un mot de passe';
-  label.style.color     = colors[s];
+  });
 });
-
-document.getElementById('confirm-input').addEventListener('input', function() {
-  const pwd  = document.getElementById('password-input').value;
-  const lbl  = document.getElementById('confirm-label');
-  if (!this.value) { lbl.textContent = ' '; return; }
-  if (this.value === pwd) {
-    lbl.textContent = '✓ Les mots de passe correspondent';
-    lbl.style.color = '#22c55e';
-  } else {
-    lbl.textContent = '✗ Les mots de passe ne correspondent pas';
-    lbl.style.color = '#ef4444';
-  }
-});
-
-// ════════════════════════════════════════════════════════
-//  PHOTO — prévisualisation
-// ════════════════════════════════════════════════════════
-
-document.getElementById('photo-input').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) {
-    alert('La photo ne doit pas dépasser 3 Mo.');
-    this.value = '';
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = e => document.getElementById('photo-preview').src = e.target.result;
-  reader.readAsDataURL(file);
-});
-
-// ════════════════════════════════════════════════════════
-//  SOUMISSION — fusion champs géo
-// ════════════════════════════════════════════════════════
-
-document.getElementById('reg-form').addEventListener('submit', function() {
-  // Téléphone international
-  try { document.getElementById('phone-full').value = iti.getNumber(); } catch(e) {}
-
-  // Région
-  const selReg = document.getElementById('sel-region');
-  const txtReg = document.getElementById('txt-region');
-  if (selReg.style.display !== 'none' && selReg.value) txtReg.value = selReg.value;
-
-  // Département
-  const selDep = document.getElementById('sel-dept');
-  const txtDep = document.getElementById('txt-dept');
-  if (selDep.style.display !== 'none' && selDep.value) txtDep.value = selDep.value;
-
-  // Arrondissement
-  const selArr = document.getElementById('sel-arro');
-  const txtArr = document.getElementById('txt-arro');
-  if (selArr.style.display !== 'none' && selArr.value) txtArr.value = selArr.value;
-
-  // Ville
-  const selVil = document.getElementById('sel-ville');
-  const txtVil = document.getElementById('txt-ville');
-  if (selVil.style.display !== 'none' && selVil.value) txtVil.value = selVil.value;
-});
-
-// ════════════════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════════════════
-
-loadCountries();
 </script>
 </body>
 </html>

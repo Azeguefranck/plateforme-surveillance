@@ -1,413 +1,288 @@
 @extends('layouts.app')
 
 @section('content')
-
 <style>
-@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.sl-wrap{animation:fadeIn .4s ease;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--bg:#060d1f;--card:#0e1a38;--border:#1e2f5a;}
+.pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.pg-title{font-size:22px;font-weight:700;color:var(--neon)}
+.pg-title span{color:#fff;font-size:14px;font-weight:400;margin-left:8px;opacity:.7}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;transition:.2s}
+.btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
+.btn-neon:hover{background:var(--neon);color:#000}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#000}
 
-/* ── Stats ── */
-.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
-.stat-card{
-  background:#0d1a2e;border:1px solid #182640;border-radius:14px;
-  padding:16px 22px;flex:1 1 160px;min-width:140px;
-  display:flex;flex-direction:column;gap:4px;
-}
-.stat-label{font-size:11px;font-weight:bold;letter-spacing:1.5px;color:#6b7fa0;text-transform:uppercase;}
-.stat-val{font-size:28px;font-weight:bold;color:#d4dced;}
-.stat-val.green{color:#2fa84f;}
-.stat-val.orange{color:#e67e22;}
-.stat-val.blue{color:#2e86c1;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:center}
+.stat-card .val{font-size:34px;font-weight:800;margin-bottom:4px}
+.stat-card .lbl{font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:.5px}
+.stat-card.green .val{color:var(--neon)}
+.stat-card.blue  .val{color:var(--blue)}
+.stat-card.warn  .val{color:var(--warn)}
+.stat-card.red   .val{color:var(--danger)}
 
-/* ── Header ── */
-.page-header{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:20px;flex-wrap:wrap;gap:10px;
-}
-.page-title{font-size:22px;font-weight:bold;color:#d4dced;}
-.btn-add{
-  background:#2fa84f;color:#060c1a;border:none;border-radius:9px;
-  padding:10px 20px;font-weight:bold;font-size:14px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;transition:.2s;
-}
-.btn-add:hover{background:#249040;}
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:13px;display:flex;align-items:center;gap:8px}
+.alert-success{background:rgba(51,255,136,.1);border:1px solid var(--neon);color:var(--neon)}
 
-/* ── Flash ── */
-.flash{padding:12px 18px;border-radius:10px;margin-bottom:16px;font-weight:bold;font-size:14px;}
-.flash.success{background:rgba(47,168,79,.15);border:1px solid #2fa84f;color:#2fa84f;}
-.flash.error{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px}
+.form-card h3{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:12px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{background:#07102a;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;outline:none;transition:.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(51,255,136,.1)}
+.form-group textarea{resize:vertical;min-height:72px}
+.form-group select option{background:#0e1a38}
+.form-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.full-span{grid-column:1/-1}
 
-/* ── Cards grille ── */
-.salles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
-.salle-card{
-  background:#0d1a2e;border:1px solid #182640;border-radius:16px;
-  padding:20px;transition:border-color .2s,box-shadow .2s;
-}
-.salle-card:hover{border-color:#2fa84f;box-shadow:0 4px 20px rgba(47,168,79,.08);}
+.rooms-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.rooms-title{font-size:16px;font-weight:700;color:#fff}
+.rooms-count{font-size:12px;color:#aaa}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.room-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:.2s;position:relative}
+.room-card:hover{border-color:var(--blue);box-shadow:0 4px 20px rgba(51,181,255,.08)}
+.room-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.room-name{font-size:16px;font-weight:700;color:#fff}
+.room-code{font-size:11px;color:var(--blue);font-family:monospace;margin-top:2px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge-active{background:rgba(51,255,136,.12);color:var(--neon);border:1px solid rgba(51,255,136,.3)}
+.badge-inactive{background:rgba(255,87,51,.12);color:var(--danger);border:1px solid rgba(255,87,51,.3)}
+.badge-maintenance{background:rgba(255,214,51,.12);color:var(--warn);border:1px solid rgba(255,214,51,.3)}
+.room-info{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.room-info-row{display:flex;gap:8px;align-items:center;font-size:12px;color:#aaa}
+.room-info-row span:first-child{color:#666;width:90px;flex-shrink:0}
+.room-info-row span:last-child{color:#ccc}
+.room-capacity{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
+.cap-label{font-size:11px;color:#666}
+.cap-val{font-size:20px;font-weight:800;color:var(--blue)}
+.cap-unit{font-size:11px;color:#aaa}
+.room-actions{display:flex;gap:8px;margin-top:14px}
+.room-actions .btn{padding:7px 14px;font-size:12px}
+.empty-state{text-align:center;padding:60px 20px;color:#555}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:14px}
 
-.salle-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
-.salle-code{
-  background:rgba(47,168,79,.15);border:1px solid rgba(47,168,79,.4);
-  color:#2fa84f;padding:4px 12px;border-radius:20px;
-  font-size:12px;font-weight:bold;letter-spacing:1px;
-}
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:bold;}
-.badge.actif{background:rgba(47,168,79,.15);border:1px solid #2fa84f;color:#2fa84f;}
-.badge.inactif{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;}
-.badge.maintenance{background:rgba(230,126,34,.15);border:1px solid #e67e22;color:#e67e22;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#0b1632;border:1px solid var(--border);border-radius:16px;padding:28px;width:min(600px,95vw);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;color:var(--blue);margin-bottom:20px}
+.modal-close{float:right;background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;margin-top:-4px}
+.modal-close:hover{color:#fff}
 
-.salle-nom{font-size:16px;font-weight:bold;color:#d4dced;margin-bottom:12px;}
-.salle-info{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;}
-.salle-info-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#a0aec0;}
-.salle-info-row i{color:#2fa84f;width:14px;text-align:center;font-size:12px;}
-.salle-info-row span{font-weight:bold;color:#d4dced;margin-left:auto;}
-
-.badge-sec{
-  font-size:10px;font-weight:bold;letter-spacing:.5px;padding:2px 8px;border-radius:10px;
+@media(max-width:768px){
+.stats-row{grid-template-columns:repeat(2,1fr)}
+.form-grid{grid-template-columns:1fr}
+.rooms-grid{grid-template-columns:1fr}
 }
-.badge-sec.standard{background:rgba(46,134,193,.15);color:#2e86c1;border:1px solid rgba(46,134,193,.4);}
-.badge-sec.eleve{background:rgba(230,126,34,.15);color:#e67e22;border:1px solid rgba(230,126,34,.4);}
-.badge-sec.critique{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.4);}
-
-.badge-net{
-  font-size:10px;font-weight:bold;letter-spacing:.5px;padding:2px 8px;border-radius:10px;
-}
-.badge-net.connecte{background:rgba(47,168,79,.15);color:#2fa84f;border:1px solid rgba(47,168,79,.4);}
-.badge-net.deconnecte{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.4);}
-
-.salle-actions{display:flex;gap:8px;border-top:1px solid #182640;padding-top:14px;}
-.btn-edit,.btn-del{
-  flex:1;border:none;border-radius:8px;padding:8px;
-  font-size:12px;font-weight:bold;cursor:pointer;transition:.2s;
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.btn-edit{background:rgba(46,134,193,.2);color:#2e86c1;border:1px solid rgba(46,134,193,.4);}
-.btn-edit:hover{background:#2e86c1;color:white;}
-.btn-del{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.4);}
-.btn-del:hover{background:#e74c3c;color:white;}
-
-/* ── Empty state ── */
-.empty-state{
-  text-align:center;padding:60px 20px;
-  background:#0d1a2e;border:1px solid #182640;border-radius:16px;
-}
-.empty-state i{font-size:48px;color:#182640;margin-bottom:16px;display:block;}
-.empty-state p{color:#6b7fa0;font-size:15px;margin-bottom:20px;}
-
-/* ── Modal ── */
-.modal-bg{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-  z-index:1000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;
-}
-.modal-bg.open{display:flex;}
-.modal{
-  background:#0d1a2e;border:1px solid #182640;border-radius:16px;
-  padding:28px;width:100%;max-width:600px;margin:auto;
-  animation:fadeIn .3s ease;
-}
-.modal h2{font-size:18px;font-weight:bold;color:#d4dced;margin-bottom:20px;}
-.modal-close{float:right;background:none;border:none;color:#6b7fa0;font-size:22px;cursor:pointer;line-height:1;}
-.modal-close:hover{color:#e74c3c;}
-
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-@media(max-width:560px){.form-grid{grid-template-columns:1fr;}}
-.form-group{display:flex;flex-direction:column;gap:5px;}
-.form-group.full{grid-column:1/-1;}
-.form-label{font-size:12px;font-weight:bold;color:#6b7fa0;letter-spacing:.5px;}
-.form-control{
-  background:#0a1525;border:1.5px solid #1e3050;border-radius:9px;
-  color:#d4dced;padding:9px 13px;font-size:13px;outline:none;
-  transition:border-color .2s;width:100%;
-}
-.form-control:focus{border-color:#2fa84f;}
-.form-control option{background:#0a1525;}
-
-.code-info{
-  background:rgba(47,168,79,.08);border:1px solid rgba(47,168,79,.3);border-radius:9px;
-  padding:10px 14px;grid-column:1/-1;font-size:13px;color:#2fa84f;
-  display:flex;align-items:center;gap:8px;
-}
-
-.modal-footer{margin-top:20px;display:flex;justify-content:flex-end;gap:10px;}
-.btn-cancel{
-  background:transparent;border:1px solid #182640;border-radius:9px;
-  color:#6b7fa0;padding:10px 20px;font-size:14px;cursor:pointer;transition:.2s;
-}
-.btn-cancel:hover{border-color:#6b7fa0;color:#d4dced;}
-.btn-submit{
-  background:#2fa84f;color:#060c1a;border:none;border-radius:9px;
-  padding:10px 24px;font-weight:bold;font-size:14px;cursor:pointer;transition:.2s;
-}
-.btn-submit:hover{background:#249040;}
 </style>
 
-<div class="sl-wrap">
-
-{{-- Flash messages --}}
-@if(session('success'))
-  <div class="flash success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
-@endif
-@if(session('error'))
-  <div class="flash error"><i class="fa-solid fa-circle-xmark"></i> {{ session('error') }}</div>
-@endif
-
-{{-- Stats --}}
-<div class="stat-row">
-  <div class="stat-card">
-    <span class="stat-label">Total salles</span>
-    <span class="stat-val">{{ $stats['total'] }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Actives</span>
-    <span class="stat-val green">{{ $stats['actives'] }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Maintenance</span>
-    <span class="stat-val orange">{{ $stats['maintenance'] }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Total serveurs</span>
-    <span class="stat-val blue">{{ $stats['total_serveurs'] }}</span>
-  </div>
-</div>
-
-{{-- Header --}}
-<div class="page-header">
-  <div class="page-title"><i class="fa-solid fa-building-server" style="color:#2fa84f;margin-right:10px;"></i>Gestion des Salles Serveurs</div>
-  <button class="btn-add" onclick="openModal('modal-add')">
-    <i class="fa-solid fa-plus"></i> Ajouter une salle
-  </button>
-</div>
-
-{{-- Cards --}}
-@if($salles->isEmpty())
-  <div class="empty-state">
-    <i class="fa-solid fa-building-server"></i>
-    <p>Aucune salle créée pour le moment.</p>
-    <button class="btn-add" onclick="openModal('modal-add')">
-      <i class="fa-solid fa-plus"></i> Créer la première salle
-    </button>
-  </div>
-@else
-  <div class="salles-grid">
-    @foreach($salles as $sl)
-    <div class="salle-card">
-      <div class="salle-card-header">
-        <span class="salle-code">{{ $sl->code }}</span>
-        @php
-          $bc = match($sl->statut) { 'actif'=>'actif','inactif'=>'inactif','maintenance'=>'maintenance', default=>'actif' };
-        @endphp
-        <span class="badge {{ $bc }}">{{ strtoupper($sl->statut) }}</span>
-      </div>
-      <div class="salle-nom">{{ $sl->nom }}</div>
-      <div class="salle-info">
-        @if($sl->localisation)
-        <div class="salle-info-row">
-          <i class="fa-solid fa-location-dot"></i>
-          <span>Localisation</span>
-          <span>{{ $sl->localisation }}</span>
-        </div>
-        @endif
-        @if($sl->responsable)
-        <div class="salle-info-row">
-          <i class="fa-solid fa-user"></i>
-          <span>Responsable</span>
-          <span>{{ $sl->responsable }}</span>
-        </div>
-        @endif
-        @if($sl->capacite)
-        <div class="salle-info-row">
-          <i class="fa-solid fa-server"></i>
-          <span>Capacité</span>
-          <span>{{ $sl->capacite }} serveurs</span>
-        </div>
-        @endif
-        <div class="salle-info-row">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Sécurité</span>
-          @php $secClass = match($sl->niveau_securite) { 'eleve'=>'eleve','critique'=>'critique', default=>'standard' }; @endphp
-          <span class="badge-sec {{ $secClass }}">{{ strtoupper($sl->niveau_securite) }}</span>
-        </div>
-        <div class="salle-info-row">
-          <i class="fa-solid fa-network-wired"></i>
-          <span>Réseau</span>
-          @php $netClass = $sl->statut_reseau === 'connecte' ? 'connecte' : 'deconnecte'; @endphp
-          <span class="badge-net {{ $netClass }}">{{ strtoupper($sl->statut_reseau) }}</span>
-        </div>
-        @if($sl->description)
-        <div class="salle-info-row" style="align-items:flex-start;">
-          <i class="fa-solid fa-align-left" style="margin-top:2px;"></i>
-          <span style="color:#a0aec0;font-size:12px;margin-left:22px;font-style:italic;">{{ Str::limit($sl->description, 80) }}</span>
-        </div>
-        @endif
-      </div>
-      <div class="salle-actions">
-        <button class="btn-edit" onclick="openEdit({{ json_encode($sl) }})">
-          <i class="fa-solid fa-pen"></i> Modifier
-        </button>
-        <form method="POST" action="/salles/delete/{{ $sl->id }}" style="flex:1;"
-              data-code="{{ e($sl->code) }}"
-              onsubmit="event.preventDefault();const f=this;CyberConfirm.show({title:'Supprimer la salle',message:'Supprimer la salle '+f.dataset.code+' ? Cette action est irréversible.',icon:'fa-solid fa-server',confirmText:'Supprimer',confirmColor:'danger'}).then(ok=>{if(ok){f.onsubmit=null;f.submit();}})">
-          @csrf
-          <button type="submit" class="btn-del" style="width:100%;">
-            <i class="fa-solid fa-trash"></i> Supprimer
-          </button>
-        </form>
-      </div>
+<div class="pg-header">
+    <div>
+        <div class="pg-title"><i class="fa-solid fa-warehouse" style="margin-right:8px"></i>Salles Serveurs <span>Gestion des salles</span></div>
     </div>
-    @endforeach
-  </div>
+    <button class="btn btn-neon" onclick="document.getElementById('addModal').classList.add('open')"><i class="fa-solid fa-plus"></i> Nouvelle Salle</button>
+</div>
+
+@if(session('success_salle'))
+<div class="alert alert-success">&#10003; {{ session('success_salle') }}</div>
 @endif
 
+<!-- Stats -->
+<div class="stats-row">
+    <div class="stat-card blue"><div class="val"><i class="fa-solid fa-server" style="font-size:24px"></i> {{ $stats['total'] }}</div><div class="lbl">Total salles</div></div>
+    <div class="stat-card green"><div class="val"><i class="fa-solid fa-circle-check" style="font-size:24px"></i> {{ $stats['actives'] }}</div><div class="lbl">Actives</div></div>
+    <div class="stat-card red"><div class="val"><i class="fa-solid fa-circle-xmark" style="font-size:24px"></i> {{ $stats['inactives'] }}</div><div class="lbl">Inactives</div></div>
+    <div class="stat-card warn"><div class="val"><i class="fa-solid fa-wrench" style="font-size:24px"></i> {{ $stats['maintenance'] }}</div><div class="lbl">Maintenance</div></div>
 </div>
 
-{{-- ══ MODAL AJOUT ══ --}}
-<div class="modal-bg" id="modal-add">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-add')">&times;</button>
-    <h2><i class="fa-solid fa-plus" style="color:#2fa84f;"></i> Ajouter une salle</h2>
-    <form method="POST" action="/salles/store">
-      @csrf
-      <div class="form-grid">
-        <div class="code-info">
-          <i class="fa-solid fa-tag"></i>
-          Le code identifiant (SALLE-XXX) est <strong>généré automatiquement</strong> par le système.
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Nom de la salle *</label>
-          <input class="form-control" type="text" name="nom" required placeholder="Ex: Salle Principale, DC-A1...">
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Description</label>
-          <textarea class="form-control" name="description" rows="2" placeholder="Description de la salle..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Localisation</label>
-          <input class="form-control" type="text" name="localisation" placeholder="Bâtiment A, Étage 2...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Capacité (nb serveurs)</label>
-          <input class="form-control" type="number" name="capacite" min="0" placeholder="20">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Responsable</label>
-          <input class="form-control" type="text" name="responsable" placeholder="Nom du responsable">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Statut</label>
-          <select class="form-control" name="statut">
-            <option value="actif">Actif</option>
-            <option value="inactif">Inactif</option>
-            <option value="maintenance">En maintenance</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Niveau de sécurité</label>
-          <select class="form-control" name="niveau_securite">
-            <option value="standard">Standard</option>
-            <option value="eleve">Élevé</option>
-            <option value="critique">Critique</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Statut réseau</label>
-          <select class="form-control" name="statut_reseau">
-            <option value="connecte">Connecté</option>
-            <option value="deconnecte">Déconnecté</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="closeModal('modal-add')">Annuler</button>
-        <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Créer la salle</button>
-      </div>
-    </form>
-  </div>
+@if($derniereMesure)
+<div class="form-card" style="margin-bottom:20px;padding:16px 24px">
+    <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;color:#aaa">Dernière mesure capteurs</div>
+        @if($derniereMesure->temperature ?? null)
+        <div><span style="color:#666;font-size:11px">TEMP</span> <span style="color:var(--neon);font-weight:700">{{ $derniereMesure->temperature }}°C</span></div>
+        @endif
+        @if($derniereMesure->humidite ?? null)
+        <div><span style="color:#666;font-size:11px">HUM</span> <span style="color:var(--blue);font-weight:700">{{ $derniereMesure->humidite }}%</span></div>
+        @endif
+        @if($derniereMesure->gaz ?? null)
+        <div><span style="color:#666;font-size:11px">GAZ</span> <span style="color:var(--warn);font-weight:700">{{ $derniereMesure->gaz }} ppm</span></div>
+        @endif
+        <div style="margin-left:auto;font-size:11px;color:#555">{{ \Carbon\Carbon::parse($derniereMesure->created_at)->diffForHumans() }}</div>
+    </div>
+</div>
+@endif
+
+<!-- Rooms grid -->
+<div class="rooms-header">
+    <div class="rooms-title">Liste des salles</div>
+    <div class="rooms-count">{{ count($salles) }} salle(s)</div>
 </div>
 
-{{-- ══ MODAL ÉDITION ══ --}}
-<div class="modal-bg" id="modal-edit">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-edit')">&times;</button>
-    <h2><i class="fa-solid fa-pen" style="color:#2e86c1;"></i> Modifier la salle <span id="edit-code" style="color:#2fa84f;"></span></h2>
-    <form method="POST" id="edit-form-salle" action="">
-      @csrf
-      <div class="form-grid">
-        <div class="form-group full">
-          <label class="form-label">Nom de la salle *</label>
-          <input class="form-control" type="text" name="nom" id="se_nom" required>
+@if(count($salles) === 0)
+<div class="empty-state">
+    <div class="icon"><i class="fa-solid fa-warehouse" style="font-size:48px;color:#1e2f5a"></i></div>
+    <p>Aucune salle enregistrée.<br>Cliquez sur <strong><i class="fa-solid fa-plus"></i> Nouvelle Salle</strong> pour commencer.</p>
+</div>
+@else
+<div class="rooms-grid">
+@foreach($salles as $salle)
+<div class="room-card">
+    <div class="room-card-header">
+        <div>
+            <div class="room-name">{{ $salle->nom }}</div>
+            @if($salle->code)<div class="room-code">{{ $salle->code }}</div>@endif
         </div>
-        <div class="form-group full">
-          <label class="form-label">Description</label>
-          <textarea class="form-control" name="description" id="se_description" rows="2"></textarea>
+        <span class="badge badge-{{ $salle->statut }}">{{ $salle->statut }}</span>
+    </div>
+    <div class="room-info">
+        @if($salle->localisation)
+        <div class="room-info-row"><span>Localisation</span><span>{{ $salle->localisation }}</span></div>
+        @endif
+        @if($salle->responsable)
+        <div class="room-info-row"><span>Responsable</span><span>{{ $salle->responsable }}</span></div>
+        @endif
+        @if($salle->description)
+        <div class="room-info-row"><span>Description</span><span>{{ Str::limit($salle->description, 60) }}</span></div>
+        @endif
+    </div>
+    <div class="room-capacity">
+        <span class="cap-label">Capacité</span>
+        <span class="cap-val">{{ $salle->capacite_serveurs }}</span>
+        <span class="cap-unit">serveurs max</span>
+    </div>
+    <div class="room-actions">
+        <button class="btn btn-blue" onclick="openEdit({{ $salle->id }}, '{{ addslashes($salle->nom) }}', '{{ addslashes($salle->code ?? '') }}', '{{ addslashes($salle->localisation ?? '') }}', '{{ addslashes($salle->responsable ?? '') }}', {{ $salle->capacite_serveurs }}, '{{ $salle->statut }}', '{{ addslashes($salle->description ?? '') }}')"><i class="fa-solid fa-pen-to-square"></i> Modifier</button>
+        <form method="POST" action="/salles/{{ $salle->id }}" id="del-salle-{{ $salle->id }}" style="margin:0">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-danger" onclick="delSalle(this,{{ $salle->id }})"><i class="fa-solid fa-trash"></i> Supprimer</button>
+        </form>
+    </div>
+</div>
+@endforeach
+</div>
+@endif
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal">
+    <h3><i class="fa-solid fa-plus-circle"></i> Nouvelle Salle <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></h3>
+    <form method="POST" action="/salles">
+        @csrf
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" name="nom" required placeholder="Salle principale">
+            </div>
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" name="code" placeholder="SRV-001" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label>Statut</label>
+                <select name="statut">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Localisation</label>
+                <input type="text" name="localisation" placeholder="Bâtiment A, Niveau 2">
+            </div>
+            <div class="form-group">
+                <label>Responsable</label>
+                <input type="text" name="responsable" placeholder="Nom du responsable">
+            </div>
+            <div class="form-group">
+                <label>Capacité serveurs</label>
+                <input type="number" name="capacite_serveurs" min="0" value="0">
+            </div>
+            <div class="form-group full-span">
+                <label>Description</label>
+                <textarea name="description" placeholder="Description de la salle..."></textarea>
+            </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Localisation</label>
-          <input class="form-control" type="text" name="localisation" id="se_localisation">
+        <div class="form-actions">
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('addModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i> Annuler</button>
+            <button type="submit" class="btn btn-neon"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Capacité (nb serveurs)</label>
-          <input class="form-control" type="number" name="capacite" id="se_capacite" min="0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Responsable</label>
-          <input class="form-control" type="text" name="responsable" id="se_responsable">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Statut</label>
-          <select class="form-control" name="statut" id="se_statut">
-            <option value="actif">Actif</option>
-            <option value="inactif">Inactif</option>
-            <option value="maintenance">En maintenance</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Niveau de sécurité</label>
-          <select class="form-control" name="niveau_securite" id="se_niveau_securite">
-            <option value="standard">Standard</option>
-            <option value="eleve">Élevé</option>
-            <option value="critique">Critique</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Statut réseau</label>
-          <select class="form-control" name="statut_reseau" id="se_statut_reseau">
-            <option value="connecte">Connecté</option>
-            <option value="deconnecte">Déconnecté</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="closeModal('modal-edit')">Annuler</button>
-        <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Mettre à jour</button>
-      </div>
     </form>
-  </div>
+</div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal">
+    <h3><i class="fa-solid fa-pen-to-square"></i> Modifier la Salle <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></h3>
+    <form method="POST" id="editForm" action="#">
+        @csrf
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" name="nom" id="edit_nom" required>
+            </div>
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" name="code" id="edit_code" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label>Statut</label>
+                <select name="statut" id="edit_statut">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Localisation</label>
+                <input type="text" name="localisation" id="edit_localisation">
+            </div>
+            <div class="form-group">
+                <label>Responsable</label>
+                <input type="text" name="responsable" id="edit_responsable">
+            </div>
+            <div class="form-group">
+                <label>Capacité serveurs</label>
+                <input type="number" name="capacite_serveurs" id="edit_capacite" min="0">
+            </div>
+            <div class="form-group full-span">
+                <label>Description</label>
+                <textarea name="description" id="edit_description"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('editModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i> Annuler</button>
+            <button type="submit" class="btn btn-neon"><i class="fa-solid fa-floppy-disk"></i> Mettre à jour</button>
+        </div>
+    </form>
+</div>
 </div>
 
 <script>
-function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function delSalle(btn, id) {
+    confirmDlg('Supprimer cette salle ?','La salle serveurs sera définitivement supprimée. Toutes ses données associées seront perdues. Cette action est irréversible.',{type:'danger',icon:'🏢',confirmText:'Supprimer la salle'}).then(function(ok) {
+        if (ok) { btnLoad(btn); document.getElementById('del-salle-'+id).submit(); }
+    });
+}
 
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
-});
-
-function setVal(id, val){ var el=document.getElementById(id); if(el) el.value = val ?? ''; }
-
-function openEdit(s){
-  document.getElementById('edit-form-salle').action = '/salles/update/' + s.id;
-  document.getElementById('edit-code').textContent = s.code;
-  setVal('se_nom', s.nom);
-  setVal('se_description', s.description);
-  setVal('se_localisation', s.localisation);
-  setVal('se_capacite', s.capacite);
-  setVal('se_responsable', s.responsable);
-  setVal('se_statut', s.statut);
-  setVal('se_niveau_securite', s.niveau_securite);
-  setVal('se_statut_reseau', s.statut_reseau);
-  openModal('modal-edit');
+function openEdit(id, nom, code, localisation, responsable, capacite, statut, description) {
+    document.getElementById('editForm').action = '/salles/' + id;
+    document.getElementById('edit_nom').value = nom;
+    document.getElementById('edit_code').value = code;
+    document.getElementById('edit_localisation').value = localisation;
+    document.getElementById('edit_responsable').value = responsable;
+    document.getElementById('edit_capacite').value = capacite;
+    document.getElementById('edit_description').value = description;
+    const sel = document.getElementById('edit_statut');
+    for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === statut) { sel.selectedIndex = i; break; }
+    }
+    document.getElementById('editModal').classList.add('open');
 }
 </script>
-
 @endsection

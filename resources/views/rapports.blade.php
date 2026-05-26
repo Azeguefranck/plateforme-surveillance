@@ -1,574 +1,551 @@
 @extends('layouts.app')
 
 @section('content')
-
 <style>
-@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.rpt-wrap{animation:fadeIn .4s ease;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--card:#0e1a38;--border:#1e2f5a;}
+.pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.pg-title{font-size:22px;font-weight:700;color:var(--neon)}
+.btn{padding:8px 14px;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px;transition:.18s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
+.btn-neon:hover{background:var(--neon);color:#000}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#000}
+.btn-warn{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.btn-warn:hover{background:var(--warn);color:#000}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-purple{background:transparent;border:1px solid #cc88ff;color:#cc88ff}
+.btn-purple:hover{background:#cc88ff;color:#000}
+.btn-gray{background:transparent;border:1px solid #2a3a5a;color:#777}
+.btn-gray:hover{border-color:#aaa;color:#aaa}
 
-/* ── Filter panel ── */
-.filter-panel{background:#0d1a2e;border:1px solid #182640;border-radius:16px;padding:20px;margin-bottom:20px;}
-.filter-title{font-size:13px;font-weight:bold;letter-spacing:1px;color:#2fa84f;text-transform:uppercase;margin-bottom:14px;}
-.filter-grid{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
-.filter-group{display:flex;flex-direction:column;gap:5px;flex:1 1 160px;}
-.filter-label{font-size:11px;font-weight:bold;color:#6b7fa0;letter-spacing:.5px;text-transform:uppercase;}
-.form-control{background:#0a1525;border:1.5px solid #1e3050;border-radius:9px;color:#d4dced;padding:9px 12px;font-size:13px;outline:none;transition:border-color .2s;}
-.form-control:focus{border-color:#2fa84f;}
-.form-control option{background:#0a1525;}
-.btn-filter{background:#2fa84f;color:#060c1a;border:none;border-radius:9px;padding:9px 20px;font-weight:bold;font-size:13px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px;align-self:flex-end;}
-.btn-filter:hover{background:#249040;}
-.btn-reset{background:transparent;color:#6b7fa0;border:1px solid #182640;border-radius:9px;padding:9px 16px;font-weight:bold;font-size:13px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px;align-self:flex-end;}
-.btn-reset:hover{color:#d4dced;border-color:#d4dced;}
+/* type selector */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.type-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:.2s;text-align:center}
+.type-card:hover{border-color:var(--blue)}
+.type-card.selected{border-color:var(--neon);background:rgba(51,255,136,.04)}
+.type-icon{font-size:28px;margin-bottom:8px}
+.type-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.type-desc{font-size:11px;color:#555}
 
-/* ── Section title ── */
-.section-title{font-size:15px;font-weight:bold;color:#d4dced;margin:22px 0 14px;display:flex;align-items:center;gap:10px;}
-.section-title i{color:#2fa84f;}
+/* filter section */
+.filter-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.filter-section h4{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;font-weight:700}
+.filter-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:5px}
+.filter-group label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.filter-group input,.filter-group select{background:#07102a;border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:#fff;font-size:12px;outline:none;transition:.2s;min-width:120px}
+.filter-group input:focus,.filter-group select:focus{border-color:var(--neon)}
+.filter-group select option{background:#0e1a38}
+.range-pair{display:flex;gap:6px;align-items:center}
+.range-pair input{min-width:70px!important;width:70px}
+.range-sep{font-size:11px;color:#555}
+.filter-extra{display:none}
 
-/* ── Report type cards ── */
-.rpt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:24px;}
-.rpt-card{background:#0d1a2e;border:1px solid #182640;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s,box-shadow .2s;}
-.rpt-card:hover{border-color:#2fa84f;box-shadow:0 4px 16px rgba(47,168,79,.08);}
-.rpt-card.active-type{border-color:#2fa84f;background:rgba(47,168,79,.05);}
-.rpt-icon{font-size:22px;color:#2fa84f;}
-.rpt-name{font-size:13px;font-weight:bold;color:#d4dced;}
-.rpt-desc{font-size:11px;color:#6b7fa0;line-height:1.4;}
-.rpt-actions{display:flex;gap:7px;margin-top:4px;}
-.btn-preview{flex:1;background:rgba(47,168,79,.1);color:#2fa84f;border:1px solid rgba(47,168,79,.3);border-radius:7px;padding:6px;font-size:11px;font-weight:bold;cursor:pointer;transition:.2s;text-align:center;}
-.btn-preview:hover{background:rgba(47,168,79,.22);}
-.btn-gen{flex:1;background:#2fa84f;color:#060c1a;border:none;border-radius:7px;padding:6px;font-size:11px;font-weight:bold;cursor:pointer;transition:.2s;text-align:center;}
-.btn-gen:hover{background:#249040;}
+/* format grid */
+.format-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.format-section h4{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;font-weight:700}
+.format-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.fmt-btn{background:#07102a;border:1px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;transition:.2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}
+.fmt-btn:hover{border-color:var(--neon);background:rgba(51,255,136,.05);transform:translateY(-1px)}
+.fmt-btn:active{transform:scale(.96)}
+.fmt-btn .fmt-icon{font-size:20px}
+.fmt-btn .fmt-label{font-size:11px;font-weight:700}
+.fmt-btn .fmt-desc{font-size:9px;color:#555}
+.fmt-btn.csv{border-color:rgba(51,255,136,.3)} .fmt-btn.csv .fmt-label{color:var(--neon)}
+.fmt-btn.json{border-color:rgba(51,181,255,.3)} .fmt-btn.json .fmt-label{color:var(--blue)}
+.fmt-btn.xml{border-color:rgba(255,214,51,.3)} .fmt-btn.xml .fmt-label{color:var(--warn)}
+.fmt-btn.xls{border-color:rgba(51,255,136,.3)} .fmt-btn.xls .fmt-label{color:#00cc66}
+.fmt-btn.xlsx{border-color:rgba(51,255,136,.3)} .fmt-btn.xlsx .fmt-label{color:#00cc66}
+.fmt-btn.txt{border-color:rgba(170,170,170,.3)} .fmt-btn.txt .fmt-label{color:#aaa}
+.fmt-btn.sql{border-color:rgba(255,153,51,.3)} .fmt-btn.sql .fmt-label{color:#ff9933}
+.fmt-btn.docx{border-color:rgba(51,181,255,.3)} .fmt-btn.docx .fmt-label{color:var(--blue)}
+.fmt-btn.html{border-color:rgba(204,136,255,.3)} .fmt-btn.html .fmt-label{color:#cc88ff}
+.fmt-btn.zip{border-color:rgba(255,214,51,.3)} .fmt-btn.zip .fmt-label{color:var(--warn)}
+.fmt-btn.pdf{border-color:rgba(255,87,51,.3)} .fmt-btn.pdf .fmt-label{color:var(--danger)}
+.fmt-btn.backup{border-color:rgba(51,255,136,.2)} .fmt-btn.backup .fmt-label{color:var(--neon)}
 
-/* ── Quick exports ── */
-.exports-panel{background:#0d1a2e;border:1px solid #182640;border-radius:16px;padding:20px;margin-bottom:20px;}
-.exports-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
-.btn-export{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:9px;font-weight:bold;font-size:12px;cursor:pointer;transition:.2s;border:1.5px solid;text-decoration:none;}
-.btn-csv{background:rgba(47,168,79,.12);color:#2fa84f;border-color:#2fa84f;}
-.btn-csv:hover{background:#2fa84f;color:#060c1a;}
-.btn-json{background:rgba(46,134,193,.12);color:#2e86c1;border-color:#2e86c1;}
-.btn-json:hover{background:#2e86c1;color:white;}
-.btn-pdf{background:rgba(231,76,60,.12);color:#e74c3c;border-color:#e74c3c;}
-.btn-pdf:hover{background:#e74c3c;color:white;}
-.btn-txt{background:rgba(230,126,34,.12);color:#e67e22;border-color:#e67e22;}
-.btn-txt:hover{background:#e67e22;color:white;}
-.btn-purple{background:rgba(139,92,246,.12);color:#8b5cf6;border-color:#8b5cf6;}
-.btn-purple:hover{background:#8b5cf6;color:white;}
+/* stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;text-align:center}
+.stat-card .val{font-size:26px;font-weight:800;margin-bottom:4px}
+.stat-card .lbl{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.4px}
+.stat-card.green .val{color:var(--neon)}
+.stat-card.blue  .val{color:var(--blue)}
+.stat-card.warn  .val{color:var(--warn)}
+.stat-card.red   .val{color:var(--danger)}
 
-/* ── Preview table ── */
-.table-wrap{background:#0d1a2e;border:1px solid #182640;border-radius:16px;overflow:hidden;margin-bottom:20px;}
-.table-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #182640;flex-wrap:wrap;gap:8px;}
-.table-title{font-size:13px;font-weight:bold;color:#2fa84f;letter-spacing:.5px;text-transform:uppercase;}
-.table-meta{font-size:12px;color:#6b7fa0;margin-top:2px;}
-.tbl-scroll{overflow-x:auto;}
-.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:500px;}
-.tbl th{background:#091527;padding:10px 13px;text-align:left;color:#6b7fa0;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #182640;white-space:nowrap;}
-.tbl td{padding:9px 13px;border-bottom:1px solid rgba(24,38,64,.6);color:#d4dced;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tbody tr:hover td{background:rgba(47,168,79,.03);}
-.loading-cell{text-align:center;padding:40px;color:#6b7fa0;}
+/* chart */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.chart-title{font-size:14px;font-weight:700;color:#fff}
+canvas{max-height:200px}
 
-.badge-crit{background:#3d0000;color:#ef4444;border:1px solid rgba(239,68,68,.4);padding:2px 7px;border-radius:10px;font-size:10px;font-weight:bold;}
-.badge-warn{background:#3d2800;color:#f59e0b;border:1px solid rgba(245,158,11,.4);padding:2px 7px;border-radius:10px;font-size:10px;font-weight:bold;}
-.badge-ok{background:#0d2e14;color:#2fa84f;border:1px solid rgba(47,168,79,.4);padding:2px 7px;border-radius:10px;font-size:10px;font-weight:bold;}
-.badge-info{background:#062e38;color:#2e86c1;border:1px solid rgba(46,134,193,.4);padding:2px 7px;border-radius:10px;font-size:10px;font-weight:bold;}
-.badge-ref{background:#3d0000;color:#ef4444;border:1px solid rgba(239,68,68,.3);padding:2px 7px;border-radius:10px;font-size:10px;}
+/* table */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-header{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border)}
+.table-title{font-size:13px;font-weight:700;color:#fff}
+.table-count{font-size:11px;color:#555}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#07102a}
+th{padding:9px 14px;text-align:left;font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:9px 14px;border-top:1px solid var(--border);font-size:12px;color:#ccc}
+tr:hover td{background:rgba(51,181,255,.03)}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700}
+.badge-warning{background:rgba(255,214,51,.1);color:var(--warn);border:1px solid rgba(255,214,51,.3)}
+.badge-critique{background:rgba(255,87,51,.1);color:var(--danger);border:1px solid rgba(255,87,51,.3)}
+.no-data{text-align:center;padding:40px;color:#555}
+.loading{text-align:center;padding:40px;color:#33b5ff;font-size:13px}
 
-/* ── Generate modal ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center;padding:16px;}
-.modal-overlay.open{display:flex;}
-.modal-box{background:#0d1a2e;border:1px solid #2fa84f;border-radius:20px;padding:28px 26px;width:100%;max-width:520px;animation:fadeIn .25s ease;}
-.modal-title{font-size:18px;font-weight:bold;color:#2fa84f;margin-bottom:4px;}
-.modal-sub{font-size:13px;color:#6b7fa0;margin-bottom:22px;}
-.fmt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
-.fmt-btn{padding:14px 8px;border-radius:10px;border:1.5px solid #182640;background:#091527;cursor:pointer;text-align:center;transition:.2s;}
-.fmt-btn:hover{border-color:#2fa84f;}
-.fmt-btn.selected{border-color:#2fa84f;background:rgba(47,168,79,.1);}
-.fmt-btn i{font-size:22px;display:block;margin-bottom:6px;}
-.fmt-btn span{font-size:12px;font-weight:bold;color:#d4dced;}
-.fmt-csv  i{color:#2fa84f;}
-.fmt-json i{color:#2e86c1;}
-.fmt-xml  i{color:#8b5cf6;}
-.fmt-txt  i{color:#e67e22;}
-.fmt-excel i{color:#16a34a;}
-.fmt-sql  i{color:#e74c3c;}
-.fmt-word i{color:#2563eb;}
-.fmt-pdf  i{color:#dc2626;}
-.modal-dates{display:flex;gap:12px;margin-bottom:22px;}
-.modal-dates .filter-group{flex:1;}
-.modal-foot{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
-.btn-cancel{background:transparent;color:#6b7fa0;border:1px solid #182640;border-radius:9px;padding:10px 20px;font-weight:bold;cursor:pointer;transition:.2s;font-size:13px;}
-.btn-cancel:hover{color:#d4dced;border-color:#d4dced;}
-.btn-download{background:#2fa84f;color:#060c1a;border:none;border-radius:9px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px;}
-.btn-download:hover{background:#249040;}
-
-.btn-refresh{background:transparent;border:1px solid #182640;color:#6b7fa0;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;transition:.2s;}
-.btn-refresh:hover{color:#2fa84f;border-color:#2fa84f;}
-
-@media(max-width:600px){
-  .fmt-grid{grid-template-columns:repeat(2,1fr);}
-  .filter-group{flex:1 1 100%;}
-  .modal-dates{flex-direction:column;}
-  .modal-box{padding:20px 16px;}
+@media(max-width:900px){
+.type-grid{grid-template-columns:1fr 1fr}
+.stats-row{grid-template-columns:1fr 1fr}
+.format-grid{grid-template-columns:repeat(3,1fr)}
+.filter-row{flex-direction:column}
 }
-@media(max-width:380px){
-  .fmt-grid{grid-template-columns:repeat(2,1fr);}
+@media(max-width:600px){
+.format-grid{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 
-<div class="rpt-wrap">
-
-{{-- ═══ FILTRES ═══ --}}
-<div class="filter-panel">
-  <div class="filter-title"><i class="fa-solid fa-filter"></i> Filtres</div>
-  <div class="filter-grid">
-    <div class="filter-group">
-      <label class="filter-label">Date début</label>
-      <input class="form-control" type="date" id="f_debut">
-    </div>
-    <div class="filter-group">
-      <label class="filter-label">Date fin</label>
-      <input class="form-control" type="date" id="f_fin">
-    </div>
-    <div class="filter-group">
-      <label class="filter-label">Niveau alerte</label>
-      <select class="form-control" id="f_niveau">
-        <option value="">Tous niveaux</option>
-        <option value="critique">Critique</option>
-        <option value="avertissement">Avertissement</option>
-        <option value="info">Info</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label class="filter-label">Salle</label>
-      <select class="form-control" id="f_salle">
-        <option value="">Toutes les salles</option>
-        @foreach($salles as $sl)
-        <option value="{{ $sl->id }}">{{ $sl->nom ?? ($sl->code ?? $sl->id) }}</option>
-        @endforeach
-      </select>
-    </div>
-    <button class="btn-filter" onclick="loadPreview()">
-      <i class="fa-solid fa-magnifying-glass"></i> Filtrer
-    </button>
-    <button class="btn-reset" onclick="resetFilters()">
-      <i class="fa-solid fa-xmark"></i> Réinitialiser
-    </button>
-  </div>
+<div class="pg-header">
+    <div class="pg-title">&#128202; Rapports</div>
+    <div style="font-size:12px;color:#555" id="reportTimestamp">—</div>
 </div>
 
-{{-- ═══ TYPES DE RAPPORTS ═══ --}}
-<div class="section-title"><i class="fa-solid fa-file-chart-column"></i> Types de rapports</div>
-<div class="rpt-grid">
-  @php
-  $types = [
-    ['key'=>'capteurs',     'icon'=>'fa-temperature-three-quarters','name'=>'Capteurs',     'desc'=>'Mesures temp, humidité, gaz, courant'],
-    ['key'=>'anomalies',    'icon'=>'fa-triangle-exclamation',      'name'=>'Anomalies',    'desc'=>'Détections et incidents anormaux'],
-    ['key'=>'securite',     'icon'=>'fa-shield-halved',             'name'=>'Sécurité',     'desc'=>'Accès, intrusions, PIR détectés'],
-    ['key'=>'utilisateurs', 'icon'=>'fa-users',                     'name'=>'Utilisateurs', 'desc'=>'Comptes et statuts utilisateurs'],
-    ['key'=>'salles',       'icon'=>'fa-building-server',           'name'=>'Salles',       'desc'=>'État et historique des salles'],
-    ['key'=>'serveurs',     'icon'=>'fa-server',                    'name'=>'Serveurs',     'desc'=>'Supervision des serveurs'],
-    ['key'=>'energie',      'icon'=>'fa-bolt',                      'name'=>'Énergie',      'desc'=>'Consommation et puissance électrique'],
-    ['key'=>'historique',   'icon'=>'fa-clock-rotate-left',         'name'=>'Historique',   'desc'=>'Journal complet des mesures'],
-    ['key'=>'alertes',      'icon'=>'fa-bell',                      'name'=>'Alertes',      'desc'=>'Historique de toutes les alertes'],
-    ['key'=>'incidents',    'icon'=>'fa-circle-exclamation',        'name'=>'Incidents',    'desc'=>'Incidents critiques uniquement'],
-    ['key'=>'maintenance',  'icon'=>'fa-screwdriver-wrench',        'name'=>'Maintenance',  'desc'=>'Journal des interventions'],
-  ];
-  @endphp
-  @foreach($types as $t)
-  <div class="rpt-card" id="card-{{ $t['key'] }}">
-    <i class="fa-solid {{ $t['icon'] }} rpt-icon"></i>
-    <div class="rpt-name">{{ $t['name'] }}</div>
-    <div class="rpt-desc">{{ $t['desc'] }}</div>
-    <div class="rpt-actions">
-      <button class="btn-preview" onclick="loadPreview('{{ $t['key'] }}')">
-        <i class="fa-solid fa-eye"></i> Aperçu
-      </button>
-      <button class="btn-gen" onclick="openGenerateModal('{{ $t['key'] }}','{{ $t['name'] }}')">
-        <i class="fa-solid fa-download"></i> Générer
-      </button>
+<!-- Report type selector -->
+<div class="type-grid">
+    <div class="type-card selected" data-type="mesures" onclick="selectType(this,'mesures')">
+        <div class="type-icon">&#127777;</div>
+        <div class="type-name">Mesures capteurs</div>
+        <div class="type-desc">Données IoT température, humidité, gaz…</div>
     </div>
-  </div>
-  @endforeach
+    <div class="type-card" data-type="alertes" onclick="selectType(this,'alertes')">
+        <div class="type-icon">&#128276;</div>
+        <div class="type-name">Alertes</div>
+        <div class="type-desc">Historique des alertes déclenchées</div>
+    </div>
+    <div class="type-card" data-type="salles" onclick="selectType(this,'salles')">
+        <div class="type-icon">&#127970;</div>
+        <div class="type-name">Salles &amp; Serveurs</div>
+        <div class="type-desc">Inventaire des équipements</div>
+    </div>
 </div>
 
-{{-- ═══ EXPORTS RAPIDES ═══ --}}
-<div class="exports-panel">
-  <div class="filter-title"><i class="fa-solid fa-bolt-lightning"></i> Exports rapides</div>
-  <div class="exports-row">
-    <button class="btn-export btn-csv" onclick="quickExport('capteurs','csv')">
-      <i class="fa-solid fa-file-csv"></i> Mesures CSV
-    </button>
-    <button class="btn-export btn-json" onclick="quickExport('capteurs','json')">
-      <i class="fa-solid fa-file-code"></i> Mesures JSON
-    </button>
-    <button class="btn-export btn-txt" onclick="quickExport('alertes','csv')">
-      <i class="fa-solid fa-bell"></i> Alertes CSV
-    </button>
-    <button class="btn-export btn-purple" onclick="quickExport('utilisateurs','json')">
-      <i class="fa-solid fa-users"></i> Utilisateurs JSON
-    </button>
-    <button class="btn-export btn-pdf" onclick="quickExport(currentType,'pdf')">
-      <i class="fa-solid fa-file-pdf"></i> PDF actuel
-    </button>
-    <button class="btn-export" style="background:rgba(37,99,235,.12);color:#2563eb;border:1.5px solid #2563eb;border-radius:9px;font-weight:bold;font-size:12px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;text-decoration:none;"
-      onclick="quickExport(currentType,'word')"
-      onmouseover="this.style.background='#2563eb';this.style.color='white'"
-      onmouseout="this.style.background='rgba(37,99,235,.12)';this.style.color='#2563eb'">
-      <i class="fa-solid fa-file-word"></i> Word actuel
-    </button>
-    <button class="btn-export btn-pdf" onclick="window.print()" style="border-color:#9aa5b4;color:#9aa5b4;background:transparent;">
-      <i class="fa-solid fa-print"></i> Imprimer
-    </button>
-    <button class="btn-export btn-txt" onclick="exportPreviewTXT()">
-      <i class="fa-solid fa-file-lines"></i> Aperçu TXT
-    </button>
-  </div>
-</div>
-
-{{-- ═══ PRÉVISUALISATION ═══ --}}
-<div class="table-wrap">
-  <div class="table-header">
-    <div>
-      <div class="table-title">
-        <i class="fa-solid fa-table"></i>
-        Prévisualisation — <span id="preview-type-label">Capteurs</span>
-      </div>
-      <div class="table-meta" id="preview-meta"></div>
-    </div>
-    <button class="btn-refresh" onclick="loadPreview()">
-      <i class="fa-solid fa-rotate"></i> Actualiser
-    </button>
-  </div>
-  <div class="tbl-scroll">
-    <table class="tbl">
-      <thead id="preview-head">
-        <tr><th colspan="9">Chargement...</th></tr>
-      </thead>
-      <tbody id="preview-body">
-        <tr><td colspan="9" class="loading-cell">
-          <i class="fa-solid fa-spinner fa-spin"></i> Chargement...
-        </td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-</div>
-
-{{-- ═══ MODAL GÉNÉRER ═══ --}}
-<div class="modal-overlay" id="gen-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
-    <div class="modal-title"><i class="fa-solid fa-file-arrow-down"></i> Générer un rapport</div>
-    <div class="modal-sub">Type sélectionné : <b id="gen-type-label" style="color:#d4dced;"></b></div>
-
-    <div class="fmt-grid">
-      <button class="fmt-btn fmt-csv selected" data-fmt="csv" onclick="selectFmt(this)">
-        <i class="fa-solid fa-file-csv"></i><span>CSV</span>
-      </button>
-      <button class="fmt-btn fmt-json" data-fmt="json" onclick="selectFmt(this)">
-        <i class="fa-solid fa-file-code"></i><span>JSON</span>
-      </button>
-      <button class="fmt-btn fmt-xml" data-fmt="xml" onclick="selectFmt(this)">
-        <i class="fa-solid fa-file-lines"></i><span>XML</span>
-      </button>
-      <button class="fmt-btn fmt-txt" data-fmt="txt" onclick="selectFmt(this)">
-        <i class="fa-solid fa-file-alt"></i><span>TXT</span>
-      </button>
-      <button class="fmt-btn fmt-excel" data-fmt="excel" onclick="selectFmt(this)">
-        <i class="fa-solid fa-table-cells"></i><span>Excel</span>
-      </button>
-      <button class="fmt-btn fmt-sql" data-fmt="sql" onclick="selectFmt(this)">
-        <i class="fa-solid fa-database"></i><span>SQL</span>
-      </button>
-      <button class="fmt-btn fmt-word" data-fmt="word" onclick="selectFmt(this)">
-        <i class="fa-solid fa-file-word"></i><span>Word</span>
-      </button>
-      <button class="fmt-btn fmt-pdf" data-fmt="pdf" onclick="selectFmt(this)">
-        <i class="fa-solid fa-file-pdf"></i><span>PDF</span>
-      </button>
+<!-- Filters -->
+<div class="filter-section">
+    <h4>&#9881; Filtres</h4>
+    <div class="filter-row">
+        <div class="filter-group">
+            <label>Date début</label>
+            <input type="date" id="dateDebut" value="{{ now()->subDays(7)->toDateString() }}" onchange="loadReport()">
+        </div>
+        <div class="filter-group">
+            <label>Date fin</label>
+            <input type="date" id="dateFin" value="{{ now()->toDateString() }}" onchange="loadReport()">
+        </div>
+        <div class="filter-group">
+            <label>Période rapide</label>
+            <select onchange="applyPeriod(this.value)">
+                <option value="">Personnalisée</option>
+                <option value="1">Aujourd'hui</option>
+                <option value="7" selected>7 derniers jours</option>
+                <option value="30">30 derniers jours</option>
+                <option value="90">3 derniers mois</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Salle serveurs</label>
+            <select id="filterSalle" onchange="loadReport()">
+                <option value="">Toutes les salles</option>
+            </select>
+        </div>
+        <div class="filter-group" id="niveauGroup">
+            <label>Niveau alerte</label>
+            <select id="filterNiveau" onchange="loadReport()">
+                <option value="">Tous</option>
+                <option value="warning">Warning</option>
+                <option value="critique">Critique</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Limite enreg.</label>
+            <select id="filterLimit" onchange="loadReport()">
+                <option value="100">100</option>
+                <option value="200" selected>200</option>
+                <option value="500">500</option>
+                <option value="1000">1 000</option>
+                <option value="5000">5 000</option>
+            </select>
+        </div>
+        <button class="btn btn-blue" onclick="loadReport()">&#8635; Filtrer</button>
     </div>
 
-    <div class="modal-dates">
-      <div class="filter-group">
-        <label class="filter-label">Date début</label>
-        <input class="form-control" type="date" id="gen-debut">
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Date fin</label>
-        <input class="form-control" type="date" id="gen-fin">
-      </div>
+    <!-- Extra filters for mesures -->
+    <div class="filter-row filter-extra" id="extraFilters" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="filter-group">
+            <label>&#127777; Température (°C)</label>
+            <div class="range-pair">
+                <input type="number" id="fTempMin" placeholder="Min" step="0.1" onchange="loadReport()">
+                <span class="range-sep">–</span>
+                <input type="number" id="fTempMax" placeholder="Max" step="0.1" onchange="loadReport()">
+            </div>
+        </div>
+        <div class="filter-group">
+            <label>&#128167; Humidité (%)</label>
+            <div class="range-pair">
+                <input type="number" id="fHumMin" placeholder="Min" step="0.1" onchange="loadReport()">
+                <span class="range-sep">–</span>
+                <input type="number" id="fHumMax" placeholder="Max" step="0.1" onchange="loadReport()">
+            </div>
+        </div>
+        <div class="filter-group">
+            <label>&#9729; Gaz (ppm)</label>
+            <div class="range-pair">
+                <input type="number" id="fGazMin" placeholder="Min" onchange="loadReport()">
+                <span class="range-sep">–</span>
+                <input type="number" id="fGazMax" placeholder="Max" onchange="loadReport()">
+            </div>
+        </div>
+        <div class="filter-group">
+            <label>&#9889; Courant (A)</label>
+            <div class="range-pair">
+                <input type="number" id="fCurMin" placeholder="Min" step="0.1" onchange="loadReport()">
+                <span class="range-sep">–</span>
+                <input type="number" id="fCurMax" placeholder="Max" step="0.1" onchange="loadReport()">
+            </div>
+        </div>
+        <div class="filter-group">
+            <label>&#128161; Puissance (W)</label>
+            <div class="range-pair">
+                <input type="number" id="fPwrMin" placeholder="Min" onchange="loadReport()">
+                <span class="range-sep">–</span>
+                <input type="number" id="fPwrMax" placeholder="Max" onchange="loadReport()">
+            </div>
+        </div>
+        <button class="btn btn-gray" onclick="clearRanges()" style="font-size:11px;padding:7px 10px">&#10005; Réinitialiser</button>
     </div>
-
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeModal()">
-        <i class="fa-solid fa-xmark"></i> Annuler
-      </button>
-      <button class="btn-download" onclick="generateReport()">
-        <i class="fa-solid fa-file-arrow-down"></i> Télécharger
-      </button>
-    </div>
-  </div>
 </div>
 
+<!-- Export format grid -->
+<div class="format-section">
+    <h4>&#8595; Exporter le rapport</h4>
+    <div class="format-grid">
+        <div class="fmt-btn csv"    onclick="exportData('csv')"   title="Tableur universel">
+            <div class="fmt-icon">&#128200;</div>
+            <div class="fmt-label">CSV</div>
+            <div class="fmt-desc">Tableur</div>
+        </div>
+        <div class="fmt-btn json"   onclick="exportData('json')"  title="API / développeur">
+            <div class="fmt-icon">&#123;&#125;</div>
+            <div class="fmt-label">JSON</div>
+            <div class="fmt-desc">Données API</div>
+        </div>
+        <div class="fmt-btn xml"    onclick="exportData('xml')"   title="Échange de données">
+            <div class="fmt-icon">&#60;/&#62;</div>
+            <div class="fmt-label">XML</div>
+            <div class="fmt-desc">Échange</div>
+        </div>
+        <div class="fmt-btn xls"    onclick="exportData('xls')"   title="Excel classique">
+            <div class="fmt-icon">&#128202;</div>
+            <div class="fmt-label">XLS</div>
+            <div class="fmt-desc">Excel 97+</div>
+        </div>
+        <div class="fmt-btn xlsx"   onclick="exportData('xlsx')"  title="Excel moderne">
+            <div class="fmt-icon">&#128202;</div>
+            <div class="fmt-label">XLSX</div>
+            <div class="fmt-desc">Excel 2007+</div>
+        </div>
+        <div class="fmt-btn txt"    onclick="exportData('txt')"   title="Texte brut formaté">
+            <div class="fmt-icon">&#128220;</div>
+            <div class="fmt-label">TXT</div>
+            <div class="fmt-desc">Texte brut</div>
+        </div>
+        <div class="fmt-btn sql"    onclick="exportData('sql')"   title="Script SQL INSERT">
+            <div class="fmt-icon">&#128190;</div>
+            <div class="fmt-label">SQL</div>
+            <div class="fmt-desc">Script INSERT</div>
+        </div>
+        <div class="fmt-btn docx"   onclick="exportData('docx')"  title="Document Word">
+            <div class="fmt-icon">&#128196;</div>
+            <div class="fmt-label">DOCX</div>
+            <div class="fmt-desc">Word</div>
+        </div>
+        <div class="fmt-btn html"   onclick="exportData('html')"  title="Page HTML autonome">
+            <div class="fmt-icon">&#127760;</div>
+            <div class="fmt-label">HTML</div>
+            <div class="fmt-desc">Page web</div>
+        </div>
+        <div class="fmt-btn zip"    onclick="exportData('zip')"   title="Archive tous formats">
+            <div class="fmt-icon">&#128230;</div>
+            <div class="fmt-label">ZIP</div>
+            <div class="fmt-desc">Archive</div>
+        </div>
+        <div class="fmt-btn pdf"    onclick="printRapport()"      title="Impression PDF">
+            <div class="fmt-icon">&#128438;</div>
+            <div class="fmt-label">PDF</div>
+            <div class="fmt-desc">Imprimer</div>
+        </div>
+        <div class="fmt-btn backup" onclick="downloadBackup()"    title="Sauvegarde complète">
+            <div class="fmt-icon">&#128190;</div>
+            <div class="fmt-label">BACKUP</div>
+            <div class="fmt-desc">Tout exporter</div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats row -->
+<div class="stats-row">
+    <div class="stat-card blue"><div class="val" id="statTotal">—</div><div class="lbl">Total enreg.</div></div>
+    <div class="stat-card green"><div class="val" id="statPeriod">—</div><div class="lbl">Sur la période</div></div>
+    <div class="stat-card warn"><div class="val" id="statWarn">—</div><div class="lbl">Avertissements</div></div>
+    <div class="stat-card red"><div class="val" id="statCrit">—</div><div class="lbl">Critiques</div></div>
+</div>
+
+<!-- Chart -->
+<div class="chart-card" id="chartSection">
+    <div class="chart-header">
+        <div class="chart-title" id="chartTitle">Évolution sur la période</div>
+        <div style="font-size:11px;color:#555" id="chartMeta">—</div>
+    </div>
+    <canvas id="reportChart"></canvas>
+</div>
+
+<!-- Data table -->
+<div class="table-card">
+    <div class="table-header">
+        <div class="table-title" id="tableTitle">Données</div>
+        <div class="table-count" id="tableCount">—</div>
+    </div>
+    <div id="tableWrapper">
+        <div class="loading">Chargement...</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-let currentType = 'capteurs';
-let previewData = [];
+let currentType = 'mesures';
+let reportChart = null;
 
-const TYPE_LABELS = {
-  capteurs:'Capteurs', anomalies:'Anomalies', securite:'Sécurité',
-  utilisateurs:'Utilisateurs', salles:'Salles', serveurs:'Serveurs',
-  energie:'Énergie', historique:'Historique', alertes:'Alertes',
-  incidents:'Incidents', maintenance:'Maintenance'
-};
-
-function fmtDate(v){ return v ? new Date(v).toLocaleString('fr-FR') : '—'; }
-
-const SEUILS = {temp:{w:30,c:40},gaz:{w:300,c:500},cur:{w:10,c:15}};
-function niveauMesure(m){
-  if((+m.temperature||0)>=SEUILS.temp.c||(+m.gaz||0)>=SEUILS.gaz.c||(+m.courant||0)>=SEUILS.cur.c||m.pir_detecte) return 'CRITIQUE';
-  if((+m.temperature||0)>=SEUILS.temp.w||(+m.gaz||0)>=SEUILS.gaz.w||(+m.courant||0)>=SEUILS.cur.w) return 'AVERT';
-  return 'OK';
-}
-function nivBadge(n){
-  const u = (n||'').toUpperCase();
-  if(u==='CRITIQUE'||u==='CRIT') return '<span class="badge-crit">CRIT</span>';
-  if(u==='AVERT'||u==='AVERTISSEMENT') return '<span class="badge-warn">WARN</span>';
-  if(u==='INFO') return '<span class="badge-info">INFO</span>';
-  return '<span class="badge-ok">OK</span>';
-}
-function statuBadge(s){
-  const u=(s||'').toLowerCase();
-  if(u==='valide') return '<span class="badge-ok">Validé</span>';
-  if(u==='attente') return '<span class="badge-warn">Attente</span>';
-  return '<span class="badge-ref">Refusé</span>';
-}
-
-// ── Column config per type ──
-const COL = {
-  capteurs:{
-    heads:['#','Date','Temp °C','Hum %','Gaz ppm','Courant A','Pui W','PIR','Niveau'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-      `<b style="color:#ff5733">${(+(m.temperature||0)).toFixed(1)}</b>`,
-      `<b style="color:#33b5ff">${(+(m.humidite||0)).toFixed(1)}</b>`,
-      `<b style="color:#ffd633">${Math.round(m.gaz||0)}</b>`,
-      `<b style="color:#33ff88">${(+(m.courant||0)).toFixed(2)}</b>`,
-      `<b style="color:#bb66ff">${Math.round(m.puissance||0)}</b>`,
-      m.pir_detecte?'<b style="color:#ef4444">OUI</b>':'<span style="color:#6b7fa0">—</span>',
-      nivBadge(niveauMesure(m)),
-    ]
-  },
-  energie:{
-    heads:['#','Date','Courant (A)','Puissance (W)','Tension (V)','Temp °C','Hum %'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-      `<b style="color:#33ff88">${(+(m.courant||0)).toFixed(2)}</b>`,
-      `<b style="color:#bb66ff">${Math.round(m.puissance||0)}</b>`,
-      `<b style="color:#ffd633">${Math.round(m.tension||220)}</b>`,
-      `<b style="color:#ff5733">${(+(m.temperature||0)).toFixed(1)}</b>`,
-      `<b style="color:#33b5ff">${(+(m.humidite||0)).toFixed(1)}</b>`,
-    ]
-  },
-  alertes:{
-    heads:['#','Date','Type','Niveau','Valeur','Message','Résolu'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-      `<span style="text-transform:capitalize">${m.type||'—'}</span>`,
-      m.niveau==='CRITIQUE'?'<span class="badge-crit">CRITIQUE</span>':'<span class="badge-warn">'+(m.niveau||'—')+'</span>',
-      `<span style="color:#6b7fa0">${m.valeur||'—'}</span>`,
-      `<span style="font-size:11px;color:#6b7fa0">${(m.message||'').substring(0,70)}</span>`,
-      m.resolu?'<span class="badge-ok">OUI</span>':'<span class="badge-ref">NON</span>',
-    ]
-  },
-  incidents:{
-    heads:['#','Date','Type','Valeur','Message','Résolu'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-      `<b style="color:#ef4444;text-transform:capitalize">${m.type||'—'}</b>`,
-      `<b style="color:#ef4444">${m.valeur||'—'}</b>`,
-      `<span style="font-size:11px;color:#6b7fa0">${(m.message||'').substring(0,80)}</span>`,
-      m.resolu?'<span class="badge-ok">OUI</span>':'<span class="badge-ref">NON</span>',
-    ]
-  },
-  securite:{
-    heads:['#','Date','Type','Niveau','Valeur','Message'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-      `<b style="color:#ef4444;text-transform:capitalize">${m.type||'intrusion'}</b>`,
-      m.niveau==='CRITIQUE'?'<span class="badge-crit">CRITIQUE</span>':'<span class="badge-warn">'+(m.niveau||'—')+'</span>',
-      `<b style="color:#ef4444">${m.valeur||'—'}</b>`,
-      `<span style="font-size:11px;color:#6b7fa0">${(m.message||'').substring(0,70)}</span>`,
-    ]
-  },
-  utilisateurs:{
-    heads:['#','Nom','Prénom','Email','Rôle','Statut','Téléphone'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<b>${m.nom||'—'}</b>`,
-      `${m.prenom||'—'}`,
-      `<span style="color:#2e86c1">${m.email||'—'}</span>`,
-      `<span style="color:#6b7fa0">${m.role||'user'}</span>`,
-      statuBadge(m.validation_status),
-      `<span style="color:#6b7fa0">${m.telephone||'—'}</span>`,
-    ]
-  },
-  salles:{
-    heads:['#','Nom','Code','Capacité','État','Créé le'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<b>${m.nom||'—'}</b>`,
-      `<span style="color:#2e86c1">${m.code||'—'}</span>`,
-      `${m.capacite||'—'}`,
-      `<span style="color:#2fa84f">${m.etat||'—'}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-    ]
-  },
-  serveurs:{
-    heads:['#','Nom','IP','Type','OS','Statut','Créé le'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<b>${m.nom||'—'}</b>`,
-      `<span style="color:#2e86c1">${m.ip||'—'}</span>`,
-      `${m.type||'—'}`,
-      `${m.os||'—'}`,
-      m.statut==='actif'?'<span class="badge-ok">Actif</span>':'<span class="badge-ref">'+(m.statut||'—')+'</span>',
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-    ]
-  },
-  maintenance:{
-    heads:['#','Date','Action'],
-    row:m=>[
-      `<span style="color:#6b7fa0">${m.id}</span>`,
-      `<span style="font-size:11px">${fmtDate(m.created_at)}</span>`,
-      `<span style="color:#d4dced">${m.action||'—'}</span>`,
-    ]
-  },
-};
-COL.historique = COL.capteurs;
-COL.anomalies  = COL.alertes;
-
-function buildParams(extra){
-  return new URLSearchParams(Object.assign({
-    type:   currentType,
-    debut:  document.getElementById('f_debut').value  || '',
-    fin:    document.getElementById('f_fin').value    || '',
-    niveau: document.getElementById('f_niveau').value || '',
-    salle:  document.getElementById('f_salle').value  || '',
-    page:   1,
-    limit:  50,
-  }, extra||{})).toString();
-}
-
-async function loadPreview(type){
-  if(type){
+function selectType(el, type) {
+    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
     currentType = type;
-    document.querySelectorAll('.rpt-card').forEach(c=>c.classList.remove('active-type'));
-    const card = document.getElementById('card-'+type);
-    if(card){ card.classList.add('active-type'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); }
-  }
-  document.getElementById('preview-type-label').textContent = TYPE_LABELS[currentType]||currentType;
-  const thead = document.getElementById('preview-head');
-  const tbody = document.getElementById('preview-body');
-  const meta  = document.getElementById('preview-meta');
-  const cfg   = COL[currentType] || COL.capteurs;
-  const cols  = cfg.heads.length;
+    const labels = {mesures:'Mesures capteurs', alertes:'Alertes', salles:'Salles & Serveurs'};
+    document.getElementById('chartTitle').textContent = labels[type];
+    // Show/hide mesures-specific filters
+    document.getElementById('extraFilters').style.display = type === 'mesures' ? 'flex' : 'none';
+    document.getElementById('niveauGroup').style.display  = type === 'alertes' ? '' : 'none';
+    loadReport();
+}
 
-  thead.innerHTML = '<tr>' + cfg.heads.map(h=>`<th>${h}</th>`).join('') + '</tr>';
-  tbody.innerHTML = `<tr><td colspan="${cols}" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</td></tr>`;
-  meta.textContent = '';
+function applyPeriod(days) {
+    if (!days) return;
+    const end = new Date(), start = new Date();
+    start.setDate(start.getDate() - parseInt(days) + 1);
+    document.getElementById('dateDebut').value = start.toISOString().split('T')[0];
+    document.getElementById('dateFin').value   = end.toISOString().split('T')[0];
+    loadReport();
+}
 
-  try {
-    const r = await fetch('/api/report-data?' + buildParams());
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const j = await r.json();
-    previewData = j.data || [];
+function clearRanges() {
+    ['fTempMin','fTempMax','fHumMin','fHumMax','fGazMin','fGazMax','fCurMin','fCurMax','fPwrMin','fPwrMax'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+    loadReport();
+}
 
-    if(!previewData.length){
-      tbody.innerHTML = `<tr><td colspan="${cols}" class="loading-cell">Aucune donnée pour ces filtres</td></tr>`;
-      meta.textContent = '0 résultats';
-      return;
+function buildParams() {
+    const debut  = document.getElementById('dateDebut').value;
+    const fin    = document.getElementById('dateFin').value;
+    const niveau = document.getElementById('filterNiveau').value;
+    const salle  = document.getElementById('filterSalle').value;
+    const limit  = document.getElementById('filterLimit').value;
+    let params   = `type=${currentType}&debut=${debut}&fin=${fin}&niveau=${niveau}&salle_id=${salle}&limit=${limit}`;
+    if (currentType === 'mesures') {
+        const ids = ['fTempMin','fTempMax','fHumMin','fHumMax','fGazMin','fGazMax','fCurMin','fCurMax','fPwrMin','fPwrMax'];
+        const keys= ['temp_min','temp_max','hum_min','hum_max','gaz_min','gaz_max','courant_min','courant_max','pwr_min','pwr_max'];
+        ids.forEach((id, i) => {
+            const v = document.getElementById(id)?.value;
+            if (v !== '' && v != null) params += `&${keys[i]}=${v}`;
+        });
     }
-    meta.textContent = `${previewData.length} affichés / ${j.total||previewData.length} total`;
-    tbody.innerHTML = previewData.map(m=>{
-      try {
-        const cells = cfg.row(m);
-        return '<tr>' + cells.map(c=>`<td>${c}</td>`).join('') + '</tr>';
-      } catch(e){
-        return '<tr><td colspan="'+cols+'" style="color:#6b7fa0;padding:8px 13px">—</td></tr>';
-      }
-    }).join('');
-  } catch(e){
-    tbody.innerHTML = `<tr><td colspan="${cols}" class="loading-cell" style="color:#e74c3c"><i class="fa-solid fa-circle-exclamation"></i> Données indisponibles</td></tr>`;
-  }
+    return params;
 }
 
-function resetFilters(){
-  ['f_debut','f_fin','f_niveau','f_salle'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  loadPreview();
+function loadReport() {
+    document.getElementById('reportTimestamp').textContent = 'Généré le ' + new Date().toLocaleString('fr-FR');
+    document.getElementById('tableWrapper').innerHTML = '<div class="loading">Chargement...</div>';
+    const params = buildParams();
+
+    fetch(`/api/filter?${params}`)
+        .then(r => r.json())
+        .then(res => {
+            const rows = res.data || [];
+            document.getElementById('statPeriod').textContent = rows.length;
+            document.getElementById('tableCount').textContent = rows.length + ' enregistrements';
+
+            if (currentType === 'mesures') {
+                renderMesuresTable(rows);
+                renderMesuresChart(rows);
+                const warnCount = rows.filter(r => r.temperature > 35 || r.humidite > 75 || r.gaz > 300).length;
+                const critCount = rows.filter(r => r.temperature > 40 || r.humidite > 85 || r.gaz > 500).length;
+                document.getElementById('statWarn').textContent = warnCount;
+                document.getElementById('statCrit').textContent = critCount;
+            } else if (currentType === 'alertes') {
+                renderAlertesTable(rows);
+                renderAlertesChart(rows);
+                document.getElementById('statWarn').textContent = rows.filter(r => r.niveau === 'warning').length;
+                document.getElementById('statCrit').textContent = rows.filter(r => r.niveau === 'critique').length;
+            } else {
+                renderGenericTable(rows);
+                document.getElementById('statWarn').textContent = '—';
+                document.getElementById('statCrit').textContent = '—';
+            }
+        })
+        .catch(() => {
+            document.getElementById('tableWrapper').innerHTML = '<div class="no-data">Erreur de chargement. Vérifiez la connexion.</div>';
+        });
+
+    fetch('/api/stats').then(r => r.json()).then(s => {
+        const map = {mesures: s.totalMesures, alertes: (s.alertesWarning||0)+(s.alertesCritiques||0), salles: '—'};
+        document.getElementById('statTotal').textContent = map[currentType] ?? '—';
+    }).catch(() => {});
 }
 
-// ── Generate modal ──
-function openGenerateModal(type, label){
-  currentType = type;
-  document.getElementById('gen-type-label').textContent = label || TYPE_LABELS[type] || type;
-  document.getElementById('gen-debut').value = document.getElementById('f_debut').value;
-  document.getElementById('gen-fin').value   = document.getElementById('f_fin').value;
-  document.getElementById('gen-modal').classList.add('open');
+function renderMesuresTable(rows) {
+    if (!rows.length) { document.getElementById('tableWrapper').innerHTML = '<div class="no-data">Aucune mesure sur cette période.</div>'; return; }
+    let html = `<div style="overflow-x:auto"><table><thead><tr>
+        <th>Date</th><th>Temp (°C)</th><th>Hum (%)</th><th>Gaz (ppm)</th><th>Courant (A)</th><th>Puissance (W)</th><th>Tension (V)</th><th>PIR</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+        const t = new Date(r.created_at).toLocaleString('fr-FR');
+        html += `<tr>
+            <td style="color:#555;font-size:11px">${t}</td>
+            <td style="color:${r.temperature>40?'var(--danger)':r.temperature>35?'var(--warn)':'var(--neon)'}">${r.temperature??'—'}</td>
+            <td style="color:${r.humidite>85?'var(--danger)':r.humidite>75?'var(--warn)':'var(--blue)'}">${r.humidite??'—'}</td>
+            <td style="color:${r.gaz>500?'var(--danger)':r.gaz>300?'var(--warn)':'#ccc'}">${r.gaz??'—'}</td>
+            <td>${r.courant??'—'}</td><td>${r.puissance??'—'}</td><td>${r.tension??'—'}</td>
+            <td style="color:${r.pir?'var(--danger)':'var(--neon)'}">${r.pir?'OUI':'NON'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('tableWrapper').innerHTML = html;
 }
 
-function closeModal(){
-  document.getElementById('gen-modal').classList.remove('open');
+function renderAlertesTable(rows) {
+    if (!rows.length) { document.getElementById('tableWrapper').innerHTML = '<div class="no-data">Aucune alerte sur cette période.</div>'; return; }
+    let html = `<div style="overflow-x:auto"><table><thead><tr>
+        <th>Date</th><th>Message</th><th>Niveau</th><th>Valeur</th><th>Lu</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+        const t = new Date(r.created_at).toLocaleString('fr-FR');
+        html += `<tr>
+            <td style="color:#555;font-size:11px">${t}</td>
+            <td style="color:#ccc;max-width:300px">${r.message??'—'}</td>
+            <td><span class="badge badge-${r.niveau}">${r.niveau??'—'}</span></td>
+            <td style="color:var(--warn)">${r.valeur??'—'}</td>
+            <td style="color:${r.lu?'var(--neon)':'#555'}">${r.lu?'✓':'○'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('tableWrapper').innerHTML = html;
 }
 
-function selectFmt(btn){
-  document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
+function renderGenericTable(rows) {
+    if (!rows.length) { document.getElementById('tableWrapper').innerHTML = '<div class="no-data">Aucune donnée.</div>'; return; }
+    const keys = Object.keys(rows[0]).filter(k => !['created_at','updated_at'].includes(k)).concat(['created_at']);
+    let html = `<div style="overflow-x:auto"><table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>`;
+    rows.forEach(r => {
+        html += '<tr>' + keys.map(k => `<td>${r[k]??'—'}</td>`).join('') + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('tableWrapper').innerHTML = html;
 }
 
-function generateReport(){
-  const fmt    = document.querySelector('.fmt-btn.selected')?.dataset.fmt || 'csv';
-  const debut  = document.getElementById('gen-debut').value;
-  const fin    = document.getElementById('gen-fin').value;
-  const niveau = document.getElementById('f_niveau').value;
-  const salle  = document.getElementById('f_salle').value;
-  const url    = '/rapports/generer?' + new URLSearchParams({type:currentType,format:fmt,debut,fin,niveau,salle}).toString();
-  window.location.href = url;
-  if(window.showToast) showToast('Téléchargement en cours…', 'info');
-  setTimeout(closeModal, 600);
+function renderMesuresChart(rows) {
+    const canvas = document.getElementById('reportChart');
+    if (reportChart) { reportChart.destroy(); reportChart = null; }
+    const sample = rows.filter((_, i) => i % Math.max(1, Math.floor(rows.length/50)) === 0).reverse();
+    const labels = sample.map(r => new Date(r.created_at).toLocaleString('fr-FR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}));
+    reportChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets: [
+            { label: 'Temp (°C)', data: sample.map(r => r.temperature), borderColor: '#ff5733', tension: .4, pointRadius: 0 },
+            { label: 'Hum (%)',   data: sample.map(r => r.humidite),    borderColor: '#33b5ff', tension: .4, pointRadius: 0 },
+            { label: 'Gaz/10',   data: sample.map(r => r.gaz ? r.gaz/10 : null), borderColor: '#ffd633', tension: .4, pointRadius: 0 },
+        ]},
+        options: {
+            responsive: true, maintainAspectRatio: true,
+            plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: '#555', maxTicksLimit: 10, font: { size: 10 } }, grid: { color: '#1e2f5a' } },
+                y: { ticks: { color: '#555', font: { size: 10 } }, grid: { color: '#1e2f5a' } }
+            }
+        }
+    });
+    document.getElementById('chartMeta').textContent = sample.length + ' points';
 }
 
-function quickExport(type, format){
-  const debut = document.getElementById('f_debut').value;
-  const fin   = document.getElementById('f_fin').value;
-  window.location.href = '/rapports/generer?' + new URLSearchParams({type,format,debut,fin}).toString();
-  if(window.showToast) showToast('Export '+format.toUpperCase()+' en cours…', 'info');
+function renderAlertesChart(rows) {
+    const canvas = document.getElementById('reportChart');
+    if (reportChart) { reportChart.destroy(); reportChart = null; }
+    const byDay = {};
+    rows.forEach(r => {
+        const d = r.created_at?.split('T')[0] || r.created_at?.split(' ')[0];
+        if (!d) return;
+        if (!byDay[d]) byDay[d] = {warning:0, critique:0};
+        byDay[d][r.niveau] = (byDay[d][r.niveau] || 0) + 1;
+    });
+    const days = Object.keys(byDay).sort();
+    reportChart = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: { labels: days, datasets: [
+            { label: 'Warning',  data: days.map(d => byDay[d].warning),  backgroundColor: 'rgba(255,214,51,.5)' },
+            { label: 'Critique', data: days.map(d => byDay[d].critique), backgroundColor: 'rgba(255,87,51,.5)'  },
+        ]},
+        options: {
+            responsive: true, maintainAspectRatio: true,
+            plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: '#555', font: { size: 10 } }, grid: { color: '#1e2f5a' } },
+                y: { ticks: { color: '#555', font: { size: 10 } }, grid: { color: '#1e2f5a' } }
+            }
+        }
+    });
+    document.getElementById('chartMeta').textContent = rows.length + ' alertes';
 }
 
-function exportPreviewTXT(){
-  if(!previewData.length){
-    if(window.showToast) showToast('Chargez les données d\'abord.', 'error');
-    return;
-  }
-  let txt = '=== RAPPORT ' + (TYPE_LABELS[currentType]||currentType).toUpperCase() + ' ===\n';
-  txt += 'Export : ' + new Date().toLocaleString('fr-FR') + '\n';
-  txt += 'Total  : ' + previewData.length + ' enregistrement(s)\n\n';
-  previewData.forEach((m,i)=>{
-    txt += '── ' + (i+1) + ' ──\n';
-    Object.entries(m).forEach(([k,v])=>{ txt += '  ' + k.padEnd(26) + ': ' + (v??'—') + '\n'; });
-    txt += '\n';
-  });
-  const a = document.createElement('a');
-  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt);
-  a.download = 'rapport_' + currentType + '_' + new Date().toISOString().slice(0,10) + '.txt';
-  a.click();
+function exportData(format) {
+    const params = buildParams();
+    window.location.href = `/rapports/export?${params}&format=${format}`;
+    notify('Téléchargement ' + format.toUpperCase() + ' en cours…', 'i', 3000);
 }
 
-// ── Init ──
-loadPreview('capteurs');
+function printRapport() {
+    const debut  = document.getElementById('dateDebut').value;
+    const fin    = document.getElementById('dateFin').value;
+    const niveau = document.getElementById('filterNiveau').value;
+    const salle  = document.getElementById('filterSalle').value;
+    window.open(`/rapports/print?type=${currentType}&debut=${debut}&fin=${fin}&niveau=${niveau}&salle_id=${salle}`, '_blank');
+}
+
+function downloadBackup() {
+    window.location.href = '/rapports/backup';
+    notify('Génération du backup complet en cours…', 'i', 4000);
+}
+
+// Load salles into dropdown
+fetch('/api/salles-list').then(r => r.json()).then(salles => {
+    const sel = document.getElementById('filterSalle');
+    salles.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id; o.textContent = s.nom;
+        sel.appendChild(o);
+    });
+}).catch(() => {});
+
+loadReport();
 </script>
-
 @endsection

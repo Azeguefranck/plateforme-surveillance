@@ -3,863 +3,1081 @@
 @section('content')
 
 @php
-// $user est passé depuis la route (objet DB frais).
-// Le cast (object) protège contre toute désérialisation en array.
-$u = (object)(isset($user) ? (array)$user : (array)(session('user') ?? []));
-
-$initiales = strtoupper(substr($u->nom ?? 'U', 0, 1) . substr($u->prenom ?? '', 0, 1));
-
-$roleLabel = match($u->role ?? 'utilisateur') {
-    'admin'        => ['ADMIN',        '#f59e0b'],
-    'superadmin'   => ['SUPER ADMIN',  '#ef4444'],
-    'technicien'   => ['TECHNICIEN',   '#3b82f6'],
-    default        => ['UTILISATEUR',  '#2fa84f'],
+$u = is_array($user) ? (object)$user : $user;
+$nom_complet = trim(($u->prenom ?? '') . ' ' . ($u->nom ?? '')) ?: ($u->name ?? 'Utilisateur');
+$role_label  = match($u->role ?? '') {
+    'admin'       => 'Administrateur',
+    'super_admin' => 'Super Admin',
+    default       => ucfirst($u->role ?? 'Utilisateur'),
 };
-
-$statutLabel = match($u->validation_status ?? 'en_attente') {
-    'valide'    => ['Validé',     '#2fa84f', '#052010'],
-    'refuse'    => ['Refusé',     '#ef4444', '#300808'],
-    'bloque'    => ['Bloqué',     '#f59e0b', '#2d1800'],
-    default     => ['En attente', '#6b7fa0', '#0d1a2e'],
+$statut_color = match($u->validation_status ?? '') {
+    'valide'    => '#33ff88',
+    'en_attente'=> '#ffd633',
+    'bloque'    => '#ff5733',
+    default     => '#8899cc',
 };
-
-$memberSince = ($u->created_at ?? null)
-    ? \Carbon\Carbon::parse($u->created_at)->locale('fr')->isoFormat('D MMMM YYYY')
-    : 'N/A';
+$statut_label = match($u->validation_status ?? '') {
+    'valide'    => 'ACTIF',
+    'en_attente'=> 'EN ATTENTE',
+    'bloque'    => 'BLOQUÉ',
+    default     => strtoupper($u->validation_status ?? ''),
+};
+$photo_url = $u->photo_profil ? asset('storage/' . $u->photo_profil) : null;
+$initiales = strtoupper(mb_substr($u->prenom ?? 'U', 0, 1) . mb_substr($u->nom ?? '', 0, 1));
+$date_inscription = $u->created_at ? \Carbon\Carbon::parse($u->created_at)->format('d/m/Y') : '—';
 @endphp
 
 <style>
+/* ── Base ─────────────────────────────────────────────── */
+*{box-sizing:border-box}
+body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
-/* ─── BASE ─── */
-.profil-wrap{
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-    max-width:1300px;
-    animation:pfadeIn .5s ease;
-}
-
-@keyframes pfadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-
-/* ─── CARDS ─── */
-.pcard{
-    background:#0d1a2e;
-    border:1px solid #182640;
-    border-radius:16px;
-    padding:22px 26px;
-    position:relative;
-    overflow:hidden;
-    transition:border-color .25s;
-}
-.pcard::before{
-    content:'';position:absolute;top:0;left:0;right:0;
-    height:2px;
-    background:linear-gradient(90deg,transparent,rgba(47,168,79,0.5),transparent);
-}
-.pcard:hover{border-color:rgba(47,168,79,0.25);}
-
-.pcard-title{
-    display:flex;align-items:center;gap:10px;
-    font-size:14px;font-weight:bold;
-    color:#d4dced;letter-spacing:.5px;
-    margin-bottom:20px;
-    padding-bottom:14px;
-    border-bottom:1px solid #182640;
-}
-.pcard-title i{color:#2fa84f;font-size:15px;}
-
-/* ─── ALERT MESSAGES ─── */
-.p-alert{
-    padding:11px 16px;border-radius:9px;
-    font-size:13px;font-weight:bold;
-    margin-bottom:16px;
-    display:flex;align-items:center;gap:9px;
-}
-.p-alert-ok {background:#052010;border:1px solid #2fa84f;color:#6ee7a0;}
-.p-alert-err{background:#2d0808;border:1px solid #ef4444;color:#fca5a5;}
-
-/* ─── HEADER CARD ─── */
+/* ── Page header ──────────────────────────────────────── */
 .profil-header{
-    display:flex;
-    align-items:center;
-    gap:28px;
-    flex-wrap:wrap;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:12px;
+}
+.profil-header h1{
+  font-size:24px;font-weight:700;color:#fff;
+  letter-spacing:1px;display:flex;align-items:center;gap:10px;
+}
+.profil-header h1 span{color:#33ff88}
+.breadcrumb{font-size:12px;color:#5a6a99}
+.breadcrumb a{color:#33ff88;text-decoration:none}
+
+/* ── Flash messages ───────────────────────────────────── */
+.flash{
+  padding:12px 18px;border-radius:10px;margin-bottom:20px;
+  font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;
+  animation:fadeUp .4s ease;
+}
+.flash-success{background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:#33ff88}
+.flash-error  {background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff5733}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Grid layouts ─────────────────────────────────────── */
+.grid-top{display:grid;grid-template-columns:300px 1fr;gap:20px;margin-bottom:20px}
+.grid-mid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.grid-bot{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media(max-width:1024px){.grid-top{grid-template-columns:1fr}}
+@media(max-width:768px){.grid-mid,.grid-bot{grid-template-columns:1fr}}
+
+/* ── Card base ────────────────────────────────────────── */
+.card{
+  background:linear-gradient(135deg,#0e1a38,#0c1530);
+  border:1px solid #1e2f5a;border-radius:18px;
+  padding:26px;position:relative;overflow:hidden;
+  transition:border-color .3s;
+}
+.card:hover{border-color:rgba(51,255,136,.2)}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(51,255,136,.4),transparent);
+  opacity:0;transition:.3s;
+}
+.card:hover::before{opacity:1}
+.card-title{
+  font-size:13px;font-weight:700;letter-spacing:1.5px;color:#8899cc;
+  text-transform:uppercase;margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title::before{
+  content:'';width:3px;height:14px;border-radius:2px;
+  background:linear-gradient(180deg,#33ff88,#33b5ff);flex-shrink:0;
 }
 
-/* Avatar */
-.avatar-zone{position:relative;flex-shrink:0;}
-
+/* ── Avatar card ──────────────────────────────────────── */
+.avatar-card{text-align:center}
+.avatar-wrap{
+  position:relative;display:inline-block;margin:0 auto 16px;
+}
 .avatar-ring{
-    width:96px;height:96px;
-    border-radius:50%;
-    border:3px solid #2fa84f;
-    box-shadow:0 0 20px rgba(47,168,79,0.3),0 0 40px rgba(47,168,79,0.1);
-    overflow:hidden;
-    position:relative;
-    animation:avatarGlow 3s ease-in-out infinite;
+  width:110px;height:110px;border-radius:50%;
+  border:3px solid #1e2f5a;padding:4px;
+  background:linear-gradient(135deg,#0e1a38,#060d1f);
+  position:relative;
+  box-shadow:0 0 0 1px rgba(51,255,136,.15),0 0 30px rgba(51,255,136,.1);
+  animation:ringPulse 3s ease-in-out infinite;
 }
-
-@keyframes avatarGlow{
-    0%,100%{box-shadow:0 0 18px rgba(47,168,79,0.3),0 0 36px rgba(47,168,79,0.1);}
-    50%{box-shadow:0 0 28px rgba(47,168,79,0.5),0 0 50px rgba(47,168,79,0.2);}
+@keyframes ringPulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(51,255,136,.15),0 0 30px rgba(51,255,136,.1)}
+  50%{box-shadow:0 0 0 3px rgba(51,255,136,.25),0 0 45px rgba(51,255,136,.18)}
 }
-
-.avatar-img{width:100%;height:100%;object-fit:cover;}
-
+.avatar-img{
+  width:100%;height:100%;border-radius:50%;object-fit:cover;
+  display:block;
+}
 .avatar-initials{
-    width:100%;height:100%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:32px;font-weight:bold;
-    color:#2fa84f;background:#0a1525;
-    letter-spacing:1px;
+  width:100%;height:100%;border-radius:50%;
+  background:linear-gradient(135deg,#1e3a6e,#0d2550);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;font-weight:700;color:#33ff88;
+  letter-spacing:2px;
 }
-
-.avatar-edit-btn{
-    position:absolute;bottom:-2px;right:-2px;
-    width:28px;height:28px;
-    background:#2fa84f;border:2px solid #0d1a2e;
-    border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;transition:.2s;font-size:11px;color:#060c1a;
+.avatar-online{
+  position:absolute;bottom:6px;right:6px;
+  width:16px;height:16px;border-radius:50%;
+  background:#33ff88;border:2px solid #060d1f;
+  animation:dotPulse 2s infinite;
 }
-.avatar-edit-btn:hover{background:#249040;transform:scale(1.1);}
+@keyframes dotPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
 
-/* Header info */
-.header-info{flex:1;min-width:200px;}
+.avatar-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px}
+.avatar-email{font-size:13px;color:#8899cc;margin-bottom:12px}
 
-.header-name{
-    font-size:22px;font-weight:bold;color:#e8edf8;
-    margin-bottom:6px;
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;margin:3px}
+.badge-role {background:rgba(51,181,255,.1);color:#33b5ff;border:1px solid rgba(51,181,255,.25)}
+.badge-statut{border:1px solid;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:.5px}
+
+.avatar-meta{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.meta-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;font-size:13px}
+.meta-row .ml{color:#5a6a99}
+.meta-row .mr{color:#c7d2ff;font-weight:600}
+
+/* Photo upload button */
+.btn-photo{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:8px;
+  border:1px solid #1e2f5a;background:rgba(255,255,255,.04);
+  color:#8899cc;font-size:12px;font-weight:600;
+  cursor:pointer;transition:.25s;margin-top:12px;
 }
+.btn-photo:hover{border-color:#33ff88;color:#33ff88;background:rgba(51,255,136,.05)}
+.btn-photo input{display:none}
 
-.header-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+/* ── Form fields ──────────────────────────────────────── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:700px){.form-grid-3{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.form-grid-3{grid-template-columns:1fr}}
 
-.badge{
-    display:inline-flex;align-items:center;gap:5px;
-    padding:4px 12px;border-radius:20px;
-    font-size:11px;font-weight:bold;letter-spacing:.8px;
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:700;color:#5a6a99;letter-spacing:.5px;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  background:rgba(255,255,255,.04);border:1px solid #1e2f5a;
+  border-radius:8px;padding:10px 14px;color:#e0e8ff;
+  font-size:14px;outline:none;transition:.25s;
+  font-family:inherit;
 }
-
-.header-meta{
-    display:flex;flex-wrap:wrap;gap:16px;
-    font-size:12px;color:#6b7fa0;
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:#33ff88;
+  box-shadow:0 0 0 3px rgba(51,255,136,.08);
 }
+.field input[readonly]{color:#5a6a99;cursor:default}
+.field input[readonly]:focus{border-color:#1e2f5a;box-shadow:none}
+.field select option{background:#0e1a38;color:#e0e8ff}
 
-.header-meta span{display:flex;align-items:center;gap:5px;}
-.header-meta i{color:#2fa84f;font-size:11px;}
-
-/* ─── GRID ─── */
-.profil-grid{
-    display:grid;
-    grid-template-columns:1fr 380px;
-    gap:18px;
-    align-items:start;
+/* Password field with toggle */
+.pw-wrap{position:relative}
+.pw-wrap input{width:100%;padding-right:44px}
+.pw-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#5a6a99;cursor:pointer;
+  font-size:16px;transition:.2s;padding:0;line-height:1;
 }
+.pw-eye:hover{color:#33ff88}
 
-/* ─── FORM FIELDS ─── */
-.form-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-}
+/* Password strength */
+.pw-strength{margin-top:6px;display:flex;gap:4px}
+.pw-bar{height:3px;border-radius:2px;flex:1;background:#1e2f5a;transition:.3s}
 
-.form-grid .full{grid-column:1/-1;}
-
-.fld{display:flex;flex-direction:column;gap:5px;}
-
-.fld label{
-    font-size:11px;font-weight:bold;
-    color:#6b7fa0;letter-spacing:.5px;
-    text-transform:uppercase;
-}
-
-.fld label i{color:#2fa84f;margin-right:4px;}
-
-.fld input, .fld select, .fld textarea{
-    background:#0a1525;
-    border:1.5px solid #1e3050;
-    border-radius:9px;
-    padding:10px 13px;
-    font-size:13px;color:#d4dced;
-    outline:none;
-    transition:border-color .2s,box-shadow .2s;
-    width:100%;
-}
-
-.fld input:focus, .fld select:focus, .fld textarea:focus{
-    border-color:#2fa84f;
-    box-shadow:0 0 0 3px rgba(47,168,79,0.1);
-}
-
-.fld input::placeholder, .fld textarea::placeholder{color:#2d4060;}
-
-.fld .readonly-val{
-    background:#070e1c;
-    border:1.5px solid #111d35;
-    border-radius:9px;
-    padding:10px 13px;
-    font-size:13px;color:#6b7fa0;
-    cursor:not-allowed;
-}
-
-/* Input avec œil */
-.input-eye{position:relative;}
-.input-eye input{padding-right:40px;}
-.eye-toggle{
-    position:absolute;right:12px;top:50%;transform:translateY(-50%);
-    background:none;border:none;color:#6b7fa0;
-    cursor:pointer;font-size:14px;transition:color .2s;
-}
-.eye-toggle:hover{color:#2fa84f;}
-
-/* Boutons */
+/* ── Buttons ──────────────────────────────────────────── */
 .btn-primary{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:10px 22px;
-    background:#2fa84f;color:#060c1a;
-    border:none;border-radius:9px;
-    font-size:13px;font-weight:bold;
-    cursor:pointer;transition:.2s;
-    text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 24px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,rgba(51,255,136,.15),rgba(51,255,136,.08));
+  border:1px solid rgba(51,255,136,.3);
+  color:#33ff88;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.25s;letter-spacing:.5px;
 }
-.btn-primary:hover{background:#249040;transform:translateY(-1px);}
-
-.btn-secondary{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:10px 22px;
-    background:rgba(30,50,100,0.4);color:#c0d4ff;
-    border:1.5px solid rgba(60,100,200,0.4);
-    border-radius:9px;font-size:13px;font-weight:bold;
-    cursor:pointer;transition:.2s;
-    text-decoration:none;
+.btn-primary:hover{
+  background:linear-gradient(135deg,rgba(51,255,136,.22),rgba(51,255,136,.12));
+  box-shadow:0 0 20px rgba(51,255,136,.25);
+  transform:translateY(-1px);
 }
-.btn-secondary:hover{background:rgba(30,80,200,0.4);border-color:rgba(100,150,255,0.7);}
-
 .btn-danger{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:10px 22px;
-    background:rgba(100,10,10,0.4);color:#fca5a5;
-    border:1.5px solid rgba(200,40,40,0.4);
-    border-radius:9px;font-size:13px;font-weight:bold;
-    cursor:pointer;transition:.2s;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 24px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,rgba(255,87,51,.12),rgba(255,87,51,.06));
+  border:1px solid rgba(255,87,51,.3);
+  color:#ff7755;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.25s;
 }
-.btn-danger:hover{background:rgba(150,20,20,0.5);border-color:#ef4444;}
+.btn-danger:hover{
+  background:linear-gradient(135deg,rgba(255,87,51,.2),rgba(255,87,51,.1));
+  box-shadow:0 0 20px rgba(255,87,51,.2);transform:translateY(-1px);
+}
+.btn-actions{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
 
-/* Barre force mot de passe */
-.strength-bar{height:3px;background:#182640;border-radius:3px;margin-top:5px;overflow:hidden;}
-.strength-fill{height:100%;width:0;border-radius:3px;transition:width .3s,background .3s;}
-.strength-txt{font-size:11px;color:#6b7fa0;margin-top:3px;}
+/* ── Section separator ────────────────────────────────── */
+.section-sep{
+  height:1px;margin:24px 0;
+  background:linear-gradient(90deg,transparent,#1e2f5a,transparent);
+}
 
-/* ─── ACTIVITÉS TIMELINE ─── */
-.timeline{display:flex;flex-direction:column;gap:0;}
-
+/* ── Timeline ─────────────────────────────────────────── */
+.timeline{display:flex;flex-direction:column;gap:0}
 .tl-item{
-    display:flex;gap:14px;
-    padding-bottom:16px;
-    position:relative;
+  display:flex;gap:14px;padding:12px 0;
+  position:relative;
 }
-
-.tl-item::before{
-    content:'';
-    position:absolute;
-    left:17px;top:34px;
-    width:2px;height:calc(100% - 10px);
-    background:linear-gradient(to bottom,#182640,transparent);
+.tl-item:not(:last-child)::after{
+  content:'';position:absolute;left:15px;top:40px;bottom:0;
+  width:1px;background:linear-gradient(180deg,#1e2f5a,transparent);
 }
-
-.tl-item:last-child::before{display:none;}
-
 .tl-dot{
-    width:34px;height:34px;
-    border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:13px;
-    flex-shrink:0;
-    border:2px solid;
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;border:1px solid;margin-top:2px;
 }
+.tl-dot.g{background:rgba(51,255,136,.1);border-color:rgba(51,255,136,.3);color:#33ff88}
+.tl-dot.r{background:rgba(255,87,51,.1);border-color:rgba(255,87,51,.3);color:#ff5733}
+.tl-dot.y{background:rgba(255,214,51,.1);border-color:rgba(255,214,51,.3);color:#ffd633}
+.tl-dot.b{background:rgba(51,181,255,.1);border-color:rgba(51,181,255,.3);color:#33b5ff}
+.tl-body{flex:1;min-width:0}
+.tl-msg{font-size:13px;color:#c7d2ff;line-height:1.4}
+.tl-time{font-size:11px;color:#3a4a6a;margin-top:3px}
 
-.tl-body{flex:1;min-width:0;padding-top:4px;}
-.tl-label{font-size:13px;font-weight:bold;color:#d4dced;margin-bottom:2px;}
-.tl-time{font-size:11px;color:#6b7fa0;}
-.tl-desc{font-size:12px;color:#8090b0;margin-top:3px;}
-
-/* ─── TOGGLE SWITCHES ─── */
-.notif-list{display:flex;flex-direction:column;gap:12px;}
-
-.notif-item{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px 14px;
-    background:#0a1525;border:1px solid #182640;
-    border-radius:9px;transition:.2s;
+/* ── Notification switches ────────────────────────────── */
+.switch-list{display:flex;flex-direction:column;gap:10px}
+.switch-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;background:rgba(255,255,255,.03);
+  border-radius:10px;border:1px solid transparent;transition:.25s;
 }
-.notif-item:hover{border-color:rgba(47,168,79,0.2);}
-
-.notif-left{display:flex;align-items:center;gap:10px;}
-.notif-icon{
-    width:32px;height:32px;border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:13px;
-}
-.notif-name{font-size:13px;font-weight:bold;color:#d4dced;}
-.notif-desc{font-size:11px;color:#6b7fa0;margin-top:1px;}
-
+.switch-row:hover{border-color:#1e2f5a;background:rgba(255,255,255,.05)}
+.switch-label{font-size:13px;color:#c7d2ff;display:flex;align-items:center;gap:9px}
+.switch-ico{font-size:15px;width:20px;text-align:center}
 /* Toggle switch */
-.toggle{
-    position:relative;
-    width:42px;height:22px;
-    flex-shrink:0;
-}
-.toggle input{opacity:0;width:0;height:0;}
+.toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
 .toggle-slider{
-    position:absolute;cursor:pointer;
-    inset:0;background:#1e3050;
-    border-radius:22px;transition:.3s;
+  position:absolute;inset:0;background:#1e2f5a;
+  border-radius:24px;cursor:pointer;transition:.3s;
 }
 .toggle-slider::before{
-    content:'';position:absolute;
-    width:16px;height:16px;
-    left:3px;bottom:3px;
-    background:#6b7fa0;border-radius:50%;
-    transition:.3s;
+  content:'';position:absolute;height:18px;width:18px;
+  left:3px;top:3px;background:#5a6a99;
+  border-radius:50%;transition:.3s;
 }
-.toggle input:checked + .toggle-slider{background:#2fa84f;box-shadow:0 0 8px rgba(47,168,79,0.4);}
-.toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:white;}
+.toggle input:checked + .toggle-slider{background:rgba(51,255,136,.25);border:1px solid rgba(51,255,136,.4)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:#33ff88;box-shadow:0 0 8px rgba(51,255,136,.5)}
 
-/* ─── SÉCURITÉ INFO ─── */
-.sec-grid{display:flex;flex-direction:column;gap:10px;}
-
+/* ── Security info ────────────────────────────────────── */
+.sec-list{display:flex;flex-direction:column;gap:10px}
 .sec-row{
-    display:flex;align-items:center;gap:12px;
-    padding:10px 14px;
-    background:#0a1525;border:1px solid #182640;
-    border-radius:9px;
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px;background:rgba(255,255,255,.03);
+  border-radius:10px;
 }
-
-.sec-icon{
-    width:34px;height:34px;border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:13px;flex-shrink:0;
-    background:rgba(47,168,79,0.1);color:#2fa84f;
+.sec-ico{
+  width:34px;height:34px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:rgba(51,181,255,.08);border:1px solid rgba(51,181,255,.15);
 }
+.sec-content{flex:1;min-width:0}
+.sec-key{font-size:11px;color:#5a6a99;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.sec-val{font-size:13px;color:#c7d2ff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec-val.online{color:#33ff88}
 
-.sec-label{font-size:11px;color:#6b7fa0;text-transform:uppercase;letter-spacing:.5px;}
-.sec-val{font-size:12px;color:#d4dced;font-weight:bold;margin-top:1px;word-break:break-all;}
-
-/* ─── RESPONSIVE ─── */
-@media(max-width:1100px){
-    .profil-grid{grid-template-columns:1fr;}
+/* ── Stats mini ───────────────────────────────────────── */
+.stats-mini{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.stat-mini{
+  background:rgba(255,255,255,.03);border-radius:10px;
+  padding:14px;text-align:center;border:1px solid transparent;transition:.25s;
 }
+.stat-mini:hover{border-color:#1e2f5a}
+.stat-mini-num{font-size:24px;font-weight:700;color:#33ff88;line-height:1}
+.stat-mini-label{font-size:11px;color:#5a6a99;margin-top:5px;letter-spacing:.5px;text-transform:uppercase}
 
-@media(max-width:700px){
-    .form-grid{grid-template-columns:1fr;}
-    .form-grid .full{grid-column:1;}
-    .pcard{padding:16px 16px;}
-    .profil-header{gap:18px;}
-    .avatar-ring{width:80px;height:80px;}
-    .avatar-initials{font-size:26px;}
-    .header-name{font-size:18px;}
-}
+/* ── Scroll ───────────────────────────────────────────── */
+.card-scroll{max-height:380px;overflow-y:auto;padding-right:4px}
+.card-scroll::-webkit-scrollbar{width:3px}
+.card-scroll::-webkit-scrollbar-track{background:#0a1225}
+.card-scroll::-webkit-scrollbar-thumb{background:#33ff88;border-radius:2px}
 
-@media(max-width:480px){
-    .header-badges{gap:6px;}
-    .badge{font-size:10px;padding:3px 9px;}
-    .header-meta{gap:10px;font-size:11px;}
-}
-
+/* ── Geo cascade ──────────────────────────────────────── */
+.geo-sel{width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;outline:none;transition:.2s;cursor:pointer;appearance:none;-webkit-appearance:none}
+.geo-sel:focus{border-color:#33ff88;box-shadow:0 0 0 2px rgba(51,255,136,.1)}
+.geo-sel:disabled{opacity:.45;cursor:not-allowed}
+.geo-sel option{background:#0e1a38}
+.geo-ld{font-size:11px;color:#33b5ff;margin-top:4px;display:none}
+.geo-ld.show{display:block}
 </style>
 
-<div class="profil-wrap">
 
-    {{-- ══════════════════ HEADER CARD ══════════════════ --}}
-    <div class="pcard profil-header">
+{{-- ── Header ── --}}
+<div class="profil-header">
+  <h1>👤 Mon <span>Profil</span></h1>
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> / Mon Profil</div>
+</div>
 
-        {{-- Avatar --}}
-        <form method="POST" action="/profil/photo" enctype="multipart/form-data" id="photoForm">
-            @csrf
-            <div class="avatar-zone">
-                <div class="avatar-ring">
-                    @if($u->photo_profil && file_exists(public_path($u->photo_profil)))
-                        <img src="{{ asset($u->photo_profil) }}" class="avatar-img" alt="Photo profil" id="avatarPreview">
-                    @else
-                        <div class="avatar-initials" id="avatarInitiales">{{ $initiales }}</div>
-                    @endif
-                </div>
-                <label class="avatar-edit-btn" title="Modifier la photo" for="photoInput">
-                    <i class="fa-solid fa-camera"></i>
-                </label>
-                <input type="file" id="photoInput" name="photo_profil" accept="image/*"
-                       style="display:none;" onchange="previewPhoto(this)">
-            </div>
-        </form>
+{{-- ── Flash messages ── --}}
+@if(session('success_profil'))
+  <div class="flash flash-success">✅ {{ session('success_profil') }}</div>
+@endif
+@if(session('success_password'))
+  <div class="flash flash-success">🔐 {{ session('success_password') }}</div>
+@endif
+@if(session('success_photo'))
+  <div class="flash flash-success">📷 {{ session('success_photo') }}</div>
+@endif
+@if(session('error_password'))
+  <div class="flash flash-error">❌ {{ session('error_password') }}</div>
+@endif
+@if($errors->any())
+  @foreach($errors->all() as $err)
+    <div class="flash flash-error">⚠️ {{ $err }}</div>
+  @endforeach
+@endif
 
-        {{-- Infos header --}}
-        <div class="header-info">
 
-            @if(session('success_photo'))
-                <div class="p-alert p-alert-ok"><i class="fa-solid fa-circle-check"></i> {{ session('success_photo') }}</div>
-            @endif
+{{-- ═══════════════════════════════════════════════════════
+     ROW 1 : Avatar  |  Informations personnelles
+════════════════════════════════════════════════════════ --}}
+<div class="grid-top">
 
-            <div class="header-name">{{ $u->prenom ?? '' }} {{ $u->nom ?? '' }}</div>
+  {{-- ── Carte Avatar ── --}}
+  <div class="card avatar-card">
+    <div class="card-title">Identité</div>
 
-            <div class="header-badges">
-                <span class="badge" style="background:rgba(0,0,0,0.3);border:1px solid {{ $roleLabel[1] }};color:{{ $roleLabel[1] }};">
-                    <i class="fa-solid fa-shield-halved" style="font-size:10px;"></i>
-                    {{ $roleLabel[0] }}
-                </span>
-                <span class="badge" style="background:{{ $statutLabel[2] }};border:1px solid {{ $statutLabel[1] }};color:{{ $statutLabel[1] }};">
-                    <i class="fa-solid fa-circle" style="font-size:7px;"></i>
-                    {{ $statutLabel[0] }}
-                </span>
-            </div>
-
-            <div class="header-meta">
-                <span><i class="fa-solid fa-envelope"></i> {{ $u->email ?? 'N/A' }}</span>
-                <span><i class="fa-solid fa-calendar"></i> Membre depuis {{ $memberSince }}</span>
-                @if($u->pays)
-                    <span><i class="fa-solid fa-globe"></i> {{ $u->pays }}</span>
-                @endif
-            </div>
-        </div>
-
+    <div class="avatar-wrap">
+      <div class="avatar-ring">
+        @if($photo_url)
+          <img class="avatar-img" src="{{ $photo_url }}" alt="Photo profil" id="avatar-preview">
+        @else
+          <div class="avatar-initials" id="avatar-preview-wrap">{{ $initiales }}</div>
+        @endif
+      </div>
+      <div class="avatar-online"></div>
     </div>
 
-    {{-- ══════════════════ GRILLE PRINCIPALE ══════════════════ --}}
-    <div class="profil-grid">
+    <div class="avatar-name">{{ $nom_complet }}</div>
+    <div class="avatar-email">{{ $u->email ?? '' }}</div>
 
-        {{-- ─── COLONNE GAUCHE ─── --}}
-        <div style="display:flex;flex-direction:column;gap:18px;">
+    <div>
+      <span class="badge badge-role">{{ $role_label }}</span>
+      <span class="badge badge-statut" style="color:{{ $statut_color }};border-color:{{ $statut_color }}20;background:{{ $statut_color }}10">
+        {{ $statut_label }}
+      </span>
+    </div>
 
-            {{-- INFORMATIONS PERSONNELLES --}}
-            <div class="pcard">
-                <div class="pcard-title">
-                    <i class="fa-solid fa-user-pen"></i>
-                    Informations personnelles
-                </div>
+    {{-- Photo upload form --}}
+    <form action="/profil/photo" method="POST" enctype="multipart/form-data" id="form-photo">
+      @csrf
+      <label class="btn-photo">
+        📷 Modifier la photo
+        <input type="file" name="photo_profil" accept="image/*" id="photo-input" onchange="previewPhoto(this);document.getElementById('form-photo').submit()">
+      </label>
+    </form>
 
-                @if(session('success_profil'))
-                    <div class="p-alert p-alert-ok"><i class="fa-solid fa-circle-check"></i> {{ session('success_profil') }}</div>
-                @endif
+    <div class="avatar-meta">
+      <div class="meta-row">
+        <span class="ml">Inscription</span>
+        <span class="mr">{{ $date_inscription }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="ml">Rôle</span>
+        <span class="mr">{{ $role_label }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="ml">Statut</span>
+        <span class="mr" style="color:{{ $statut_color }}">{{ $statut_label }}</span>
+      </div>
+      @if($u->pays ?? false)
+      <div class="meta-row">
+        <span class="ml">Pays</span>
+        <span class="mr">{{ $u->pays }}</span>
+      </div>
+      @endif
+    </div>
+  </div>
 
-                <form method="POST" action="/profil/update">
-                    @csrf
-                    <div class="form-grid">
+  {{-- ── Informations personnelles ── --}}
+  <div class="card">
+    <div class="card-title">Informations personnelles</div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-user"></i> Nom</label>
-                            <input type="text" name="nom" value="{{ $u->nom ?? '' }}" placeholder="Nom" required>
-                        </div>
+    <form action="/profil/update" method="POST">
+      @csrf
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-user"></i> Prénom</label>
-                            <input type="text" name="prenom" value="{{ $u->prenom ?? '' }}" placeholder="Prénom" required>
-                        </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Prénom</label>
+          <input type="text" name="prenom" value="{{ old('prenom', $u->prenom ?? '') }}" required>
+        </div>
+        <div class="field">
+          <label>Nom</label>
+          <input type="text" name="nom" value="{{ old('nom', $u->nom ?? '') }}" required>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" value="{{ $u->email ?? '' }}" readonly>
+        </div>
+        <div class="field">
+          <label>Téléphone</label>
+          <input type="text" name="telephone" value="{{ old('telephone', $u->telephone ?? '') }}" required>
+        </div>
+      </div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-envelope"></i> Email</label>
-                            <div class="readonly-val">{{ $u->email ?? 'N/A' }}</div>
-                        </div>
+      <div class="section-sep"></div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-phone"></i> Téléphone</label>
-                            <input type="text" name="telephone" value="{{ $u->telephone ?? '' }}" placeholder="Téléphone">
-                        </div>
+      <div class="form-grid-3">
+        {{-- Pays --}}
+        <div class="field">
+          <label>🌍 Pays</label>
+          <input type="hidden" name="pays"     id="p_pays_val"    value="{{ old('pays',    $u->pays    ?? '') }}">
+          <input type="hidden" name="iso_pays" id="p_iso_val"     value="{{ old('iso_pays',$u->iso_pays?? '') }}">
+          <select class="geo-sel" id="p_pays_sel">
+            <option value="">— Sélectionner un pays —</option>
+          </select>
+          <div class="geo-ld" id="p_pays_ld">Chargement…</div>
+        </div>
+        {{-- Région --}}
+        <div class="field">
+          <label>🌐 Région / Province / État</label>
+          <select class="geo-sel" name="region" id="p_region_sel" disabled>
+            <option value="">— Choisir un pays d'abord —</option>
+          </select>
+          <div class="geo-ld" id="p_reg_ld">Chargement…</div>
+        </div>
+        {{-- Département --}}
+        <div class="field">
+          <label>🏛️ Département / District</label>
+          <select class="geo-sel" name="departement" id="p_dept_sel" disabled>
+            <option value="">— Choisir une région d'abord —</option>
+          </select>
+          <div class="geo-ld" id="p_dept_ld">Chargement…</div>
+        </div>
+        {{-- Arrondissement --}}
+        <div class="field">
+          <label>🏘️ Arrondissement / Commune</label>
+          <input type="hidden" name="arrondissement" id="p_h_arrond" value="{{ old('arrondissement', $u->arrondissement ?? '') }}">
+          <select class="geo-sel" id="p_arrond_sel" style="display:none">
+            <option value="">— Sélectionner —</option>
+          </select>
+          <input class="geo-sel" id="p_arrond_txt" type="text" name="_arrond_txt" placeholder="Ex: Yaoundé 1er, Lyon 3e…" value="{{ old('arrondissement', $u->arrondissement ?? '') }}" style="display:block">
+          <div class="geo-ld" id="p_arrond_ld">Chargement…</div>
+        </div>
+        {{-- Ville --}}
+        <div class="field">
+          <label>🏙️ Ville / Résidence</label>
+          <select class="geo-sel" name="ville_residence" id="p_ville_sel" disabled>
+            <option value="">— Choisir un département d'abord —</option>
+          </select>
+          <div class="geo-ld" id="p_ville_ld">Chargement…</div>
+        </div>
+        {{-- Quartier --}}
+        <div class="field">
+          <label>Quartier</label>
+          <input type="text" name="quartier" value="{{ old('quartier', $u->quartier ?? '') }}">
+        </div>
+      </div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-briefcase"></i> Profession</label>
-                            <input type="text" name="profession" value="{{ $u->profession ?? '' }}" placeholder="Profession">
-                        </div>
+      <div class="section-sep"></div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-building"></i> Organisation</label>
-                            <input type="text" name="organisation" value="{{ $u->organisation ?? '' }}" placeholder="Organisation">
-                        </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Profession</label>
+          <input type="text" name="profession" value="{{ old('profession', $u->profession ?? '') }}">
+        </div>
+        <div class="field">
+          <label>Organisation</label>
+          <input type="text" name="organisation" value="{{ old('organisation', $u->organisation ?? '') }}">
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label>Adresse complète</label>
+        <input type="text" name="adresse" value="{{ old('adresse', $u->adresse ?? '') }}">
+      </div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-globe"></i> Pays</label>
-                            <div class="readonly-val">{{ $u->pays ?? 'Non renseigné' }}</div>
-                        </div>
+      <div class="btn-actions">
+        <button type="submit" class="btn-primary">💾 Enregistrer les modifications</button>
+      </div>
+    </form>
+  </div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-map"></i> Région / État</label>
-                            <div class="readonly-val">{{ $u->etat ?? $u->region ?? 'Non renseigné' }}</div>
-                        </div>
+</div>{{-- /grid-top --}}
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-map-pin"></i> Département</label>
-                            <div class="readonly-val">{{ $u->departement ?? 'Non renseigné' }}</div>
-                        </div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-location-dot"></i> Arrondissement</label>
-                            <div class="readonly-val">{{ $u->arrondissement ?? 'Non renseigné' }}</div>
-                        </div>
+{{-- ═══════════════════════════════════════════════════════
+     ROW 2 : Sécurité  |  Sécurité avancée
+════════════════════════════════════════════════════════ --}}
+<div class="grid-mid">
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-city"></i> Ville</label>
-                            <div class="readonly-val">{{ $u->ville ?? 'Non renseigné' }}</div>
-                        </div>
+  {{-- ── Changer le mot de passe ── --}}
+  <div class="card">
+    <div class="card-title">🔐 Sécurité du compte</div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-house"></i> Quartier</label>
-                            <input type="text" name="quartier" value="{{ $u->quartier ?? '' }}" placeholder="Quartier">
-                        </div>
+    <form action="/profil/password" method="POST">
+      @csrf
 
-                        <div class="fld full">
-                            <label><i class="fa-solid fa-map-location-dot"></i> Adresse complète</label>
-                            <input type="text" name="adresse" value="{{ $u->adresse ?? '' }}" placeholder="Adresse complète">
-                        </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Mot de passe actuel</label>
+        <div class="pw-wrap">
+          <input type="password" name="ancien_mdp" id="pw-old" placeholder="••••••••" required>
+          <button type="button" class="pw-eye" onclick="togglePw('pw-old',this)">👁</button>
+        </div>
+      </div>
 
-                    </div>
+      <div class="field" style="margin-bottom:6px">
+        <label>Nouveau mot de passe</label>
+        <div class="pw-wrap">
+          <input type="password" name="nouveau_mdp" id="pw-new" placeholder="Min. 8 caractères" required minlength="8" oninput="updateStrength(this.value)">
+          <button type="button" class="pw-eye" onclick="togglePw('pw-new',this)">👁</button>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-bar" id="b1"></div>
+          <div class="pw-bar" id="b2"></div>
+          <div class="pw-bar" id="b3"></div>
+          <div class="pw-bar" id="b4"></div>
+          <div class="pw-bar" id="b5"></div>
+        </div>
+        <div style="font-size:11px;color:#5a6a99;margin-top:4px" id="pw-label">Entrez un mot de passe</div>
+      </div>
 
-                    <div style="margin-top:18px;display:flex;gap:10px;">
-                        <button type="submit" class="btn-primary">
-                            <i class="fa-solid fa-floppy-disk"></i> Enregistrer
-                        </button>
-                    </div>
-                </form>
-            </div>
+      <div class="field" style="margin-bottom:20px">
+        <label>Confirmer le nouveau mot de passe</label>
+        <div class="pw-wrap">
+          <input type="password" name="nouveau_mdp_confirmation" id="pw-conf" placeholder="Répéter le mot de passe" required minlength="8">
+          <button type="button" class="pw-eye" onclick="togglePw('pw-conf',this)">👁</button>
+        </div>
+      </div>
 
-            {{-- SÉCURITÉ — CHANGEMENT MOT DE PASSE --}}
-            <div class="pcard">
-                <div class="pcard-title">
-                    <i class="fa-solid fa-lock"></i>
-                    Sécurité du compte
-                </div>
+      <div class="section-sep"></div>
 
-                @if(session('success_pwd'))
-                    <div class="p-alert p-alert-ok"><i class="fa-solid fa-circle-check"></i> {{ session('success_pwd') }}</div>
-                @endif
-                @if(session('error_pwd'))
-                    <div class="p-alert p-alert-err"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error_pwd') }}</div>
-                @endif
+      <div style="font-size:12px;color:#5a6a99;margin-bottom:16px;line-height:1.6">
+        🛡 Le mot de passe doit contenir au moins 8 caractères.<br>
+        Recommandé : majuscules, chiffres, caractères spéciaux.
+      </div>
 
-                <form method="POST" action="/profil/password">
-                    @csrf
-                    <div class="form-grid">
+      <button type="submit" class="btn-danger">🔑 Changer le mot de passe</button>
+    </form>
+  </div>
 
-                        <div class="fld full">
-                            <label><i class="fa-solid fa-key"></i> Mot de passe actuel</label>
-                            <div class="input-eye">
-                                <input type="password" name="current_password" id="pwd0" placeholder="Saisissez votre mot de passe actuel" required>
-                                <button type="button" class="eye-toggle" onclick="toggleEye('pwd0','eye0')">
-                                    <i class="fa-solid fa-eye" id="eye0"></i>
-                                </button>
-                            </div>
-                        </div>
+  {{-- ── Sécurité avancée ── --}}
+  <div class="card">
+    <div class="card-title">🛡 Sécurité avancée</div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-lock"></i> Nouveau mot de passe</label>
-                            <div class="input-eye">
-                                <input type="password" name="password" id="pwd1" placeholder="Min. 8 caractères"
-                                       required minlength="8" oninput="checkStrength(this.value)">
-                                <button type="button" class="eye-toggle" onclick="toggleEye('pwd1','eye1')">
-                                    <i class="fa-solid fa-eye" id="eye1"></i>
-                                </button>
-                            </div>
-                            <div class="strength-bar"><div class="strength-fill" id="sfill"></div></div>
-                            <div class="strength-txt" id="stxt"></div>
-                        </div>
+    <div class="sec-list">
+      <div class="sec-row">
+        <div class="sec-ico">🌐</div>
+        <div class="sec-content">
+          <div class="sec-key">Adresse IP</div>
+          <div class="sec-val" id="user-ip">Chargement…</div>
+        </div>
+      </div>
+      <div class="sec-row">
+        <div class="sec-ico">💻</div>
+        <div class="sec-content">
+          <div class="sec-key">Appareil</div>
+          <div class="sec-val" id="user-device">—</div>
+        </div>
+      </div>
+      <div class="sec-row">
+        <div class="sec-ico">🧭</div>
+        <div class="sec-content">
+          <div class="sec-key">Navigateur</div>
+          <div class="sec-val" id="user-browser">—</div>
+        </div>
+      </div>
+      <div class="sec-row">
+        <div class="sec-ico">🕐</div>
+        <div class="sec-content">
+          <div class="sec-key">Dernière activité</div>
+          <div class="sec-val" id="user-activity">—</div>
+        </div>
+      </div>
+      <div class="sec-row">
+        <div class="sec-ico">🔗</div>
+        <div class="sec-content">
+          <div class="sec-key">Statut connexion</div>
+          <div class="sec-val online">● Session active</div>
+        </div>
+      </div>
+      <div class="sec-row">
+        <div class="sec-ico">📅</div>
+        <div class="sec-content">
+          <div class="sec-key">Compte créé le</div>
+          <div class="sec-val">{{ $date_inscription }}</div>
+        </div>
+      </div>
+    </div>
 
-                        <div class="fld">
-                            <label><i class="fa-solid fa-lock"></i> Confirmer le mot de passe</label>
-                            <div class="input-eye">
-                                <input type="password" name="password_confirmation" id="pwd2"
-                                       placeholder="Répétez le mot de passe"
-                                       required minlength="8" oninput="checkMatch()">
-                                <button type="button" class="eye-toggle" onclick="toggleEye('pwd2','eye2')">
-                                    <i class="fa-solid fa-eye" id="eye2"></i>
-                                </button>
-                            </div>
-                            <div class="strength-txt" id="mtxt"></div>
-                        </div>
+    <div class="stats-mini">
+      <div class="stat-mini">
+        <div class="stat-mini-num" id="sm-alertes">—</div>
+        <div class="stat-mini-label">Alertes reçues</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-num" id="sm-mesures">—</div>
+        <div class="stat-mini-label">Mesures enreg.</div>
+      </div>
+    </div>
+  </div>
 
-                    </div>
+</div>{{-- /grid-mid --}}
 
-                    <div style="margin-top:18px;">
-                        <button type="submit" class="btn-danger" id="pwdBtn">
-                            <i class="fa-solid fa-shield-halved"></i> Changer le mot de passe
-                        </button>
-                    </div>
-                </form>
-            </div>
 
+{{-- ═══════════════════════════════════════════════════════
+     ROW 3 : Activités  |  Notifications
+════════════════════════════════════════════════════════ --}}
+<div class="grid-bot">
+
+  {{-- ── Activités récentes ── --}}
+  <div class="card">
+    <div class="card-title">📋 Activités récentes</div>
+    <div class="card-scroll">
+      <div class="timeline" id="timeline">
+
+        {{-- Connexion actuelle --}}
+        <div class="tl-item">
+          <div class="tl-dot g">🔑</div>
+          <div class="tl-body">
+            <div class="tl-msg">Connexion réussie à la plateforme</div>
+            <div class="tl-time" id="tl-now">—</div>
+          </div>
         </div>
 
-        {{-- ─── COLONNE DROITE ─── --}}
-        <div style="display:flex;flex-direction:column;gap:18px;">
-
-            {{-- ACTIVITÉS RÉCENTES --}}
-            <div class="pcard">
-                <div class="pcard-title">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    Activités récentes
-                </div>
-
-                <div class="timeline">
-
-                    {{-- Connexion actuelle --}}
-                    <div class="tl-item">
-                        <div class="tl-dot" style="background:rgba(47,168,79,0.12);border-color:#2fa84f;color:#2fa84f;">
-                            <i class="fa-solid fa-right-to-bracket"></i>
-                        </div>
-                        <div class="tl-body">
-                            <div class="tl-label">Connexion</div>
-                            <div class="tl-time">{{ now()->locale('fr')->isoFormat('D MMM YYYY, HH:mm') }}</div>
-                            <div class="tl-desc">Session active en cours</div>
-                        </div>
-                    </div>
-
-                    {{-- Alertes récentes --}}
-                    @if(isset($alertes) && $alertes->count())
-                        @foreach($alertes->take(4) as $alerte)
-                        <div class="tl-item">
-                            <div class="tl-dot" style="background:rgba(239,68,68,0.1);border-color:#ef4444;color:#ef4444;">
-                                <i class="fa-solid fa-bell"></i>
-                            </div>
-                            <div class="tl-body">
-                                <div class="tl-label">Alerte système</div>
-                                <div class="tl-time">
-                                    {{ $alerte->created_at ? \Carbon\Carbon::parse($alerte->created_at)->locale('fr')->isoFormat('D MMM, HH:mm') : 'N/A' }}
-                                </div>
-                                <div class="tl-desc">
-                                    {{ isset($alerte->message) ? Str::limit($alerte->message, 55) : ($alerte->type ?? 'Alerte capteur') }}
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    @else
-                        <div class="tl-item">
-                            <div class="tl-dot" style="background:rgba(107,127,160,0.1);border-color:#6b7fa0;color:#6b7fa0;">
-                                <i class="fa-solid fa-inbox"></i>
-                            </div>
-                            <div class="tl-body">
-                                <div class="tl-label" style="color:#6b7fa0;">Aucune alerte récente</div>
-                                <div class="tl-time">Système nominal</div>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Création compte --}}
-                    <div class="tl-item">
-                        <div class="tl-dot" style="background:rgba(59,130,246,0.1);border-color:#3b82f6;color:#3b82f6;">
-                            <i class="fa-solid fa-user-plus"></i>
-                        </div>
-                        <div class="tl-body">
-                            <div class="tl-label">Compte créé</div>
-                            <div class="tl-time">{{ $memberSince }}</div>
-                            <div class="tl-desc">Inscription sur la plateforme</div>
-                        </div>
-                    </div>
-
-                </div>
+        {{-- Alertes depuis la DB --}}
+        @forelse($alertes as $alerte)
+          @php
+            $ico   = $alerte->niveau === 'critique' ? '🔴' : ($alerte->niveau === 'warning' ? '🟡' : '🟢');
+            $cls   = $alerte->niveau === 'critique' ? 'r' : ($alerte->niveau === 'warning' ? 'y' : 'g');
+            $date  = \Carbon\Carbon::parse($alerte->created_at)->format('d/m/Y H:i');
+          @endphp
+          <div class="tl-item">
+            <div class="tl-dot {{ $cls }}">{{ $ico }}</div>
+            <div class="tl-body">
+              <div class="tl-msg">{{ $alerte->message }}</div>
+              <div class="tl-time">{{ $date }}</div>
             </div>
-
-            {{-- PRÉFÉRENCES NOTIFICATIONS --}}
-            <div class="pcard">
-                <div class="pcard-title">
-                    <i class="fa-solid fa-bell"></i>
-                    Préférences notifications
-                </div>
-
-                <div class="notif-list">
-
-                    @php
-                    $notifs = [
-                        ['id'=>'n_sms',   'icon'=>'fa-mobile-screen-button', 'color'=>'#2fa84f',   'bg'=>'rgba(47,168,79,0.1)',   'name'=>'Alertes SMS',        'desc'=>'Via module GSM SIM900'],
-                        ['id'=>'n_email', 'icon'=>'fa-envelope',             'color'=>'#3b82f6',   'bg'=>'rgba(59,130,246,0.1)', 'name'=>'Alertes Email',      'desc'=>'Notification par email'],
-                        ['id'=>'n_temp',  'icon'=>'fa-temperature-high',     'color'=>'#ef4444',   'bg'=>'rgba(239,68,68,0.1)',  'name'=>'Température',        'desc'=>'Seuil critique capteur'],
-                        ['id'=>'n_gaz',   'icon'=>'fa-smog',                 'color'=>'#f59e0b',   'bg'=>'rgba(245,158,11,0.1)', 'name'=>'Gaz / Fumée',        'desc'=>'Détection gaz MQ135'],
-                        ['id'=>'n_pir',   'icon'=>'fa-person-walking',       'color'=>'#a855f7',   'bg'=>'rgba(168,85,247,0.1)', 'name'=>'Mouvement PIR',      'desc'=>'Détection intrusion'],
-                        ['id'=>'n_pow',   'icon'=>'fa-bolt',                 'color'=>'#06b6d4',   'bg'=>'rgba(6,182,212,0.1)',  'name'=>'Puissance électrique','desc'=>'Anomalie courant'],
-                    ];
-                    @endphp
-
-                    @foreach($notifs as $n)
-                    <div class="notif-item">
-                        <div class="notif-left">
-                            <div class="notif-icon" style="background:{{ $n['bg'] }};color:{{ $n['color'] }};">
-                                <i class="fa-solid {{ $n['icon'] }}"></i>
-                            </div>
-                            <div>
-                                <div class="notif-name">{{ $n['name'] }}</div>
-                                <div class="notif-desc">{{ $n['desc'] }}</div>
-                            </div>
-                        </div>
-                        <label class="toggle">
-                            <input type="checkbox" class="notif-chk" data-id="{{ $n['id'] }}"
-                                   {{ in_array($n['id'], ['n_sms','n_email','n_temp','n_gaz']) ? 'checked' : '' }}>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    @endforeach
-
-                </div>
+          </div>
+        @empty
+          <div class="tl-item">
+            <div class="tl-dot b">📊</div>
+            <div class="tl-body">
+              <div class="tl-msg">Aucune alerte enregistrée pour le moment</div>
+              <div class="tl-time">Système en attente de données capteurs</div>
             </div>
+          </div>
+        @endforelse
 
-            {{-- SÉCURITÉ AVANCÉE --}}
-            <div class="pcard">
-                <div class="pcard-title">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    Informations de connexion
-                </div>
+        {{-- Inscription --}}
+        <div class="tl-item">
+          <div class="tl-dot b">✅</div>
+          <div class="tl-body">
+            <div class="tl-msg">Compte créé et validé</div>
+            <div class="tl-time">{{ $date_inscription }}</div>
+          </div>
+        </div>
 
-                <div class="sec-grid">
+      </div>
+    </div>
+  </div>
 
-                    <div class="sec-row">
-                        <div class="sec-icon"><i class="fa-solid fa-network-wired"></i></div>
-                        <div>
-                            <div class="sec-label">Adresse IP</div>
-                            <div class="sec-val">{{ request()->ip() }}</div>
-                        </div>
-                    </div>
+  {{-- ── Préférences notifications ── --}}
+  <div class="card">
+    <div class="card-title">🔔 Préférences notifications</div>
 
-                    <div class="sec-row">
-                        <div class="sec-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
-                            <i class="fa-solid fa-display"></i>
-                        </div>
-                        <div>
-                            <div class="sec-label">Appareil</div>
-                            <div class="sec-val" id="device-info">Détection...</div>
-                        </div>
-                    </div>
+    <div class="switch-list">
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">📧</span> Alertes par email</div>
+        <label class="toggle"><input type="checkbox" id="notif-email" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">🌡</span> Alertes température</div>
+        <label class="toggle"><input type="checkbox" id="notif-temp" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">💨</span> Alertes gaz / qualité air</div>
+        <label class="toggle"><input type="checkbox" id="notif-gaz" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">⚡</span> Alertes puissance / courant</div>
+        <label class="toggle"><input type="checkbox" id="notif-power" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">🚶</span> Alertes mouvement PIR</div>
+        <label class="toggle"><input type="checkbox" id="notif-pir" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">📱</span> Alertes SMS</div>
+        <label class="toggle"><input type="checkbox" id="notif-sms" onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <div class="switch-label"><span class="switch-ico">🔴</span> Alertes anomalies critiques</div>
+        <label class="toggle"><input type="checkbox" id="notif-anomalie" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
 
-                    <div class="sec-row">
-                        <div class="sec-icon" style="background:rgba(168,85,247,0.1);color:#a855f7;">
-                            <i class="fa-brands fa-chrome"></i>
-                        </div>
-                        <div>
-                            <div class="sec-label">Navigateur</div>
-                            <div class="sec-val" id="browser-info">Détection...</div>
-                        </div>
-                    </div>
+    <div style="margin-top:16px;font-size:11px;color:#3a4a6a;line-height:1.5">
+      Les préférences sont sauvegardées localement sur cet appareil.
+    </div>
+  </div>
 
-                    <div class="sec-row">
-                        <div class="sec-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
-                            <i class="fa-solid fa-clock"></i>
-                        </div>
-                        <div>
-                            <div class="sec-label">Dernière activité</div>
-                            <div class="sec-val" id="last-act">—</div>
-                        </div>
-                    </div>
+</div>{{-- /grid-bot --}}
 
-                    <div class="sec-row">
-                        <div class="sec-icon" style="background:rgba(47,168,79,0.1);color:#2fa84f;">
-                            <i class="fa-solid fa-circle-check"></i>
-                        </div>
-                        <div>
-                            <div class="sec-label">Statut session</div>
-                            <div class="sec-val" style="color:#2fa84f;">Active &nbsp;●</div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-        </div>{{-- fin col droite --}}
-
-    </div>{{-- fin grid --}}
-
-</div>{{-- fin wrap --}}
 
 <script>
-/* ─── Aperçu photo ─── */
-function previewPhoto(input){
-    if(!input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const ring = input.closest('.avatar-zone').querySelector('.avatar-ring');
-        ring.innerHTML = `<img src="${e.target.result}" class="avatar-img" style="width:100%;height:100%;object-fit:cover;">`;
-    };
-    reader.readAsDataURL(input.files[0]);
-    document.getElementById('photoForm').submit();
-}
-
-/* ─── Afficher/masquer mot de passe ─── */
-function toggleEye(id, iconId){
-    const inp = document.getElementById(id);
-    const ico = document.getElementById(iconId);
-    if(inp.type === 'password'){
-        inp.type = 'text';
-        ico.classList.replace('fa-eye','fa-eye-slash');
+// ── Preview photo avant upload ──────────────────────────
+function previewPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const prev = document.getElementById('avatar-preview');
+    const wrap = document.getElementById('avatar-preview-wrap');
+    if (prev && prev.tagName === 'IMG') {
+      prev.src = e.target.result;
     } else {
-        inp.type = 'password';
-        ico.classList.replace('fa-eye-slash','fa-eye');
+      const ring = document.querySelector('.avatar-ring');
+      ring.innerHTML = `<img class="avatar-img" src="${e.target.result}" id="avatar-preview">`;
     }
+    if (wrap) wrap.style.display = 'none';
+  };
+  r.readAsDataURL(input.files[0]);
 }
 
-/* ─── Force mot de passe ─── */
-function checkStrength(v){
-    const fill = document.getElementById('sfill');
-    const txt  = document.getElementById('stxt');
-    let s = 0;
-    if(v.length >= 8)         s++;
-    if(/[A-Z]/.test(v))       s++;
-    if(/[0-9]/.test(v))       s++;
-    if(/[^A-Za-z0-9]/.test(v))s++;
-    const levels = [
-        {w:'0%',  c:'#c0392b', l:''},
-        {w:'25%', c:'#c0392b', l:'Faible'},
-        {w:'50%', c:'#d97706', l:'Moyen'},
-        {w:'75%', c:'#2e86c1', l:'Bon'},
-        {w:'100%',c:'#2fa84f', l:'Excellent'},
-    ];
-    fill.style.width      = levels[s].w;
-    fill.style.background = levels[s].c;
-    txt.textContent       = levels[s].l;
-    txt.style.color       = levels[s].c;
-    checkMatch();
+// ── Toggle visibility mot de passe ─────────────────────
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+  else                        { el.type = 'password'; btn.textContent = '👁'; }
 }
 
-function checkMatch(){
-    const p1  = document.getElementById('pwd1').value;
-    const p2  = document.getElementById('pwd2').value;
-    const mt  = document.getElementById('mtxt');
-    const btn = document.getElementById('pwdBtn');
-    if(!p2){ mt.textContent=''; btn.disabled=false; return; }
-    if(p1 === p2 && p1.length >= 8){
-        mt.textContent='Les mots de passe correspondent'; mt.style.color='#2fa84f'; btn.disabled=false;
-    } else {
-        mt.textContent='Les mots de passe ne correspondent pas'; mt.style.color='#c0392b'; btn.disabled=true;
-    }
+// ── Indicateur force mot de passe ──────────────────────
+function updateStrength(v) {
+  let s = 0;
+  if (v.length >= 8)  s++;
+  if (v.length >= 12) s++;
+  if (/[A-Z]/.test(v))  s++;
+  if (/[0-9]/.test(v))  s++;
+  if (/[^A-Za-z0-9]/.test(v)) s++;
+
+  const colors  = ['#ff4444','#ff7733','#ffd633','#33b5ff','#33ff88'];
+  const labels  = ['Très faible','Faible','Moyen','Fort','Très fort'];
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('b' + i).style.background = i <= s ? colors[s - 1] : '#1e2f5a';
+  }
+  document.getElementById('pw-label').textContent = v.length ? labels[s - 1] : 'Entrez un mot de passe';
+  document.getElementById('pw-label').style.color  = v.length ? colors[s - 1] : '#5a6a99';
 }
 
-/* ─── Notifications (localStorage) ─── */
-document.querySelectorAll('.notif-chk').forEach(chk => {
-    const key = 'notif_' + chk.dataset.id;
-    if(localStorage.getItem(key) !== null){
-        chk.checked = localStorage.getItem(key) === '1';
-    }
-    chk.addEventListener('change', () => {
-        localStorage.setItem(key, chk.checked ? '1' : '0');
+// ── Notifications localStorage ──────────────────────────
+const NOTIF_KEY = 'supserver_notifs';
+function saveNotif() {
+  const ids = ['notif-email','notif-temp','notif-gaz','notif-power','notif-pir','notif-sms','notif-anomalie'];
+  const prefs = {};
+  ids.forEach(id => prefs[id] = document.getElementById(id).checked);
+  localStorage.setItem(NOTIF_KEY, JSON.stringify(prefs));
+}
+function loadNotif() {
+  const raw = localStorage.getItem(NOTIF_KEY);
+  if (!raw) return;
+  try {
+    const prefs = JSON.parse(raw);
+    Object.entries(prefs).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = val;
     });
-});
+  } catch(e) {}
+}
+loadNotif();
 
-/* ─── Infos navigateur / appareil ─── */
+// ── Infos sécurité avancée ─────────────────────────────
+(function() {
+  // Device
+  const ua = navigator.userAgent;
+  let device = 'Ordinateur';
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) device = 'Mobile';
+  else if (/Tablet|iPad/i.test(ua)) device = 'Tablette';
+  document.getElementById('user-device').textContent = device;
+
+  // Browser
+  let browser = 'Inconnu';
+  if (ua.includes('Chrome') && !ua.includes('Edg'))  browser = 'Google Chrome';
+  else if (ua.includes('Firefox'))                    browser = 'Mozilla Firefox';
+  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Apple Safari';
+  else if (ua.includes('Edg'))                        browser = 'Microsoft Edge';
+  else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
+  document.getElementById('user-browser').textContent = browser;
+
+  // Last activity
+  const now = new Date();
+  document.getElementById('user-activity').textContent = now.toLocaleString('fr-FR');
+  document.getElementById('tl-now').textContent = now.toLocaleString('fr-FR');
+
+  // IP via API publique
+  fetch('https://api.ipify.org?format=json')
+    .then(r => r.json())
+    .then(d => { if(d.ip) document.getElementById('user-ip').textContent = d.ip; })
+    .catch(() => { document.getElementById('user-ip').textContent = 'Non disponible'; });
+})();
+
+// ── Mini stats depuis /api/stats ────────────────────────
+fetch('/api/stats')
+  .then(r => r.json())
+  .then(s => {
+    document.getElementById('sm-alertes').textContent = (s.alertesCritiques || 0) + (s.alertesWarning || 0);
+    document.getElementById('sm-mesures').textContent = s.totalMesures || 0;
+  })
+  .catch(() => {});
+
+// ── Geographic cascade (profil) ─────────────────────────
 (function(){
-    const ua  = navigator.userAgent;
-    let br    = 'Navigateur';
-    let dev   = 'Ordinateur';
+const PRE_PAYS   = @json($u->pays    ?? '');
+const PRE_ISO    = @json($u->iso_pays?? '');
+const PRE_REGION = @json($u->region  ?? '');
+const PRE_DEPT   = @json($u->departement ?? '');
+const PRE_ARROND = @json($u->arrondissement ?? '');
+const PRE_VILLE  = @json($u->ville_residence ?? '');
 
-    if(/Edg/.test(ua))       br = 'Microsoft Edge';
-    else if(/Chrome/.test(ua)) br = 'Google Chrome';
-    else if(/Firefox/.test(ua))br = 'Mozilla Firefox';
-    else if(/Safari/.test(ua)) br = 'Safari';
-    else if(/Opera/.test(ua))  br = 'Opera';
+const P_CTRS = [
+  {iso:'AF',fr:'Afghanistan',en:'Afghanistan'},{iso:'ZA',fr:'Afrique du Sud',en:'South Africa'},{iso:'AL',fr:'Albanie',en:'Albania'},
+  {iso:'DZ',fr:'Algérie',en:'Algeria'},{iso:'DE',fr:'Allemagne',en:'Germany'},{iso:'AD',fr:'Andorre',en:'Andorra'},
+  {iso:'AO',fr:'Angola',en:'Angola'},{iso:'AG',fr:'Antigua-et-Barbuda',en:'Antigua and Barbuda'},{iso:'SA',fr:'Arabie saoudite',en:'Saudi Arabia'},
+  {iso:'AR',fr:'Argentine',en:'Argentina'},{iso:'AM',fr:'Arménie',en:'Armenia'},{iso:'AU',fr:'Australie',en:'Australia'},
+  {iso:'AT',fr:'Autriche',en:'Austria'},{iso:'AZ',fr:'Azerbaïdjan',en:'Azerbaijan'},{iso:'BS',fr:'Bahamas',en:'Bahamas'},
+  {iso:'BH',fr:'Bahreïn',en:'Bahrain'},{iso:'BD',fr:'Bangladesh',en:'Bangladesh'},{iso:'BB',fr:'Barbade',en:'Barbados'},
+  {iso:'BE',fr:'Belgique',en:'Belgium'},{iso:'BZ',fr:'Belize',en:'Belize'},{iso:'BJ',fr:'Bénin',en:'Benin'},
+  {iso:'BT',fr:'Bhoutan',en:'Bhutan'},{iso:'BY',fr:'Biélorussie',en:'Belarus'},{iso:'BO',fr:'Bolivie',en:'Bolivia'},
+  {iso:'BA',fr:'Bosnie-Herzégovine',en:'Bosnia and Herzegovina'},{iso:'BW',fr:'Botswana',en:'Botswana'},{iso:'BR',fr:'Brésil',en:'Brazil'},
+  {iso:'BN',fr:'Brunéi',en:'Brunei'},{iso:'BG',fr:'Bulgarie',en:'Bulgaria'},{iso:'BF',fr:'Burkina Faso',en:'Burkina Faso'},
+  {iso:'BI',fr:'Burundi',en:'Burundi'},{iso:'CV',fr:'Cap-Vert',en:'Cape Verde'},{iso:'KH',fr:'Cambodge',en:'Cambodia'},
+  {iso:'CM',fr:'Cameroun',en:'Cameroon'},{iso:'CA',fr:'Canada',en:'Canada'},{iso:'CF',fr:'Centrafrique',en:'Central African Republic'},
+  {iso:'CL',fr:'Chili',en:'Chile'},{iso:'CN',fr:'Chine',en:'China'},{iso:'CY',fr:'Chypre',en:'Cyprus'},
+  {iso:'CO',fr:'Colombie',en:'Colombia'},{iso:'KM',fr:'Comores',en:'Comoros'},{iso:'CG',fr:'Congo',en:'Congo'},
+  {iso:'CD',fr:'Congo (RDC)',en:'DR Congo'},{iso:'KP',fr:'Corée du Nord',en:'North Korea'},{iso:'KR',fr:'Corée du Sud',en:'South Korea'},
+  {iso:'CR',fr:'Costa Rica',en:'Costa Rica'},{iso:'CI',fr:"Côte d'Ivoire",en:"Ivory Coast"},{iso:'HR',fr:'Croatie',en:'Croatia'},
+  {iso:'CU',fr:'Cuba',en:'Cuba'},{iso:'DK',fr:'Danemark',en:'Denmark'},{iso:'DJ',fr:'Djibouti',en:'Djibouti'},
+  {iso:'DM',fr:'Dominique',en:'Dominica'},{iso:'EG',fr:'Égypte',en:'Egypt'},{iso:'AE',fr:'Émirats arabes unis',en:'United Arab Emirates'},
+  {iso:'EC',fr:'Équateur',en:'Ecuador'},{iso:'ER',fr:'Érythrée',en:'Eritrea'},{iso:'ES',fr:'Espagne',en:'Spain'},
+  {iso:'EE',fr:'Estonie',en:'Estonia'},{iso:'SZ',fr:'Eswatini',en:'Eswatini'},{iso:'ET',fr:'Éthiopie',en:'Ethiopia'},
+  {iso:'FJ',fr:'Fidji',en:'Fiji'},{iso:'FI',fr:'Finlande',en:'Finland'},{iso:'FR',fr:'France',en:'France'},
+  {iso:'GA',fr:'Gabon',en:'Gabon'},{iso:'GM',fr:'Gambie',en:'Gambia'},{iso:'GE',fr:'Géorgie',en:'Georgia'},
+  {iso:'GH',fr:'Ghana',en:'Ghana'},{iso:'GR',fr:'Grèce',en:'Greece'},{iso:'GD',fr:'Grenade',en:'Grenada'},
+  {iso:'GT',fr:'Guatemala',en:'Guatemala'},{iso:'GN',fr:'Guinée',en:'Guinea'},{iso:'GW',fr:'Guinée-Bissau',en:'Guinea-Bissau'},
+  {iso:'GQ',fr:'Guinée équatoriale',en:'Equatorial Guinea'},{iso:'GY',fr:'Guyana',en:'Guyana'},{iso:'HT',fr:'Haïti',en:'Haiti'},
+  {iso:'HN',fr:'Honduras',en:'Honduras'},{iso:'HU',fr:'Hongrie',en:'Hungary'},{iso:'IN',fr:'Inde',en:'India'},
+  {iso:'ID',fr:'Indonésie',en:'Indonesia'},{iso:'IQ',fr:'Irak',en:'Iraq'},{iso:'IR',fr:'Iran',en:'Iran'},
+  {iso:'IE',fr:'Irlande',en:'Ireland'},{iso:'IS',fr:'Islande',en:'Iceland'},{iso:'IL',fr:'Israël',en:'Israel'},
+  {iso:'IT',fr:'Italie',en:'Italy'},{iso:'JM',fr:'Jamaïque',en:'Jamaica'},{iso:'JP',fr:'Japon',en:'Japan'},
+  {iso:'JO',fr:'Jordanie',en:'Jordan'},{iso:'KZ',fr:'Kazakhstan',en:'Kazakhstan'},{iso:'KE',fr:'Kenya',en:'Kenya'},
+  {iso:'KG',fr:'Kirghizistan',en:'Kyrgyzstan'},{iso:'KI',fr:'Kiribati',en:'Kiribati'},{iso:'KW',fr:'Koweït',en:'Kuwait'},
+  {iso:'LA',fr:'Laos',en:'Laos'},{iso:'LS',fr:'Lesotho',en:'Lesotho'},{iso:'LV',fr:'Lettonie',en:'Latvia'},
+  {iso:'LB',fr:'Liban',en:'Lebanon'},{iso:'LR',fr:'Libéria',en:'Liberia'},{iso:'LY',fr:'Libye',en:'Libya'},
+  {iso:'LI',fr:'Liechtenstein',en:'Liechtenstein'},{iso:'LT',fr:'Lituanie',en:'Lithuania'},{iso:'LU',fr:'Luxembourg',en:'Luxembourg'},
+  {iso:'MG',fr:'Madagascar',en:'Madagascar'},{iso:'MY',fr:'Malaisie',en:'Malaysia'},{iso:'MW',fr:'Malawi',en:'Malawi'},
+  {iso:'MV',fr:'Maldives',en:'Maldives'},{iso:'ML',fr:'Mali',en:'Mali'},{iso:'MT',fr:'Malte',en:'Malta'},
+  {iso:'MA',fr:'Maroc',en:'Morocco'},{iso:'MH',fr:'Marshall',en:'Marshall Islands'},{iso:'MU',fr:'Maurice',en:'Mauritius'},
+  {iso:'MR',fr:'Mauritanie',en:'Mauritania'},{iso:'MX',fr:'Mexique',en:'Mexico'},{iso:'FM',fr:'Micronésie',en:'Micronesia'},
+  {iso:'MD',fr:'Moldavie',en:'Moldova'},{iso:'MC',fr:'Monaco',en:'Monaco'},{iso:'MN',fr:'Mongolie',en:'Mongolia'},
+  {iso:'ME',fr:'Monténégro',en:'Montenegro'},{iso:'MZ',fr:'Mozambique',en:'Mozambique'},{iso:'MM',fr:'Myanmar',en:'Myanmar'},
+  {iso:'NA',fr:'Namibie',en:'Namibia'},{iso:'NR',fr:'Nauru',en:'Nauru'},{iso:'NP',fr:'Népal',en:'Nepal'},
+  {iso:'NI',fr:'Nicaragua',en:'Nicaragua'},{iso:'NE',fr:'Niger',en:'Niger'},{iso:'NG',fr:'Nigeria',en:'Nigeria'},
+  {iso:'NO',fr:'Norvège',en:'Norway'},{iso:'NZ',fr:'Nouvelle-Zélande',en:'New Zealand'},{iso:'OM',fr:'Oman',en:'Oman'},
+  {iso:'UG',fr:'Ouganda',en:'Uganda'},{iso:'UZ',fr:'Ouzbékistan',en:'Uzbekistan'},{iso:'PK',fr:'Pakistan',en:'Pakistan'},
+  {iso:'PW',fr:'Palaos',en:'Palau'},{iso:'PA',fr:'Panama',en:'Panama'},{iso:'PG',fr:'Papouasie',en:'Papua New Guinea'},
+  {iso:'PY',fr:'Paraguay',en:'Paraguay'},{iso:'NL',fr:'Pays-Bas',en:'Netherlands'},{iso:'PE',fr:'Pérou',en:'Peru'},
+  {iso:'PH',fr:'Philippines',en:'Philippines'},{iso:'PL',fr:'Pologne',en:'Poland'},{iso:'PT',fr:'Portugal',en:'Portugal'},
+  {iso:'QA',fr:'Qatar',en:'Qatar'},{iso:'RO',fr:'Roumanie',en:'Romania'},{iso:'GB',fr:'Royaume-Uni',en:'United Kingdom'},
+  {iso:'RU',fr:'Russie',en:'Russia'},{iso:'RW',fr:'Rwanda',en:'Rwanda'},{iso:'KN',fr:'Saint-Kitts',en:'Saint Kitts and Nevis'},
+  {iso:'LC',fr:'Saint-Lucie',en:'Saint Lucia'},{iso:'VC',fr:'Saint-Vincent',en:'Saint Vincent and the Grenadines'},
+  {iso:'SB',fr:'Salomon',en:'Solomon Islands'},{iso:'SV',fr:'Salvador',en:'El Salvador'},{iso:'WS',fr:'Samoa',en:'Samoa'},
+  {iso:'ST',fr:'Sao Tomé-et-Principe',en:'Sao Tome and Principe'},{iso:'SN',fr:'Sénégal',en:'Senegal'},{iso:'RS',fr:'Serbie',en:'Serbia'},
+  {iso:'SC',fr:'Seychelles',en:'Seychelles'},{iso:'SL',fr:'Sierra Leone',en:'Sierra Leone'},{iso:'SG',fr:'Singapour',en:'Singapore'},
+  {iso:'SK',fr:'Slovaquie',en:'Slovakia'},{iso:'SI',fr:'Slovénie',en:'Slovenia'},{iso:'SO',fr:'Somalie',en:'Somalia'},
+  {iso:'SD',fr:'Soudan',en:'Sudan'},{iso:'SS',fr:'Soudan du Sud',en:'South Sudan'},{iso:'LK',fr:'Sri Lanka',en:'Sri Lanka'},
+  {iso:'SE',fr:'Suède',en:'Sweden'},{iso:'CH',fr:'Suisse',en:'Switzerland'},{iso:'SR',fr:'Suriname',en:'Suriname'},
+  {iso:'SY',fr:'Syrie',en:'Syria'},{iso:'TJ',fr:'Tadjikistan',en:'Tajikistan'},{iso:'TZ',fr:'Tanzanie',en:'Tanzania'},
+  {iso:'TD',fr:'Tchad',en:'Chad'},{iso:'CZ',fr:'Tchéquie',en:'Czech Republic'},{iso:'TH',fr:'Thaïlande',en:'Thailand'},
+  {iso:'TL',fr:'Timor oriental',en:'Timor-Leste'},{iso:'TG',fr:'Togo',en:'Togo'},{iso:'TO',fr:'Tonga',en:'Tonga'},
+  {iso:'TT',fr:'Trinité-et-Tobago',en:'Trinidad and Tobago'},{iso:'TN',fr:'Tunisie',en:'Tunisia'},{iso:'TM',fr:'Turkménistan',en:'Turkmenistan'},
+  {iso:'TR',fr:'Turquie',en:'Turkey'},{iso:'TV',fr:'Tuvalu',en:'Tuvalu'},{iso:'UA',fr:'Ukraine',en:'Ukraine'},
+  {iso:'UY',fr:'Uruguay',en:'Uruguay'},{iso:'VU',fr:'Vanuatu',en:'Vanuatu'},{iso:'VE',fr:'Venezuela',en:'Venezuela'},
+  {iso:'VN',fr:'Vietnam',en:'Vietnam'},{iso:'YE',fr:'Yémen',en:'Yemen'},{iso:'ZM',fr:'Zambie',en:'Zambia'},
+  {iso:'ZW',fr:'Zimbabwe',en:'Zimbabwe'},{iso:'US',fr:'États-Unis',en:'United States'}
+];
 
-    if(/Android/.test(ua))     dev = 'Android';
-    else if(/iPhone/.test(ua)) dev = 'iPhone';
-    else if(/iPad/.test(ua))   dev = 'iPad';
-    else if(/Macintosh/.test(ua)) dev = 'Mac';
-    else if(/Windows/.test(ua))   dev = 'Windows';
-    else if(/Linux/.test(ua))     dev = 'Linux';
+function pFlag(iso){ try{return String.fromCodePoint(...[...iso.toUpperCase()].map(c=>0x1F1E6-65+c.charCodeAt(0)))}catch(e){return''} }
+function pXss(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function pLd(id,show){const el=document.getElementById(id);if(el){el.className='geo-ld'+(show?' show':'')}}
+function pReset(sel,disabled,placeholder){
+  sel.innerHTML='<option value="">'+placeholder+'</option>';
+  sel.disabled=disabled;
+}
 
-    document.getElementById('browser-info').textContent = br;
-    document.getElementById('device-info').textContent  = dev;
+function pLoadRegions(countryEn, preSelect){
+  const sel=document.getElementById('p_region_sel');
+  pLd('p_reg_ld',true);
+  pReset(sel,true,'Chargement…');
+  fetch('/api/geo/states/'+encodeURIComponent(countryEn))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_reg_ld',false);
+      pReset(sel,false,'— Région / Province —');
+      list.forEach(name=>{
+        const o=document.createElement('option');
+        o.value=name; o.textContent=name;
+        if(name===preSelect) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.disabled=list.length===0;
+      if(preSelect && list.includes(preSelect)){
+        pLoadDepts(countryEn, preSelect, PRE_DEPT);
+      }
+    })
+    .catch(()=>{pLd('p_reg_ld',false);pReset(sel,false,'— Région non disponible —')});
+}
 
-    const now = new Date();
-    document.getElementById('last-act').textContent =
-        now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR');
+function pLoadDepts(countryEn, region, preSelect){
+  const sel=document.getElementById('p_dept_sel');
+  pLd('p_dept_ld',true);
+  pReset(sel,true,'Chargement…');
+  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(region))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_dept_ld',false);
+      pReset(sel,false,'— Département / District —');
+      list.forEach(name=>{
+        const o=document.createElement('option');
+        o.value=name; o.textContent=name;
+        if(name===preSelect) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.disabled=list.length===0;
+      if(preSelect && list.includes(preSelect)){
+        pLoadArronds(countryEn, preSelect, PRE_ARROND);
+        pLoadVilles(countryEn, preSelect, PRE_VILLE);
+      }
+    })
+    .catch(()=>{pLd('p_dept_ld',false);pReset(sel,false,'— Dept non disponible —')});
+}
+
+function pLoadArronds(countryEn, dept, preSelect){
+  const hid=document.getElementById('p_h_arrond');
+  const sel=document.getElementById('p_arrond_sel');
+  const txt=document.getElementById('p_arrond_txt');
+  pLd('p_arrond_ld',true);
+  fetch('/api/geo/subcities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_arrond_ld',false);
+      if(list.length>0){
+        sel.innerHTML='<option value="">— Arrondissement —</option>';
+        list.forEach(name=>{
+          const o=document.createElement('option');
+          o.value=name; o.textContent=name;
+          if(name===preSelect) o.selected=true;
+          sel.appendChild(o);
+        });
+        sel.style.display='block'; txt.style.display='none';
+        hid.value=preSelect||'';
+        sel.onchange=()=>{ hid.value=sel.value; };
+      } else {
+        sel.style.display='none'; txt.style.display='block';
+        txt.value=preSelect||'';
+        hid.value=preSelect||'';
+      }
+    })
+    .catch(()=>{ pLd('p_arrond_ld',false); sel.style.display='none'; txt.style.display='block'; txt.value=preSelect||''; hid.value=preSelect||''; });
+}
+
+function pLoadVilles(countryEn, dept, preSelect){
+  const sel=document.getElementById('p_ville_sel');
+  pLd('p_ville_ld',true);
+  pReset(sel,true,'Chargement…');
+  fetch('/api/geo/state-cities/'+encodeURIComponent(countryEn)+'/'+encodeURIComponent(dept))
+    .then(r=>r.json())
+    .then(list=>{
+      pLd('p_ville_ld',false);
+      pReset(sel,false,'— Ville / Résidence —');
+      list.forEach(name=>{
+        const o=document.createElement('option');
+        o.value=name; o.textContent=name;
+        if(name===preSelect) o.selected=true;
+        sel.appendChild(o);
+      });
+      sel.disabled=list.length===0;
+    })
+    .catch(()=>{pLd('p_ville_ld',false);pReset(sel,false,'— Villes non disponibles —')});
+}
+
+// Build country dropdown & wire events
+document.addEventListener('DOMContentLoaded',function(){
+  const pSel=document.getElementById('p_pays_sel');
+  const pVal=document.getElementById('p_pays_val');
+  const pIso=document.getElementById('p_iso_val');
+
+  // Populate country list
+  P_CTRS.sort((a,b)=>a.fr.localeCompare(b.fr,'fr')).forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.iso; o.dataset.en=c.en; o.dataset.fr=c.fr;
+    o.textContent=pFlag(c.iso)+' '+c.fr;
+    if(c.iso===PRE_ISO || c.fr===PRE_PAYS || c.en===PRE_PAYS) o.selected=true;
+    pSel.appendChild(o);
+  });
+
+  // Sync hidden pays/iso on change
+  pSel.addEventListener('change',function(){
+    const opt=pSel.options[pSel.selectedIndex];
+    pVal.value=opt.dataset.fr||'';
+    pIso.value=opt.value||'';
+    // Reset downstream
+    pReset(document.getElementById('p_region_sel'),true,'— Choisir un pays d\'abord —');
+    pReset(document.getElementById('p_dept_sel'),true,'— Choisir une région d\'abord —');
+    pReset(document.getElementById('p_ville_sel'),true,'— Choisir un département d\'abord —');
+    document.getElementById('p_arrond_sel').style.display='none';
+    document.getElementById('p_arrond_txt').style.display='block';
+    document.getElementById('p_arrond_txt').value='';
+    document.getElementById('p_h_arrond').value='';
+    if(opt.dataset.en) pLoadRegions(opt.dataset.en,'');
+  });
+
+  // Region → Dept cascade
+  document.getElementById('p_region_sel').addEventListener('change',function(){
+    const opt=pSel.options[pSel.selectedIndex];
+    const region=this.value;
+    pReset(document.getElementById('p_dept_sel'),true,'Chargement…');
+    pReset(document.getElementById('p_ville_sel'),true,'— Choisir un département d\'abord —');
+    document.getElementById('p_arrond_sel').style.display='none';
+    document.getElementById('p_arrond_txt').style.display='block';
+    document.getElementById('p_arrond_txt').value='';
+    document.getElementById('p_h_arrond').value='';
+    if(opt && opt.dataset.en && region) pLoadDepts(opt.dataset.en, region,'');
+  });
+
+  // Dept → Arrond + Ville cascade
+  document.getElementById('p_dept_sel').addEventListener('change',function(){
+    const opt=pSel.options[pSel.selectedIndex];
+    const dept=this.value;
+    pReset(document.getElementById('p_ville_sel'),true,'Chargement…');
+    document.getElementById('p_arrond_sel').style.display='none';
+    document.getElementById('p_arrond_txt').style.display='block';
+    document.getElementById('p_arrond_txt').value='';
+    document.getElementById('p_h_arrond').value='';
+    if(opt && opt.dataset.en && dept){
+      pLoadArronds(opt.dataset.en, dept,'');
+      pLoadVilles(opt.dataset.en, dept,'');
+    }
+  });
+
+  // Sync arrond text input → hidden
+  document.getElementById('p_arrond_txt').addEventListener('input',function(){
+    document.getElementById('p_h_arrond').value=this.value;
+  });
+
+  // Pre-populate if user has existing data
+  if(PRE_ISO || PRE_PAYS){
+    const opt=Array.from(pSel.options).find(o=>o.value===PRE_ISO || o.dataset.fr===PRE_PAYS || o.dataset.en===PRE_PAYS);
+    if(opt){
+      pSel.value=opt.value;
+      pVal.value=opt.dataset.fr||'';
+      pIso.value=opt.value||'';
+      if(opt.dataset.en) pLoadRegions(opt.dataset.en, PRE_REGION);
+    }
+  }
+});
 })();
 </script>
 

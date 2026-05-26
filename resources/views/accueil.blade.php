@@ -3,723 +3,512 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="mobile-web-app-capable" content="no">
-<meta name="apple-mobile-web-app-capable" content="no">
 <title>Surveillance des Salles Serveurs</title>
-<link rel="stylesheet" href="/css/noselect.css">
 <style>
 
-/* ═══════════════════════════════════════════════
-   RESET & BASE
-═══════════════════════════════════════════════ */
-*, *::before, *::after {
-    margin: 0; padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
-}
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
-    overflow: hidden;
-    height: 100vh;
-    width: 100%;
-    background: #020912;
-    color: white;
+  width:100%; height:100vh;
+  overflow:hidden;
+  font-family:'Segoe UI', Arial, sans-serif;
+  background:#020c1a;
+  color:#fff;
 }
 
-/* ═══════════════════════════════════════════════
-   BACKGROUND
-═══════════════════════════════════════════════ */
-.bg {
-    position: fixed;
-    inset: 0;
-    background:
-        radial-gradient(ellipse 60% 80% at 15% 50%, rgba(0,40,100,0.45) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 85% 20%, rgba(0,80,40,0.3) 0%, transparent 60%),
-        linear-gradient(160deg, #020912 0%, #040e20 50%, #020912 100%);
-    z-index: 0;
+/* ── Background animated grid ──────────────────────────── */
+.bg-grid {
+  position:fixed; inset:0; z-index:0;
+  background-image:
+    linear-gradient(rgba(0,255,136,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,.035) 1px, transparent 1px);
+  background-size:50px 50px;
+  animation:gridDrift 25s linear infinite;
+}
+@keyframes gridDrift {
+  0%   { background-position:0 0,0 0; }
+  100% { background-position:0 50px,50px 0; }
 }
 
-.grid-bg {
-    position: fixed;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(0,255,65,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,65,0.035) 1px, transparent 1px);
-    background-size: 55px 55px;
-    animation: gridMove 25s linear infinite;
-    z-index: 1;
+/* ── Radial glow behind content ─────────────────────────── */
+.bg-glow {
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,255,136,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(0,60,180,.12) 0%, transparent 60%);
 }
 
-@keyframes gridMove {
-    from { transform: translateY(0); }
-    to   { transform: translateY(55px); }
-}
-
+/* ── Scan line ──────────────────────────────────────────── */
 .scan-line {
-    position: fixed;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent 0%, rgba(0,255,65,0.5) 50%, transparent 100%);
-    animation: scanDown 6s linear infinite;
-    z-index: 2;
+  position:fixed; left:0; right:0; height:1px; z-index:1;
+  background:linear-gradient(90deg, transparent 0%, rgba(0,255,136,.5) 40%, rgba(0,255,136,.8) 50%, rgba(0,255,136,.5) 60%, transparent 100%);
+  animation:scanDown 5s linear infinite;
+  pointer-events:none;
+}
+@keyframes scanDown { 0%{top:-1px} 100%{top:100vh} }
+
+/* ── Corner brackets ───────────────────────────────────── */
+.corner { position:fixed; width:50px; height:50px; opacity:.6; }
+.corner-tl { top:18px; left:18px; border-top:2px solid #00ff88; border-left:2px solid #00ff88; border-radius:4px 0 0 0; }
+.corner-tr { top:18px; right:18px; border-top:2px solid #00ff88; border-right:2px solid #00ff88; border-radius:0 4px 0 0; }
+.corner-bl { bottom:18px; left:18px; border-bottom:2px solid #00ff88; border-left:2px solid #00ff88; border-radius:0 0 0 4px; }
+.corner-br { bottom:18px; right:18px; border-bottom:2px solid #00ff88; border-right:2px solid #00ff88; border-radius:0 0 4px 0; }
+
+/* ── Particles ──────────────────────────────────────────── */
+.particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+.p {
+  position:absolute; border-radius:50%; background:#00ff88;
+  animation:floatUp linear infinite;
+}
+@keyframes floatUp {
+  0%   { transform:translateY(100vh) scale(0); opacity:0; }
+  10%  { opacity:.35; }
+  90%  { opacity:.15; }
+  100% { transform:translateY(-30px) scale(1); opacity:0; }
 }
 
-@keyframes scanDown {
-    0%   { top: 0;     opacity: 0; }
-    5%   { opacity: 1; }
-    95%  { opacity: 1; }
-    100% { top: 100vh; opacity: 0; }
-}
-
-#particles {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.pt {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(0,255,65,0.7);
-    animation: ptFloat linear infinite;
-}
-
-@keyframes ptFloat {
-    0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
-    8%   { opacity: 1; }
-    92%  { opacity: 1; }
-    100% { transform: translateY(-30px) translateX(var(--dx)); opacity: 0; }
-}
-
-/* ═══════════════════════════════════════════════
-   PAGE LAYOUT
-═══════════════════════════════════════════════ */
+/* ── Main page layout ───────────────────────────────────── */
 .page {
-    position: relative;
-    z-index: 10;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+  position:relative; z-index:2;
+  width:100%; height:100vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:0;
+  padding:16px 20px;
 }
 
-/* ─── NAVBAR ─── */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 44px;
-    border-bottom: 1px solid rgba(0,255,65,0.1);
-    backdrop-filter: blur(10px);
-    animation: fadeDown .7s ease forwards;
-    flex-shrink: 0;
+/* ── Brand line ─────────────────────────────────────────── */
+.brand {
+  display:flex; align-items:center; gap:12px;
+  font-size:11px; letter-spacing:5px; color:#00ff88;
+  text-transform:uppercase; font-weight:600;
+  opacity:0; animation:fadeUp .7s .1s forwards;
+  margin-bottom:8px;
+}
+.brand-line {
+  width:35px; height:1px;
+  background:linear-gradient(90deg, transparent, #00ff88);
+}
+.brand-line.r { transform:scaleX(-1); }
+
+/* ── Main title ─────────────────────────────────────────── */
+.main-title {
+  font-size:clamp(20px, 4vw, 52px);
+  font-weight:900; letter-spacing:2px;
+  text-align:center; line-height:1.15;
+  text-transform:uppercase;
+  color:#ffffff;
+  text-shadow:0 0 40px rgba(0,255,136,.35), 0 0 100px rgba(0,255,136,.1);
+  opacity:0; animation:fadeUp .7s .25s forwards;
+  margin-bottom:4px;
+}
+.main-title em { color:#00ff88; font-style:normal; }
+
+.title-rule {
+  width:100px; height:2px; margin:10px auto;
+  background:linear-gradient(90deg, transparent, #00ff88 40%, #00ff88 60%, transparent);
+  opacity:0; animation:fadeUp .7s .35s forwards;
 }
 
-@keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-16px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* ── Server room visual ─────────────────────────────────── */
+.server-visual {
+  width:min(680px, 92vw);
+  height:min(185px, 26vh);
+  position:relative;
+  border-radius:12px; overflow:hidden;
+  border:1px solid rgba(0,255,136,.12);
+  background:linear-gradient(180deg, #071428 0%, #030910 100%);
+  box-shadow:
+    0 0 50px rgba(0,255,136,.07),
+    0 20px 60px rgba(0,0,0,.6),
+    inset 0 0 80px rgba(0,15,50,.9);
+  opacity:0; animation:fadeUp .7s .45s forwards;
+  margin:10px 0;
 }
 
-.logo {
-    font-size: 21px;
-    font-weight: bold;
-    color: #39ff14;
-    letter-spacing: 3px;
-    text-decoration: none;
-    text-shadow: 0 0 18px rgba(57,255,20,0.45);
+/* Floor glow */
+.sv-floor {
+  position:absolute; bottom:0; left:0; right:0;
+  height:12px;
+  background:linear-gradient(180deg, rgba(0,255,136,.08) 0%, transparent 100%);
+}
+/* Ceiling ambient */
+.sv-ceil {
+  position:absolute; top:0; left:0; right:0;
+  height:3px;
+  background:linear-gradient(90deg, transparent 0%, rgba(0,80,255,.4) 30%, rgba(0,255,136,.5) 50%, rgba(0,80,255,.4) 70%, transparent 100%);
 }
 
-.nav-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: rgba(57,255,20,0.7);
-    letter-spacing: 2px;
+/* Rack container */
+.racks {
+  display:flex; align-items:flex-end;
+  height:100%; padding:10px 14px 12px;
+  gap:8px; justify-content:center;
 }
 
-.dot-live {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #39ff14;
-    box-shadow: 0 0 8px rgba(57,255,20,0.9);
-    animation: blink 1.8s ease-in-out infinite;
+/* Individual rack */
+.rack {
+  flex:1; max-width:68px;
+  background:linear-gradient(180deg, #0c1d3e 0%, #07101f 100%);
+  border:1px solid #172a50;
+  border-radius:4px 4px 0 0;
+  border-bottom:none;
+  display:flex; flex-direction:column;
+  padding:7px 5px; gap:5px;
+  position:relative;
+}
+.rack::before {
+  content:''; position:absolute;
+  top:0; left:50%; transform:translateX(-50%);
+  width:28%; height:3px;
+  background:#00ff88; border-radius:0 0 2px 2px;
+  box-shadow:0 0 8px #00ff88, 0 0 16px rgba(0,255,136,.4);
+}
+.rack-glow {
+  position:absolute; bottom:-2px; left:50%;
+  transform:translateX(-50%);
+  width:60%; height:5px; border-radius:50%;
+  background:rgba(0,255,136,.35); filter:blur(6px);
 }
 
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.3; }
+/* Server unit row */
+.unit {
+  height:7px; border-radius:2px;
+  background:linear-gradient(90deg, #091428, #162848);
+  position:relative; display:flex;
+  align-items:center; padding:0 4px; gap:3px; overflow:hidden;
+}
+.unit::before {
+  content:''; position:absolute;
+  left:0; top:0; bottom:0; width:2px;
+  background:#00ff88; opacity:.5;
 }
 
-/* ─── HERO ─── */
-.hero {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 56px;
-    padding: 16px 60px;
-    animation: fadeUp .9s ease .25s both;
-}
-
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(22px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* LEFT */
-.hero-left {
-    flex: 0 0 auto;
-    max-width: 460px;
-}
-
-.hero-tag {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-    letter-spacing: 4px;
-    color: rgba(57,255,20,0.75);
-    text-transform: uppercase;
-    margin-bottom: 18px;
-}
-
-.hero-tag::before {
-    content: '';
-    width: 28px; height: 1px;
-    background: #39ff14;
-    flex-shrink: 0;
-}
-
-.hero-title {
-    font-size: 50px;
-    font-weight: 900;
-    line-height: 1.1;
-    color: #f0f4ff;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 32px;
-}
-
-.hero-title .neon {
-    color: #39ff14;
-    text-shadow: 0 0 28px rgba(57,255,20,0.35);
-    display: block;
-}
-
-.hero-btns {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-/* Bouton Créer un compte */
-.btn-create {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 13px 30px;
-    background: linear-gradient(135deg, #39ff14 0%, #22c55e 100%);
-    color: #020912;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 50px;
-    text-decoration: none;
-    letter-spacing: .5px;
-    transition: .3s;
-    box-shadow: 0 0 24px rgba(57,255,20,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-create::after {
-    content: '';
-    position: absolute;
-    top: -50%; left: -60%;
-    width: 35%; height: 200%;
-    background: rgba(255,255,255,0.22);
-    transform: skewX(-20deg);
-    transition: left .5s;
-}
-
-.btn-create:hover::after { left: 130%; }
-.btn-create:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 40px rgba(57,255,20,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
-    color: #020912;
-}
-
-/* Bouton Se connecter */
-.btn-login {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 13px 30px;
-    background: rgba(20,50,110,0.35);
-    color: #c0d4ff;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 50px;
-    text-decoration: none;
-    letter-spacing: .5px;
-    border: 1.5px solid rgba(60,120,220,0.5);
-    backdrop-filter: blur(8px);
-    transition: .3s;
-    box-shadow: 0 0 18px rgba(30,80,200,0.15);
-}
-
-.btn-login:hover {
-    background: rgba(30,80,200,0.45);
-    border-color: rgba(100,160,255,0.85);
-    box-shadow: 0 0 28px rgba(30,80,200,0.45);
-    transform: translateY(-2px);
-    color: white;
-}
-
-/* RIGHT: Server Dashboard Visual */
-.hero-right {
-    flex: 1;
-    max-width: 500px;
-    animation: fadeUp .9s ease .45s both;
-    position: relative;
-}
-
-.halo {
-    position: absolute;
-    inset: -30px;
-    background: radial-gradient(ellipse at center, rgba(0,255,65,0.07) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.rack-card {
-    background: linear-gradient(160deg, #050f20 0%, #030b18 100%);
-    border: 1px solid rgba(0,255,65,0.18);
-    border-radius: 18px;
-    padding: 18px 20px;
-    position: relative;
-    overflow: hidden;
-    box-shadow:
-        0 25px 60px rgba(0,0,0,0.6),
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 0 0 1px rgba(0,255,65,0.04);
-}
-
-.rack-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,255,65,0.5), transparent);
-}
-
-/* Corner brackets */
-.corner { position:absolute; width:14px; height:14px; border-color:rgba(0,255,65,0.45); border-style:solid; }
-.c-tl { top:7px; left:7px;  border-width:1px 0 0 1px; }
-.c-tr { top:7px; right:7px; border-width:1px 1px 0 0; }
-.c-bl { bottom:7px; left:7px;  border-width:0 0 1px 1px; }
-.c-br { bottom:7px; right:7px; border-width:0 1px 1px 0; }
-
-.rack-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(0,255,65,0.09);
-}
-
-.rack-title-txt {
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: rgba(57,255,20,0.65);
-}
-
-.rack-clock {
-    font-size: 11px;
-    font-family: monospace;
-    color: #4a9fc4;
-}
-
-/* Server rows */
-.srv {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    margin-bottom: 7px;
-    background: rgba(0,255,65,0.025);
-    border: 1px solid rgba(0,255,65,0.07);
-    border-radius: 7px;
-    transition: border-color .3s;
-}
-
-.srv:hover { border-color: rgba(0,255,65,0.18); }
-
-.srv-id {
-    font-size: 9px;
-    color: #2d4060;
-    font-family: monospace;
-    width: 32px;
-}
-
-.leds { display:flex; gap:4px; }
-
+/* LEDs */
 .led {
-    width: 6px; height: 6px;
-    border-radius: 50%;
+  width:4px; height:4px; border-radius:50%;
+  animation:ledBlink 1.2s ease-in-out infinite;
+  flex-shrink:0;
+}
+.led.g { background:#00ff88; box-shadow:0 0 5px #00ff88; }
+.led.b { background:#33b5ff; box-shadow:0 0 5px #33b5ff; }
+.led.r { background:#ff4444; box-shadow:0 0 5px #ff4444; }
+.led.y { background:#ffd633; box-shadow:0 0 5px #ffd633; }
+@keyframes ledBlink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* Monitoring screens */
+.sv-screens {
+  position:absolute; top:10px; right:14px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.sv-screen {
+  width:54px; height:32px;
+  background:#040e1c; border:1px solid #0d2a50;
+  border-radius:3px; overflow:hidden; position:relative;
+}
+.sv-screen-scan {
+  position:absolute; left:0; right:0; height:1px;
+  background:rgba(0,255,136,.6);
+  animation:svScan 2s linear infinite;
+}
+@keyframes svScan { 0%{top:0} 100%{top:100%} }
+.sv-screen-txt {
+  font-size:5.5px; color:#00ff88; padding:3px 4px;
+  line-height:1.5; opacity:.75; font-family:monospace;
 }
 
-.led-g { background:#39ff14; box-shadow:0 0 5px rgba(57,255,20,0.8); animation:ledp 1.6s ease-in-out infinite; }
-.led-b { background:#4a9fc4; box-shadow:0 0 5px rgba(74,159,196,0.7); animation:ledp 2.2s ease-in-out infinite .4s; }
-.led-o { background:#f59e0b; box-shadow:0 0 5px rgba(245,158,11,0.7); }
-.led-x { background:#1a2840; }
+/* Network cable visual */
+.sv-cables {
+  position:absolute; bottom:12px; left:14px;
+  display:flex; gap:3px;
+}
+.cable {
+  width:2px; border-radius:1px; opacity:.4;
+}
+.cable.g { background:#00ff88; height:20px; }
+.cable.b { background:#33b5ff; height:14px; }
+.cable.y { background:#ffd633; height:18px; }
+.cable.r { background:#ff4444; height:12px; }
 
-@keyframes ledp { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
-
-.bar-wrap {
-    flex: 1;
-    height: 4px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 4px;
-    overflow: hidden;
+/* ── Buttons ─────────────────────────────────────────────── */
+.buttons {
+  display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
+  opacity:0; animation:fadeUp .7s .6s forwards;
+  margin-top:10px;
 }
 
-.bar {
-    height: 100%;
-    border-radius: 4px;
+.btn {
+  padding:13px 34px; border-radius:8px;
+  font-size:14px; font-weight:700; letter-spacing:1.5px;
+  text-decoration:none; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:9px;
+  transition:all .3s ease; position:relative; overflow:hidden;
+  cursor:pointer;
+}
+.btn::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,.06) 0%, transparent 100%);
+  transform:translateY(-100%); transition:.3s;
+}
+.btn:hover::after { transform:translateY(0); }
+
+/* Register button — neon green */
+.btn-register {
+  background:transparent;
+  border:2px solid #00ff88; color:#00ff88;
+  box-shadow:0 0 18px rgba(0,255,136,.15), inset 0 0 18px rgba(0,255,136,.03);
+}
+.btn-register:hover {
+  background:rgba(0,255,136,.07);
+  box-shadow:0 0 32px rgba(0,255,136,.45), inset 0 0 28px rgba(0,255,136,.07);
+  transform:translateY(-3px);
+  color:#00ff88;
+  text-shadow:0 0 8px rgba(0,255,136,.6);
 }
 
-.bar-g { background:linear-gradient(90deg,#39ff14,#22c55e); box-shadow:0 0 7px rgba(57,255,20,0.4); }
-.bar-b { background:linear-gradient(90deg,#4a9fc4,#2e6fa3); box-shadow:0 0 7px rgba(74,159,196,0.4); }
-.bar-o { background:linear-gradient(90deg,#f59e0b,#d97706); box-shadow:0 0 7px rgba(245,158,11,0.4); }
-
-.srv-tmp {
-    font-size: 10px;
-    font-family: monospace;
-    width: 36px;
-    text-align: right;
+/* Login button — blue */
+.btn-login {
+  background:linear-gradient(135deg, #08266a 0%, #0c3090 100%);
+  border:2px solid #1a4aaa; color:#90b8ff;
+  box-shadow:0 0 18px rgba(20,70,180,.25);
+}
+.btn-login:hover {
+  background:linear-gradient(135deg, #0c3090 0%, #1040b0 100%);
+  box-shadow:0 0 32px rgba(51,181,255,.35);
+  transform:translateY(-3px);
+  color:#c8dcff;
+  border-color:#3370dd;
 }
 
-.srv-st {
-    font-size: 9px;
-    letter-spacing: .8px;
-    width: 38px;
-    text-align: right;
-    opacity: .75;
+.btn-ico { font-size:15px; line-height:1; }
+
+/* ── Bottom status strip ─────────────────────────────────── */
+.status-strip {
+  position:fixed; bottom:16px; left:0; right:0;
+  display:flex; justify-content:center; gap:28px;
+  z-index:10; flex-wrap:wrap; padding:0 20px;
+  opacity:0; animation:fadeUp .7s .8s forwards;
+}
+.sdot-item {
+  display:flex; align-items:center; gap:6px;
+  font-size:10px; color:#3a5a7a;
+  letter-spacing:.8px; text-transform:uppercase;
+}
+.sdot {
+  width:6px; height:6px; border-radius:50%;
+  animation:dotPulse 2s ease-in-out infinite;
+}
+.sdot.g { background:#00ff88; box-shadow:0 0 6px #00ff88; }
+.sdot.b { background:#33b5ff; box-shadow:0 0 6px #33b5ff; animation-delay:.5s; }
+.sdot.y { background:#ffd633; box-shadow:0 0 6px #ffd633; animation-delay:1s; }
+@keyframes dotPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.6)} }
+
+/* ── Fade up ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
-/* Bottom grid */
-.rack-foot {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(0,255,65,0.08);
+/* ── Responsive ─────────────────────────────────────────── */
+@media(max-width:620px){
+  .main-title { font-size:20px; letter-spacing:1px; }
+  .server-visual { height:min(140px, 22vh); }
+  .btn { padding:11px 22px; font-size:13px; letter-spacing:1px; }
+  .sv-screens, .sv-cables { display:none; }
+  .racks { gap:5px; padding:8px 10px 10px; }
+  .rack { max-width:48px; padding:5px 3px; gap:3px; }
+  .status-strip { gap:14px; }
+  .corner { width:36px; height:36px; }
 }
-
-.fstat-val {
-    font-size: 17px;
-    font-weight: bold;
-    font-family: monospace;
-    text-shadow: 0 0 10px currentColor;
+@media(max-width:400px){
+  .main-title { font-size:17px; }
+  .brand { font-size:9px; letter-spacing:3px; }
 }
-
-.fstat-lbl {
-    font-size: 9px;
-    color: #2d4060;
-    letter-spacing: 1px;
-    margin-top: 2px;
-    text-transform: uppercase;
-}
-
-.fstat { text-align: center; }
-
-/* Active alert */
-.rack-alert {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    padding: 7px 11px;
-    background: rgba(57,255,20,0.03);
-    border: 1px solid rgba(57,255,20,0.1);
-    border-radius: 6px;
-}
-
-.adot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: #39ff14;
-    box-shadow: 0 0 8px rgba(57,255,20,0.9);
-    animation: blink 1.5s ease-in-out infinite;
-    flex-shrink: 0;
-}
-
-.atxt { font-size: 9px; color: rgba(57,255,20,0.7); letter-spacing: 1.5px; }
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════ */
-
-/* Tablette landscape */
-@media (max-width: 1100px) {
-    .hero { gap: 36px; padding: 14px 36px; }
-    .hero-title { font-size: 40px; }
-    .hero-right { max-width: 420px; }
-}
-
-/* Tablette portrait / petit laptop */
-@media (max-width: 860px) {
-    html, body { overflow-y: auto; }
-
-    .hero {
-        flex-direction: column;
-        padding: 20px 28px 28px;
-        gap: 24px;
-        justify-content: flex-start;
-    }
-
-    .hero-left {
-        max-width: 100%;
-        text-align: center;
-        order: 1;
-    }
-
-    .hero-tag { justify-content: center; }
-    .hero-btns { justify-content: center; }
-
-    .hero-right {
-        max-width: 100%;
-        width: 100%;
-        order: 2;
-    }
-
-    .hero-title { font-size: 34px; }
-}
-
-/* Mobile */
-@media (max-width: 520px) {
-    .navbar { padding: 14px 20px; }
-    .logo { font-size: 17px; letter-spacing: 2px; }
-    .nav-indicator { display: none; }
-    .hero { padding: 16px 16px 24px; gap: 20px; }
-    .hero-title { font-size: 27px; letter-spacing: .5px; }
-    .hero-tag { font-size: 10px; letter-spacing: 3px; }
-    .btn-create, .btn-login { padding: 12px 22px; font-size: 13px; }
-    .rack-card { padding: 14px 14px; }
-}
-
-/* Très petit mobile */
-@media (max-width: 360px) {
-    .hero-title { font-size: 23px; }
-    .hero-btns { flex-direction: column; align-items: stretch; }
-    .btn-create, .btn-login { text-align: center; justify-content: center; }
-}
-
-/* ═══════════════════════════════════════════════
-   BAR ANIMATIONS
-═══════════════════════════════════════════════ */
-@keyframes barAnim1 { 0%,100%{width:72%} 50%{width:67%} }
-@keyframes barAnim2 { 0%,100%{width:58%} 50%{width:64%} }
-@keyframes barAnim3 { 0%,100%{width:45%} 50%{width:42%} }
-@keyframes barAnim4 { 0%,100%{width:63%} 50%{width:68%} }
 
 </style>
 </head>
 <body>
 
-<!-- BACKGROUNDS -->
-<div class="bg"></div>
-<div class="grid-bg"></div>
+<!-- Backgrounds -->
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
 <div class="scan-line"></div>
-<div id="particles"></div>
 
-<!-- PAGE -->
+<!-- Corner brackets -->
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<!-- Floating particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Main content -->
 <div class="page">
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <a class="logo" href="/accueil">SURVEILLANCE</a>
-        <div class="nav-indicator">
-            <div class="dot-live"></div>
-            SYSTÈME ACTIF
-        </div>
-    </nav>
+  <!-- Title -->
+  <h1 class="main-title">SURVEILLANCE DES<br><em>SALLES SERVEURS</em></h1>
+  <div class="title-rule"></div>
 
-    <!-- HERO -->
-    <div class="hero">
+  <!-- Server room visual -->
+  <div class="server-visual">
+    <div class="sv-ceil"></div>
 
-        <!-- LEFT -->
-        <div class="hero-left">
-            <div class="hero-tag">IoT &nbsp;·&nbsp; Temps Réel &nbsp;·&nbsp; Sécurisé</div>
-            <h1 class="hero-title">
-                SURVEILLANCE DES
-                <span class="neon">SALLES SERVEURS</span>
-            </h1>
-            <div class="hero-btns">
-                <a href="/login" class="btn-login">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-                    Se connecter
-                </a>
-            </div>
-        </div>
+    <div class="racks">
 
-        <!-- RIGHT : Datacenter Visual -->
-        <div class="hero-right">
-            <div class="halo"></div>
-            <div class="rack-card">
-                <div class="corner c-tl"></div>
-                <div class="corner c-tr"></div>
-                <div class="corner c-bl"></div>
-                <div class="corner c-br"></div>
+      <div class="rack" style="height:92%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led r" style="animation-delay:.3s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div><div class="led y" style="animation-delay:.6s"></div></div>
+        <div class="unit"><div class="led b"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.2s"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+        <div class="unit"><div class="led y" style="animation-delay:.4s"></div><div class="led g"></div></div>
+      </div>
 
-                <div class="rack-head">
-                    <div class="rack-title-txt">DATACENTER &nbsp;·&nbsp; SALLE A</div>
-                    <div class="rack-clock" id="rtime">00:00:00</div>
-                </div>
+      <div class="rack" style="height:80%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g"></div><div class="led b" style="animation-delay:.1s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led b" style="animation-delay:.5s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.3s"></div><div class="led r"></div></div>
+        <div class="unit"><div class="led b"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+      </div>
 
-                <!-- SRV-01 -->
-                <div class="srv">
-                    <div class="srv-id">SRV-01</div>
-                    <div class="leds">
-                        <div class="led led-g"></div>
-                        <div class="led led-b"></div>
-                        <div class="led led-x"></div>
-                    </div>
-                    <div class="bar-wrap">
-                        <div class="bar bar-g" style="width:72%;animation:barAnim1 3.2s ease-in-out infinite;"></div>
-                    </div>
-                    <div class="srv-tmp" style="color:#39ff14;">24°C</div>
-                    <div class="srv-st" style="color:#39ff14;">ONLINE</div>
-                </div>
+      <div class="rack" style="height:100%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g" style="animation-delay:.2s"></div><div class="led g"></div><div class="led y"></div></div>
+        <div class="unit"><div class="led b"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.4s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led b" style="animation-delay:.1s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led r" style="animation-delay:.8s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.6s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led y" style="animation-delay:.3s"></div></div>
+      </div>
 
-                <!-- SRV-02 -->
-                <div class="srv">
-                    <div class="srv-id">SRV-02</div>
-                    <div class="leds">
-                        <div class="led led-g"></div>
-                        <div class="led led-g"></div>
-                        <div class="led led-b"></div>
-                    </div>
-                    <div class="bar-wrap">
-                        <div class="bar bar-b" style="width:58%;animation:barAnim2 4.1s ease-in-out infinite;"></div>
-                    </div>
-                    <div class="srv-tmp" style="color:#4a9fc4;">22°C</div>
-                    <div class="srv-st" style="color:#4a9fc4;">ONLINE</div>
-                </div>
+      <div class="rack" style="height:86%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.3s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led y"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led b" style="animation-delay:.5s"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.2s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led b"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+      </div>
 
-                <!-- SRV-03 -->
-                <div class="srv">
-                    <div class="srv-id">SRV-03</div>
-                    <div class="leds">
-                        <div class="led led-g"></div>
-                        <div class="led led-o"></div>
-                        <div class="led led-x"></div>
-                    </div>
-                    <div class="bar-wrap">
-                        <div class="bar bar-o" style="width:89%;"></div>
-                    </div>
-                    <div class="srv-tmp" style="color:#f59e0b;">38°C</div>
-                    <div class="srv-st" style="color:#f59e0b;">WARN</div>
-                </div>
+      <div class="rack" style="height:95%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g"></div><div class="led g" style="animation-delay:.4s"></div></div>
+        <div class="unit"><div class="led b"></div><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.1s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led r" style="animation-delay:.7s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.3s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led y"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+        <div class="unit"><div class="led b" style="animation-delay:.6s"></div><div class="led g"></div></div>
+      </div>
 
-                <!-- SRV-04 -->
-                <div class="srv">
-                    <div class="srv-id">SRV-04</div>
-                    <div class="leds">
-                        <div class="led led-g"></div>
-                        <div class="led led-b"></div>
-                        <div class="led led-g"></div>
-                    </div>
-                    <div class="bar-wrap">
-                        <div class="bar bar-g" style="width:45%;animation:barAnim3 5s ease-in-out infinite 1s;"></div>
-                    </div>
-                    <div class="srv-tmp" style="color:#39ff14;">21°C</div>
-                    <div class="srv-st" style="color:#39ff14;">ONLINE</div>
-                </div>
+      <div class="rack" style="height:75%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g" style="animation-delay:.5s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g" style="animation-delay:.2s"></div><div class="led y"></div></div>
+        <div class="unit"><div class="led b" style="animation-delay:.4s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led r"></div><div class="led g" style="animation-delay:.6s"></div></div>
+      </div>
 
-                <!-- SRV-05 -->
-                <div class="srv">
-                    <div class="srv-id">SRV-05</div>
-                    <div class="leds">
-                        <div class="led led-g"></div>
-                        <div class="led led-g"></div>
-                        <div class="led led-x"></div>
-                    </div>
-                    <div class="bar-wrap">
-                        <div class="bar bar-g" style="width:63%;animation:barAnim4 3.7s ease-in-out infinite .5s;"></div>
-                    </div>
-                    <div class="srv-tmp" style="color:#39ff14;">26°C</div>
-                    <div class="srv-st" style="color:#39ff14;">ONLINE</div>
-                </div>
+      <div class="rack" style="height:88%">
+        <div class="rack-glow"></div>
+        <div class="unit"><div class="led g" style="animation-delay:.1s"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led y" style="animation-delay:.5s"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led b"></div></div>
+        <div class="unit"><div class="led g" style="animation-delay:.3s"></div></div>
+        <div class="unit"><div class="led g"></div><div class="led r" style="animation-delay:.7s"></div></div>
+        <div class="unit"><div class="led b"></div><div class="led g"></div></div>
+        <div class="unit"><div class="led g"></div></div>
+      </div>
 
-                <!-- FOOTER STATS -->
-                <div class="rack-foot">
-                    <div class="fstat">
-                        <div class="fstat-val" style="color:#39ff14;">5/5</div>
-                        <div class="fstat-lbl">ONLINE</div>
-                    </div>
-                    <div class="fstat">
-                        <div class="fstat-val" style="color:#4a9fc4;">26°C</div>
-                        <div class="fstat-lbl">TEMP MOY</div>
-                    </div>
-                    <div class="fstat">
-                        <div class="fstat-val" style="color:#39ff14;">65%</div>
-                        <div class="fstat-lbl">CPU MOY</div>
-                    </div>
-                </div>
+    </div><!-- /racks -->
 
-                <!-- ALERT -->
-                <div class="rack-alert">
-                    <div class="adot"></div>
-                    <div class="atxt">SURVEILLANCE ACTIVE &nbsp;·&nbsp; TOUS LES CAPTEURS OK</div>
-                </div>
-
-            </div>
-        </div>
-
+    <!-- Monitoring screens (top-right) -->
+    <div class="sv-screens">
+      <div class="sv-screen">
+        <div class="sv-screen-txt">TEMP: 24°C<br>HUM:  46%</div>
+        <div class="sv-screen-scan"></div>
+      </div>
+      <div class="sv-screen">
+        <div class="sv-screen-txt">CPU:  78%<br>GAZ:  182</div>
+        <div class="sv-screen-scan" style="animation-delay:.9s"></div>
+      </div>
+      <div class="sv-screen">
+        <div class="sv-screen-txt">I:  8.2A<br>P: 1804W</div>
+        <div class="sv-screen-scan" style="animation-delay:1.7s"></div>
+      </div>
     </div>
 
+    <!-- Cable bundle -->
+    <div class="sv-cables">
+      <div class="cable g" style="height:22px"></div>
+      <div class="cable b" style="height:16px"></div>
+      <div class="cable y" style="height:19px"></div>
+      <div class="cable r" style="height:13px"></div>
+      <div class="cable g" style="height:25px"></div>
+      <div class="cable b" style="height:18px"></div>
+      <div class="cable g" style="height:20px"></div>
+    </div>
+
+    <div class="sv-floor"></div>
+  </div><!-- /server-visual -->
+
+  <!-- Action buttons -->
+  <div class="buttons">
+    <a href="/login" class="btn btn-login">
+      <span class="btn-ico">⊙</span> Se connecter
+    </a>
+  </div>
+
+</div><!-- /page -->
+
+<!-- Status strip -->
+<div class="status-strip">
+  <div class="sdot-item"><div class="sdot g"></div> Système actif</div>
+  <div class="sdot-item"><div class="sdot b"></div> IoT connecté</div>
+  <div class="sdot-item"><div class="sdot y"></div> Surveillance 24/7</div>
 </div>
 
 <script>
-// Horloge datacenter
-(function clock(){
-    const el = document.getElementById('rtime');
-    function tick(){
-        const n = new Date();
-        el.textContent = [n.getHours(), n.getMinutes(), n.getSeconds()]
-            .map(v => String(v).padStart(2,'0')).join(':');
-    }
-    tick();
-    setInterval(tick, 1000);
-})();
-
-// Particules
+// Generate floating particles
 (function(){
-    const c = document.getElementById('particles');
-    for(let i = 0; i < 28; i++){
-        const p = document.createElement('div');
-        p.className = 'pt';
-        const sz  = Math.random() < 0.25 ? 3 : 2;
-        const dur = 9 + Math.random() * 14;
-        const del = Math.random() * 18;
-        const dx  = ((Math.random() - 0.5) * 90).toFixed(0) + 'px';
-        p.style.cssText =
-            `left:${Math.random()*100}%;` +
-            `width:${sz}px;height:${sz}px;` +
-            `animation-duration:${dur}s;` +
-            `animation-delay:${del}s;` +
-            `--dx:${dx};` +
-            `opacity:${(.3 + Math.random() * .6).toFixed(2)};`;
-        c.appendChild(p);
-    }
+  const c = document.getElementById('particles');
+  for(let i = 0; i < 20; i++){
+    const p = document.createElement('div');
+    p.className = 'p';
+    const s = Math.random() * 2.5 + .8;
+    const colors = ['#00ff88','#33b5ff','#ffd633'];
+    const col = colors[Math.floor(Math.random()*3)];
+    p.style.cssText =
+      `width:${s}px;height:${s}px;`+
+      `left:${Math.random()*100}%;`+
+      `background:${col};`+
+      `animation-duration:${Math.random()*14+8}s;`+
+      `animation-delay:${Math.random()*12}s;`;
+    c.appendChild(p);
+  }
 })();
-
-// Bloquer "Ouvrir dans l'appli"
-window.addEventListener('beforeinstallprompt', e => e.preventDefault());
 </script>
 
 </body>

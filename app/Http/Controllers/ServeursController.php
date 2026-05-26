@@ -9,134 +9,90 @@ class ServeursController extends Controller
 {
     public function index()
     {
-        DB::statement("CREATE TABLE IF NOT EXISTS `serveurs` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `nom` varchar(255) NOT NULL,
-            `type` varchar(100) NOT NULL,
-            `adresse_ip` varchar(50) DEFAULT NULL,
-            `nom_domaine` varchar(255) DEFAULT NULL,
-            `salle_id` int(11) DEFAULT NULL,
-            `responsable` varchar(255) DEFAULT NULL,
-            `systeme_exploitation` varchar(100) DEFAULT NULL,
-            `version_os` varchar(100) DEFAULT NULL,
-            `ram` varchar(50) DEFAULT NULL,
-            `cpu` varchar(100) DEFAULT NULL,
-            `stockage` varchar(100) DEFAULT NULL,
-            `temperature` float DEFAULT NULL,
-            `statut` varchar(50) NOT NULL DEFAULT 'actif',
-            `date_installation` date DEFAULT NULL,
-            `description` text DEFAULT NULL,
-            `localisation_physique` varchar(255) DEFAULT NULL,
-            `fournisseur` varchar(255) DEFAULT NULL,
-            `numero_rack` varchar(100) DEFAULT NULL,
-            `adresse_mac` varchar(50) DEFAULT NULL,
-            `numero_serie` varchar(100) DEFAULT NULL,
-            `type_alimentation` varchar(100) DEFAULT NULL,
-            `port_reseau` varchar(100) DEFAULT NULL,
-            `consommation_energetique` float DEFAULT NULL,
-            `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
+        $serveurs = $salles = collect();
+        $stats    = ['total' => 0, 'en_ligne' => 0, 'hors_ligne' => 0, 'maintenance' => 0];
 
         try {
-            DB::statement("CREATE TABLE IF NOT EXISTS `salles` (
-                `id` int(11) NOT NULL AUTO_INCREMENT,
-                `code` varchar(20) NOT NULL,
-                `nom` varchar(255) NOT NULL,
-                `description` text DEFAULT NULL,
-                `localisation` varchar(255) DEFAULT NULL,
-                `capacite` int(11) DEFAULT NULL,
-                `responsable` varchar(255) DEFAULT NULL,
-                `statut` varchar(50) NOT NULL DEFAULT 'actif',
-                `niveau_securite` varchar(50) NOT NULL DEFAULT 'standard',
-                `statut_reseau` varchar(50) NOT NULL DEFAULT 'connecte',
-                `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `code` (`code`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $serveurs = DB::table('serveurs')->orderByDesc('created_at')->get();
+            $salles   = DB::table('salles')->get();
+            $stats = [
+                'total'       => DB::table('serveurs')->count(),
+                'en_ligne'    => DB::table('serveurs')->where('statut', 'en_ligne')->count(),
+                'hors_ligne'  => DB::table('serveurs')->where('statut', 'hors_ligne')->count(),
+                'maintenance' => DB::table('serveurs')->where('statut', 'maintenance')->count(),
+            ];
         } catch (\Exception $e) {}
 
-        $serveurs = DB::table('serveurs')
-            ->leftJoin('salles', 'serveurs.salle_id', '=', 'salles.id')
-            ->select('serveurs.*', 'salles.nom as salle_nom', 'salles.code as salle_code')
-            ->orderBy('serveurs.id', 'desc')
-            ->get();
-
-        $salles = DB::table('salles')->orderBy('nom')->get();
-
-        return view('serveurs', compact('serveurs', 'salles'));
+        return view('serveurs', compact('user', 'serveurs', 'salles', 'stats'));
     }
 
-    public function store(Request $r)
+    public function store(Request $request)
     {
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
+        $request->validate([
+            'nom'  => 'required|string|max:150',
+            'type' => 'required|string',
+        ]);
+
         DB::table('serveurs')->insert([
-            'nom'                      => $r->input('nom'),
-            'type'                     => $r->input('type'),
-            'adresse_ip'               => $r->input('adresse_ip') ?: null,
-            'nom_domaine'              => $r->input('nom_domaine') ?: null,
-            'salle_id'                 => $r->input('salle_id') ?: null,
-            'responsable'              => $r->input('responsable') ?: null,
-            'systeme_exploitation'     => $r->input('systeme_exploitation') ?: null,
-            'version_os'               => $r->input('version_os') ?: null,
-            'ram'                      => $r->input('ram') ?: null,
-            'cpu'                      => $r->input('cpu') ?: null,
-            'stockage'                 => $r->input('stockage') ?: null,
-            'temperature'              => $r->input('temperature') !== '' ? $r->input('temperature') : null,
-            'statut'                   => $r->input('statut', 'actif'),
-            'date_installation'        => $r->input('date_installation') ?: null,
-            'description'              => $r->input('description') ?: null,
-            'localisation_physique'    => $r->input('localisation_physique') ?: null,
-            'fournisseur'              => $r->input('fournisseur') ?: null,
-            'numero_rack'              => $r->input('numero_rack') ?: null,
-            'adresse_mac'              => $r->input('adresse_mac') ?: null,
-            'numero_serie'             => $r->input('numero_serie') ?: null,
-            'type_alimentation'        => $r->input('type_alimentation') ?: null,
-            'port_reseau'              => $r->input('port_reseau') ?: null,
-            'consommation_energetique' => $r->input('consommation_energetique') !== '' ? $r->input('consommation_energetique') : null,
-            'created_at'               => now(),
-            'updated_at'               => now(),
+            'nom'               => $request->nom,
+            'type'              => $request->type,
+            'adresse_ip'        => $request->adresse_ip,
+            'nom_domaine'       => $request->nom_domaine,
+            'localisation'      => $request->localisation,
+            'salle_id'          => $request->salle_id ?: null,
+            'responsable'       => $request->responsable,
+            'os'                => $request->os,
+            'ram'               => $request->ram,
+            'cpu'               => $request->cpu,
+            'stockage'          => $request->stockage,
+            'statut'            => $request->statut ?? 'en_ligne',
+            'date_installation' => $request->date_installation ?: null,
+            'notes'             => $request->notes,
+            'created_at'        => now(),
+            'updated_at'        => now(),
         ]);
 
-        return redirect('/serveurs')->with('success', 'Serveur ajouté avec succès.');
-    }
-
-    public function update(Request $r, $id)
-    {
-        DB::table('serveurs')->where('id', $id)->update([
-            'nom'                      => $r->input('nom'),
-            'type'                     => $r->input('type'),
-            'adresse_ip'               => $r->input('adresse_ip') ?: null,
-            'nom_domaine'              => $r->input('nom_domaine') ?: null,
-            'salle_id'                 => $r->input('salle_id') ?: null,
-            'responsable'              => $r->input('responsable') ?: null,
-            'systeme_exploitation'     => $r->input('systeme_exploitation') ?: null,
-            'version_os'               => $r->input('version_os') ?: null,
-            'ram'                      => $r->input('ram') ?: null,
-            'cpu'                      => $r->input('cpu') ?: null,
-            'stockage'                 => $r->input('stockage') ?: null,
-            'temperature'              => $r->input('temperature') !== '' ? $r->input('temperature') : null,
-            'statut'                   => $r->input('statut', 'actif'),
-            'date_installation'        => $r->input('date_installation') ?: null,
-            'description'              => $r->input('description') ?: null,
-            'localisation_physique'    => $r->input('localisation_physique') ?: null,
-            'fournisseur'              => $r->input('fournisseur') ?: null,
-            'numero_rack'              => $r->input('numero_rack') ?: null,
-            'adresse_mac'              => $r->input('adresse_mac') ?: null,
-            'numero_serie'             => $r->input('numero_serie') ?: null,
-            'type_alimentation'        => $r->input('type_alimentation') ?: null,
-            'port_reseau'              => $r->input('port_reseau') ?: null,
-            'consommation_energetique' => $r->input('consommation_energetique') !== '' ? $r->input('consommation_energetique') : null,
-            'updated_at'               => now(),
-        ]);
-
-        return redirect('/serveurs')->with('success', 'Serveur mis à jour avec succès.');
+        return back()->with('success_srv', 'Serveur ajouté avec succès.');
     }
 
     public function destroy($id)
     {
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
         DB::table('serveurs')->where('id', $id)->delete();
-        return redirect('/serveurs')->with('success', 'Serveur supprimé avec succès.');
+        return back()->with('success_srv', 'Serveur supprimé.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = session('user');
+        if (!$user) return redirect('/login');
+
+        DB::table('serveurs')->where('id', $id)->update([
+            'nom'               => $request->nom,
+            'type'              => $request->type,
+            'adresse_ip'        => $request->adresse_ip,
+            'nom_domaine'       => $request->nom_domaine,
+            'localisation'      => $request->localisation,
+            'salle_id'          => $request->salle_id ?: null,
+            'responsable'       => $request->responsable,
+            'os'                => $request->os,
+            'ram'               => $request->ram,
+            'cpu'               => $request->cpu,
+            'stockage'          => $request->stockage,
+            'statut'            => $request->statut ?? 'en_ligne',
+            'date_installation' => $request->date_installation ?: null,
+            'notes'             => $request->notes,
+            'updated_at'        => now(),
+        ]);
+
+        return back()->with('success_srv', 'Serveur mis à jour.');
     }
 }

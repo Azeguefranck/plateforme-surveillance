@@ -1,355 +1,231 @@
 @extends('layouts.app')
 
 @section('content')
-
 <style>
-@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.stat-wrap{animation:fadeIn .4s ease;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--card:#0e1a38;--border:#1e2f5a;}
+.pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.pg-title{font-size:22px;font-weight:700;color:var(--blue)}
+.btn{padding:9px 18px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;transition:.18s;display:inline-flex;align-items:center;gap:6px}
+.btn:active{transform:scale(.97)}
+.btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
+.btn-neon:hover{background:var(--neon);color:#000}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#000}
+.btn-warn{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.btn-warn:hover{background:var(--warn);color:#000}
+.btn-gray{background:transparent;border:1px solid #2a3a5a;color:#666}
+.btn-gray:hover{border-color:#aaa;color:#aaa}
 
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-.page-title{font-size:20px;font-weight:bold;color:var(--text);display:flex;align-items:center;gap:10px;}
-.page-title i{color:var(--accent);}
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 12px;text-align:center;transition:.2s}
+.scard:hover{border-color:var(--blue);transform:translateY(-2px)}
+.scard .v{font-size:26px;font-weight:800;margin-bottom:4px}
+.scard .l{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px}
+.scard .delta{font-size:10px;margin-top:4px}
+.scard.c0 .v{color:var(--blue)}
+.scard.c1 .v{color:var(--neon)}
+.scard.c2 .v{color:var(--danger)}
+.scard.c3 .v{color:var(--warn)}
+.scard.c4 .v{color:#cc88ff}
+.scard.c5 .v{color:#ff9933}
 
-/* ── KPI cards ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
-.kpi-card{
-  background:var(--card);border:1px solid var(--border);border-radius:14px;
-  padding:18px 20px;display:flex;flex-direction:column;gap:6px;
-  transition:border-color .2s,transform .15s;
-}
-.kpi-card:hover{border-color:var(--accent);transform:translateY(-2px);}
-.kpi-label{font-size:11px;font-weight:bold;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
-.kpi-val{font-size:30px;font-weight:bold;color:var(--text);line-height:1;}
-.kpi-sub{font-size:12px;color:var(--muted);}
-.kpi-card.accent .kpi-val{color:var(--accent);}
-.kpi-card.danger .kpi-val{color:var(--danger);}
-.kpi-card.warn   .kpi-val{color:#d97706;}
-.kpi-card.info   .kpi-val{color:var(--info);}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.chart-title{font-size:13px;font-weight:700;color:#fff}
+.chart-meta{font-size:11px;color:#555}
+canvas{max-height:200px}
 
-/* ── Période selector ── */
-.period-bar{
-  display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap;
-}
-.period-btn{
-  padding:7px 16px;border-radius:8px;border:1px solid var(--border);
-  background:var(--card);color:var(--muted);cursor:pointer;font-size:12px;font-weight:bold;transition:.2s;
-}
-.period-btn:hover,.period-btn.active{background:rgba(47,168,79,.15);border-color:var(--accent);color:var(--accent);}
-.period-divider{width:1px;height:24px;background:var(--border);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px}
+.detail-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.detail-card h4{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.detail-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,47,90,.4);font-size:12px}
+.detail-row:last-child{border-bottom:none}
+.detail-row .k{color:#666}
+.detail-row .val{color:#ccc;font-weight:600}
+.detail-row .val.g{color:var(--neon)}
+.detail-row .val.w{color:var(--warn)}
+.detail-row .val.r{color:var(--danger)}
 
-/* ── Chart panels ── */
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-bottom:22px;}
-.chart-panel{
-  background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:20px;
-}
-.chart-title{font-size:13px;font-weight:bold;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-canvas{max-width:100%;}
+.export-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.export-bar .lbl{font-size:13px;color:#aaa}
+.export-btns{display:flex;gap:8px;flex-wrap:wrap}
 
-/* ── Averages table ── */
-.avg-table{width:100%;border-collapse:collapse;font-size:13px;}
-.avg-table th{background:#091527;padding:11px 14px;text-align:left;color:var(--muted);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
-.avg-table td{padding:11px 14px;border-bottom:1px solid rgba(24,38,64,.6);color:var(--text);}
-.avg-table tr:last-child td{border-bottom:none;}
-.avg-table tbody tr:hover td{background:rgba(47,168,79,.03);}
-
-.loading-msg{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
-
-@media(max-width:600px){
-  .kpi-grid{grid-template-columns:1fr 1fr;}
-  .charts-grid{grid-template-columns:1fr;}
-}
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.charts-grid,.detail-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 
-<div class="stat-wrap">
-
-<div class="page-header">
-  <div class="page-title"><i class="fa-solid fa-chart-line"></i> Statistiques</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    <button onclick="exportStats()" style="background:rgba(47,168,79,.15);color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:bold;">
-      <i class="fa-solid fa-file-csv"></i> Export CSV
-    </button>
-    <button onclick="chargerTout()" style="background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:12px;">
-      <i class="fa-solid fa-rotate"></i> Actualiser
-    </button>
-  </div>
+<div class="pg-header">
+    <div class="pg-title">Statistiques</div>
+    <div style="font-size:12px;color:#555" id="statsTimestamp">—</div>
 </div>
 
-<!-- KPI -->
-<div class="kpi-grid">
-  <div class="kpi-card accent">
-    <div class="kpi-label">Total mesures</div>
-    <div class="kpi-val" id="kpi-mesures">—</div>
-    <div class="kpi-sub">Capteurs enregistrés</div>
-  </div>
-  <div class="kpi-card danger">
-    <div class="kpi-label">Alertes critiques</div>
-    <div class="kpi-val" id="kpi-crit">—</div>
-    <div class="kpi-sub">Niveau CRITIQUE</div>
-  </div>
-  <div class="kpi-card warn">
-    <div class="kpi-label">Alertes aujourd'hui</div>
-    <div class="kpi-val" id="kpi-today">—</div>
-    <div class="kpi-sub">Dernières 24h</div>
-  </div>
-  <div class="kpi-card info">
-    <div class="kpi-label">Serveurs actifs</div>
-    <div class="kpi-val" id="kpi-srv">—</div>
-    <div class="kpi-sub">/ <span id="kpi-srv-total">—</span> total</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Temp. moyenne</div>
-    <div class="kpi-val" id="kpi-temp">—</div>
-    <div class="kpi-sub">°C (historique)</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">SMS envoyés</div>
-    <div class="kpi-val" id="kpi-sms">—</div>
-    <div class="kpi-sub">Total GSM</div>
-  </div>
+<!-- Stats grid -->
+<div class="stats-grid">
+    <div class="scard c0"><div class="v" id="st_mesures">—</div><div class="l">Mesures</div><div class="delta" style="color:#555" id="st_mesures_d"></div></div>
+    <div class="scard c1"><div class="v" id="st_users">—</div><div class="l">Utilisateurs</div></div>
+    <div class="scard c2"><div class="v" id="st_alertes">—</div><div class="l">Alertes total</div></div>
+    <div class="scard c3"><div class="v" id="st_warn">—</div><div class="l">Warnings</div></div>
+    <div class="scard c4"><div class="v" id="st_crit">—</div><div class="l">Critiques</div></div>
+    <div class="scard c5"><div class="v" id="st_nonlu">—</div><div class="l">Non lues</div></div>
 </div>
 
-<!-- Période -->
-<div class="period-bar">
-  <span style="font-size:12px;color:var(--muted);font-weight:bold;">Période :</span>
-  <button class="period-btn active" onclick="setPeriode(1,this)">1h</button>
-  <button class="period-btn" onclick="setPeriode(6,this)">6h</button>
-  <button class="period-btn" onclick="setPeriode(24,this)">24h</button>
-  <button class="period-btn" onclick="setPeriode(72,this)">3j</button>
-  <button class="period-btn" onclick="setPeriode(168,this)">7j</button>
-  <div class="period-divider"></div>
-  <span id="chart-status" style="font-size:12px;color:var(--muted);"></span>
-</div>
-
-<!-- Graphiques -->
+<!-- Charts -->
 <div class="charts-grid">
-  <div class="chart-panel">
-    <div class="chart-title"><i class="fa-solid fa-temperature-three-quarters"></i> Température (°C)</div>
-    <canvas id="chart-temp" height="160"></canvas>
-  </div>
-  <div class="chart-panel">
-    <div class="chart-title"><i class="fa-solid fa-droplet"></i> Humidité (%)</div>
-    <canvas id="chart-hum" height="160"></canvas>
-  </div>
-  <div class="chart-panel">
-    <div class="chart-title"><i class="fa-solid fa-wind"></i> Gaz / CO₂ (ppm)</div>
-    <canvas id="chart-gaz" height="160"></canvas>
-  </div>
-  <div class="chart-panel">
-    <div class="chart-title"><i class="fa-solid fa-bolt"></i> Courant (A) & Puissance (W)</div>
-    <canvas id="chart-power" height="160"></canvas>
-  </div>
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">Alertes par niveau (7 jours)</div>
+            <div class="chart-meta" id="chartMeta1">—</div>
+        </div>
+        <canvas id="chartAlertes"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">Capteurs — dernières mesures</div>
+            <div class="chart-meta" id="chartMeta2">temps réel</div>
+        </div>
+        <canvas id="chartSensors"></canvas>
+    </div>
 </div>
 
-<!-- Tableau moyennes -->
-<div class="chart-panel" style="margin-bottom:20px;">
-  <div class="chart-title"><i class="fa-solid fa-table"></i> Récapitulatif statistique</div>
-  <div id="avg-container">
-    <div class="loading-msg">Chargement...</div>
-  </div>
+<!-- Details -->
+<div class="detail-grid">
+    <div class="detail-card">
+        <h4>Capteurs (dernière mesure)</h4>
+        <div id="sensorDetail">
+            <div class="detail-row"><span class="k">Chargement...</span><span class="val">—</span></div>
+        </div>
+    </div>
+    <div class="detail-card">
+        <h4>Comptes utilisateurs</h4>
+        <div class="detail-row"><span class="k">Total</span><span class="val" id="u_total">—</span></div>
+        <div class="detail-row"><span class="k">Validés</span><span class="val g" id="u_valide">—</span></div>
+        <div class="detail-row"><span class="k">En attente</span><span class="val w" id="u_attente">—</span></div>
+        <div class="detail-row"><span class="k">Bloqués</span><span class="val r" id="u_bloque">—</span></div>
+        <div class="detail-row"><span class="k">Refusés</span><span class="val" id="u_refuse">—</span></div>
+    </div>
+    <div class="detail-card">
+        <h4>Alertes (résumé)</h4>
+        <div class="detail-row"><span class="k">Total alertes</span><span class="val" id="a_total">—</span></div>
+        <div class="detail-row"><span class="k">Critiques</span><span class="val r" id="a_crit">—</span></div>
+        <div class="detail-row"><span class="k">Warnings</span><span class="val w" id="a_warn">—</span></div>
+        <div class="detail-row"><span class="k">Non lues</span><span class="val" id="a_nonlu">—</span></div>
+        <div class="detail-row"><span class="k">Lues</span><span class="val g" id="a_lu">—</span></div>
+    </div>
 </div>
 
+<!-- Export bar -->
+<div class="export-bar">
+    <div class="lbl">Exporter les statistiques</div>
+    <div class="export-btns">
+        <a href="/rapports/export?type=mesures&format=csv&debut={{ now()->subDays(30)->toDateString() }}&fin={{ now()->toDateString() }}" class="btn btn-neon" style="text-decoration:none">&#8595; CSV Mesures</a>
+        <a href="/rapports/export?type=alertes&format=csv&debut={{ now()->subDays(30)->toDateString() }}&fin={{ now()->toDateString() }}" class="btn btn-warn" style="text-decoration:none">&#8595; CSV Alertes</a>
+        <a href="/rapports/export?type=mesures&format=json&debut={{ now()->subDays(30)->toDateString() }}&fin={{ now()->toDateString() }}" class="btn btn-blue" style="text-decoration:none">&#8195;&#123;&#125; JSON</a>
+        <a href="/rapports/export?type=mesures&format=xls&debut={{ now()->subDays(30)->toDateString() }}&fin={{ now()->toDateString() }}" class="btn btn-gray" style="text-decoration:none">&#128202; Excel</a>
+        <button class="btn btn-gray" onclick="window.open('/rapports/print?type=mesures&debut={{ now()->subDays(7)->toDateString() }}&fin={{ now()->toDateString() }}','_blank')">&#128438; PDF</button>
+        <button class="btn btn-gray" onclick="loadStats()">&#8635; Actualiser</button>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-let charts = {};
-let periodHeures = 1;
-let statsData = {};
+var chartAlertes = null, chartSensors = null;
 
-const chartDefaults = {
-  responsive: true,
-  animation: { duration: 600 },
-  plugins: { legend: { display: false } },
-  scales: {
-    x: {
-      ticks: { color: '#6b7fa0', font: { size: 10 }, maxTicksLimit: 8, maxRotation: 0 },
-      grid: { color: 'rgba(24,38,64,.5)' }
-    },
-    y: {
-      ticks: { color: '#6b7fa0', font: { size: 10 } },
-      grid: { color: 'rgba(24,38,64,.5)' }
-    }
-  }
-};
+function loadStats() {
+    document.getElementById('statsTimestamp').textContent = new Date().toLocaleString('fr-FR');
 
-function makeChart(id, color, field, data) {
-  const labels = data.map(m => {
-    const d = new Date(m.created_at);
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  });
-  const vals = data.map(m => parseFloat(m[field] || 0));
+    fetch('/api/stats')
+        .then(function(r){return r.json();})
+        .then(function(s) {
+            document.getElementById('st_mesures').textContent = s.totalMesures     ?? '—';
+            document.getElementById('st_users').textContent   = s.totalUtilisateurs ?? '—';
+            document.getElementById('st_alertes').textContent = (s.alertesWarning||0) + (s.alertesCritiques||0);
+            document.getElementById('st_warn').textContent    = s.alertesWarning   ?? '—';
+            document.getElementById('st_crit').textContent    = s.alertesCritiques ?? '—';
+            document.getElementById('st_nonlu').textContent   = s.alertesNonLues   ?? '—';
 
-  if (charts[id]) charts[id].destroy();
+            document.getElementById('a_total').textContent  = (s.alertesWarning||0)+(s.alertesCritiques||0);
+            document.getElementById('a_crit').textContent   = s.alertesCritiques ?? '—';
+            document.getElementById('a_warn').textContent   = s.alertesWarning   ?? '—';
+            document.getElementById('a_nonlu').textContent  = s.alertesNonLues   ?? '—';
+            document.getElementById('a_lu').textContent     = Math.max(0,((s.alertesWarning||0)+(s.alertesCritiques||0))-(s.alertesNonLues||0));
+        }).catch(function(){});
 
-  const ctx = document.getElementById(id).getContext('2d');
-  charts[id] = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data: vals,
-        borderColor: color,
-        backgroundColor: color + '18',
-        borderWidth: 2,
-        pointRadius: data.length > 100 ? 0 : 2,
-        pointBackgroundColor: color,
-        fill: true,
-        tension: 0.4,
-      }]
-    },
-    options: { ...chartDefaults }
-  });
+    fetch('/api/dashboard-data')
+        .then(function(r){return r.json();})
+        .then(function(d) {
+            var m = d.derniere_mesure || {};
+            var sensors = [
+                {k:'Température',v:m.temperature,u:'°C'},
+                {k:'Humidité',   v:m.humidite,   u:'%'},
+                {k:'Gaz',        v:m.gaz,         u:'ppm'},
+                {k:'Courant',    v:m.courant,     u:'A'},
+                {k:'Puissance',  v:m.puissance,   u:'W'},
+                {k:'Tension',    v:m.tension,     u:'V'},
+            ];
+            document.getElementById('sensorDetail').innerHTML = sensors.map(function(s) {
+                return '<div class="detail-row"><span class="k">'+s.k+'</span><span class="val '+(s.v != null ? 'g' : '')+'">'+(s.v != null ? s.v+' '+s.u : '—')+'</span></div>';
+            }).join('');
+
+            // Sensor radar chart
+            var svLabels = sensors.map(function(s){return s.k;});
+            var svData   = sensors.map(function(s){return s.v != null ? s.v : 0;});
+            if (chartSensors) { chartSensors.destroy(); }
+            chartSensors = new Chart(document.getElementById('chartSensors').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: svLabels,
+                    datasets: [{ label: 'Valeur actuelle', data: svData,
+                        backgroundColor: ['rgba(255,87,51,.5)','rgba(51,181,255,.5)','rgba(255,214,51,.5)','rgba(255,153,51,.5)','rgba(204,136,255,.5)','rgba(51,255,136,.5)'],
+                        borderColor:     ['#ff5733','#33b5ff','#ffd633','#ff9933','#cc88ff','#33ff88'],
+                        borderWidth: 1, borderRadius: 5 }]
+                },
+                options: { responsive:true, maintainAspectRatio:true,
+                    plugins:{legend:{display:false}},
+                    scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}}}
+                }
+            });
+        }).catch(function(){});
+
+    fetch('/api/historique-data?type=alertes&debut='+getDate(-7)+'&fin='+getDate(0)+'&limit=500')
+        .then(function(r){return r.json();})
+        .then(function(alertes) {
+            var byDay = {};
+            alertes.forEach(function(a) {
+                var d = (a.created_at||'').split('T')[0]||(a.created_at||'').split(' ')[0];
+                if (!byDay[d]) byDay[d] = {warning:0,critique:0};
+                byDay[d][a.niveau] = (byDay[d][a.niveau]||0)+1;
+            });
+            var days = [];
+            for (var i=6; i>=0; i--) { days.push(getDate(-i)); }
+            if (chartAlertes) { chartAlertes.destroy(); }
+            chartAlertes = new Chart(document.getElementById('chartAlertes').getContext('2d'), {
+                type: 'bar',
+                data: { labels: days.map(function(d){return d.slice(5).replace('-','/');}) ,
+                    datasets: [
+                        {label:'Warning', data:days.map(function(d){return (byDay[d]||{}).warning||0;}),  backgroundColor:'rgba(255,214,51,.5)',borderColor:'#ffd633',borderWidth:1,borderRadius:4},
+                        {label:'Critique',data:days.map(function(d){return (byDay[d]||{}).critique||0;}), backgroundColor:'rgba(255,87,51,.5)', borderColor:'#ff5733',borderWidth:1,borderRadius:4},
+                    ]
+                },
+                options:{ responsive:true,maintainAspectRatio:true,
+                    plugins:{legend:{labels:{color:'#aaa',font:{size:10}}}},
+                    scales:{x:{stacked:true,ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}},y:{stacked:true,ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}}}
+                }
+            });
+            document.getElementById('chartMeta1').textContent = alertes.length+' alertes / 7j';
+        }).catch(function(){});
+
+    // User stats
+    fetch('/rapports/export?type=users&format=json&debut=2020-01-01&fin='+getDate(0))
+        .catch(function(){});
 }
 
-function makePowerChart(data) {
-  const labels = data.map(m => {
-    const d = new Date(m.created_at);
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  });
-  const courant  = data.map(m => parseFloat(m.courant  || 0));
-  const puisance = data.map(m => parseFloat(m.puissance || 0));
-
-  if (charts['power']) charts['power'].destroy();
-  const ctx = document.getElementById('chart-power').getContext('2d');
-  charts['power'] = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Courant (A)', data: courant,  borderColor: '#33ff88', backgroundColor: '#33ff8818', borderWidth: 2, pointRadius: data.length > 100 ? 0 : 2, fill: true, tension: 0.4, yAxisID: 'y' },
-        { label: 'Puissance (W)', data: puisance, borderColor: '#bb66ff', backgroundColor: '#bb66ff18', borderWidth: 2, pointRadius: data.length > 100 ? 0 : 2, fill: true, tension: 0.4, yAxisID: 'y2' },
-      ]
-    },
-    options: {
-      ...chartDefaults,
-      plugins: { legend: { display: true, labels: { color: '#6b7fa0', font: { size: 11 } } } },
-      scales: {
-        ...chartDefaults.scales,
-        y:  { ...chartDefaults.scales.y, position: 'left' },
-        y2: { ...chartDefaults.scales.y, position: 'right', grid: { drawOnChartArea: false } },
-      }
-    }
-  });
+function getDate(offset) {
+    var d = new Date(); d.setDate(d.getDate()+offset);
+    return d.toISOString().split('T')[0];
 }
 
-function setPeriode(h, btn) {
-  periodHeures = h;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  chargerGraphiques();
-}
-
-async function chargerGraphiques() {
-  document.getElementById('chart-status').textContent = 'Chargement...';
-  try {
-    const r = await fetch(`/api/stats/graphiques?heures=${periodHeures}`);
-    const data = await r.json();
-    if (!data.length) {
-      document.getElementById('chart-status').textContent = 'Aucune donnée pour cette période';
-      return;
-    }
-    document.getElementById('chart-status').textContent = `${data.length} mesures affichées`;
-    makeChart('chart-temp',  '#ff5733', 'temperature', data);
-    makeChart('chart-hum',   '#33b5ff', 'humidite',    data);
-    makeChart('chart-gaz',   '#ffd633', 'gaz',         data);
-    makePowerChart(data);
-  } catch(e) {
-    document.getElementById('chart-status').textContent = 'Données indisponibles';
-  }
-}
-
-async function chargerKPI() {
-  try {
-    const r = await fetch('/api/stats/resume');
-    const d = await r.json();
-    statsData = d;
-    document.getElementById('kpi-mesures').textContent = (d.total_mesures || 0).toLocaleString('fr-FR');
-    document.getElementById('kpi-crit').textContent    = d.alertes_crit   || 0;
-    document.getElementById('kpi-today').textContent   = d.alertes_today  || 0;
-    document.getElementById('kpi-srv').textContent     = d.serveurs_actifs || 0;
-    document.getElementById('kpi-srv-total').textContent = d.total_serveurs || 0;
-    document.getElementById('kpi-temp').textContent    = (d.avg_temp || 0).toFixed(1);
-    document.getElementById('kpi-sms').textContent     = d.total_sms || 0;
-
-    document.getElementById('avg-container').innerHTML = `
-      <table class="avg-table">
-        <thead>
-          <tr>
-            <th>Indicateur</th>
-            <th>Moyenne</th>
-            <th>Maximum</th>
-            <th>Mesures aujourd'hui</th>
-            <th>Total alertes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="color:#ff5733;font-weight:bold;">🌡️ Température</td>
-            <td>${(d.avg_temp||0).toFixed(1)} °C</td>
-            <td style="color:#e74c3c;">${(d.max_temp||0).toFixed(1)} °C</td>
-            <td rowspan="5" style="text-align:center;vertical-align:middle;font-size:22px;font-weight:bold;color:var(--accent);">${d.mesures_today||0}</td>
-            <td rowspan="5" style="text-align:center;vertical-align:middle;font-size:22px;font-weight:bold;color:#d97706;">${d.total_alertes||0}</td>
-          </tr>
-          <tr>
-            <td style="color:#33b5ff;font-weight:bold;">💧 Humidité</td>
-            <td>${(d.avg_hum||0).toFixed(1)} %</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td style="color:#ffd633;font-weight:bold;">🌬️ Gaz / CO₂</td>
-            <td>${Math.round(d.avg_gaz||0)} ppm</td>
-            <td style="color:#e74c3c;">${Math.round(d.max_gaz||0)} ppm</td>
-          </tr>
-          <tr>
-            <td style="color:#33ff88;font-weight:bold;">⚡ Courant</td>
-            <td>${(d.avg_courant||0).toFixed(2)} A</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td style="color:#bb66ff;font-weight:bold;">🔌 Puissance</td>
-            <td>${Math.round(d.avg_puissance||0)} W</td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>`;
-  } catch(e) {
-    document.getElementById('avg-container').innerHTML = '<div class="loading-msg" style="color:#e74c3c">Impossible de charger les statistiques</div>';
-  }
-}
-
-function chargerTout() {
-  chargerKPI();
-  chargerGraphiques();
-}
-
-function exportStats() {
-  const rows = [
-    ['Indicateur','Valeur'],
-    ['Total mesures', statsData.total_mesures||0],
-    ['Mesures aujourd\'hui', statsData.mesures_today||0],
-    ['Total alertes', statsData.total_alertes||0],
-    ['Alertes critiques', statsData.alertes_crit||0],
-    ['Alertes aujourd\'hui', statsData.alertes_today||0],
-    ['Temp. moyenne', (statsData.avg_temp||0).toFixed(1)+' °C'],
-    ['Temp. max', (statsData.max_temp||0).toFixed(1)+' °C'],
-    ['Hum. moyenne', (statsData.avg_hum||0).toFixed(1)+' %'],
-    ['Gaz moyen', Math.round(statsData.avg_gaz||0)+' ppm'],
-    ['Courant moyen', (statsData.avg_courant||0).toFixed(2)+' A'],
-    ['Puissance moyenne', Math.round(statsData.avg_puissance||0)+' W'],
-    ['Serveurs actifs', statsData.serveurs_actifs||0],
-    ['Total serveurs', statsData.total_serveurs||0],
-    ['Total SMS', statsData.total_sms||0],
-  ];
-  const csv = rows.map(r => r.join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'statistiques_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-}
-
-chargerTout();
-setInterval(chargerKPI, 30000);
+loadStats();
+setInterval(loadStats, 30000);
 </script>
-
 @endsection

@@ -1,545 +1,434 @@
 @extends('layouts.app')
 
 @section('content')
-
 <style>
-@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.srv-wrap{animation:fadeIn .4s ease;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--bg:#060d1f;--card:#0e1a38;--border:#1e2f5a;}
+.pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.pg-title{font-size:22px;font-weight:700;color:var(--blue)}
+.pg-title span{color:#fff;font-size:14px;font-weight:400;margin-left:8px;opacity:.7}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;transition:.2s}
+.btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
+.btn-neon:hover{background:var(--neon);color:#000}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#000}
 
-/* ── Stats bar ── */
-.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
-.stat-card{
-  background:#0d1a2e;border:1px solid #182640;border-radius:14px;
-  padding:16px 22px;flex:1 1 160px;min-width:140px;
-  display:flex;flex-direction:column;gap:4px;
-}
-.stat-label{font-size:11px;font-weight:bold;letter-spacing:1.5px;color:#6b7fa0;text-transform:uppercase;}
-.stat-val{font-size:28px;font-weight:bold;color:#d4dced;}
-.stat-val.green{color:#2fa84f;}
-.stat-val.red{color:#e74c3c;}
-.stat-val.orange{color:#e67e22;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:center}
+.stat-card .val{font-size:34px;font-weight:800;margin-bottom:4px}
+.stat-card .lbl{font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:.5px}
+.stat-card.green .val{color:var(--neon)}
+.stat-card.blue  .val{color:var(--blue)}
+.stat-card.warn  .val{color:var(--warn)}
+.stat-card.red   .val{color:var(--danger)}
 
-/* ── Header ── */
-.page-header{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:20px;flex-wrap:wrap;gap:10px;
-}
-.page-title{font-size:22px;font-weight:bold;color:#d4dced;}
-.btn-add{
-  background:#2fa84f;color:#060c1a;border:none;border-radius:9px;
-  padding:10px 20px;font-weight:bold;font-size:14px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;transition:.2s;
-}
-.btn-add:hover{background:#249040;}
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:13px;display:flex;align-items:center;gap:8px}
+.alert-success{background:rgba(51,255,136,.1);border:1px solid var(--neon);color:var(--neon)}
 
-/* ── Alert flash ── */
-.flash{
-  padding:12px 18px;border-radius:10px;margin-bottom:16px;font-weight:bold;font-size:14px;
-}
-.flash.success{background:rgba(47,168,79,.15);border:1px solid #2fa84f;color:#2fa84f;}
-.flash.error{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;}
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:28px}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.table-toolbar .title{font-size:15px;font-weight:700;color:#fff}
+.search-box{background:#07102a;border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:#fff;font-size:13px;outline:none;width:240px}
+.search-box:focus{border-color:var(--blue)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#07102a}
+th{padding:12px 16px;text-align:left;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:12px 16px;border-top:1px solid var(--border);font-size:13px;color:#ccc}
+tr:hover td{background:rgba(51,181,255,.04)}
+.td-name{color:#fff;font-weight:600}
+.td-ip{font-family:monospace;color:var(--blue);font-size:12px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge-en_ligne{background:rgba(51,255,136,.12);color:var(--neon);border:1px solid rgba(51,255,136,.3)}
+.badge-hors_ligne{background:rgba(255,87,51,.12);color:var(--danger);border:1px solid rgba(255,87,51,.3)}
+.badge-maintenance{background:rgba(255,214,51,.12);color:var(--warn);border:1px solid rgba(255,214,51,.3)}
+.td-actions{display:flex;gap:6px;white-space:nowrap}
+.td-actions .btn{padding:5px 12px;font-size:11px}
+.empty-row td{text-align:center;padding:40px;color:#555}
 
-/* ── Table ── */
-.table-wrap{
-  background:#0d1a2e;border:1px solid #182640;border-radius:16px;overflow:hidden;
-}
-.tbl{width:100%;border-collapse:collapse;font-size:13px;}
-.tbl th{
-  background:#091527;padding:12px 14px;text-align:left;
-  color:#6b7fa0;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
-  border-bottom:1px solid #182640;
-}
-.tbl td{padding:12px 14px;border-bottom:1px solid rgba(24,38,64,.6);color:#d4dced;vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tbody tr:hover td{background:rgba(47,168,79,.04);}
-.tbl .no-data{text-align:center;padding:40px;color:#6b7fa0;}
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#0b1632;border:1px solid var(--border);border-radius:16px;padding:28px;width:min(680px,95vw);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;color:var(--neon);margin-bottom:20px}
+.modal-close{float:right;background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;margin-top:-4px}
+.modal-close:hover{color:#fff}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:12px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{background:#07102a;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;outline:none;transition:.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(51,255,136,.1)}
+.form-group select option{background:#0e1a38}
+.form-group textarea{resize:vertical;min-height:72px}
+.full-span{grid-column:1/-1}
+.span2{grid-column:span 2}
+.form-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
 
-/* ── Badges statut ── */
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:.5px;}
-.badge.actif{background:rgba(47,168,79,.15);border:1px solid #2fa84f;color:#2fa84f;}
-.badge.inactif{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;}
-.badge.maintenance{background:rgba(230,126,34,.15);border:1px solid #e67e22;color:#e67e22;}
-.badge.panne{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;}
-
-/* ── Action buttons ── */
-.btn-edit,.btn-del{
-  border:none;border-radius:7px;padding:6px 12px;
-  font-size:12px;font-weight:bold;cursor:pointer;transition:.2s;
-}
-.btn-edit{background:rgba(46,134,193,.2);color:#2e86c1;border:1px solid #2e86c1;}
-.btn-edit:hover{background:#2e86c1;color:white;}
-.btn-del{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid #e74c3c;margin-left:6px;}
-.btn-del:hover{background:#e74c3c;color:white;}
-
-/* ── Modal ── */
-.modal-bg{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-  z-index:1000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;
-}
-.modal-bg.open{display:flex;}
-.modal{
-  background:#0d1a2e;border:1px solid #182640;border-radius:16px;
-  padding:28px;width:100%;max-width:860px;margin:auto;
-  animation:fadeIn .3s ease;
-}
-.modal h2{font-size:18px;font-weight:bold;color:#d4dced;margin-bottom:20px;}
-.modal-close{
-  float:right;background:none;border:none;color:#6b7fa0;
-  font-size:22px;cursor:pointer;line-height:1;transition:.2s;
-}
-.modal-close:hover{color:#e74c3c;}
-
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-@media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
-.form-group{display:flex;flex-direction:column;gap:5px;}
-.form-group.full{grid-column:1/-1;}
-.form-label{font-size:12px;font-weight:bold;color:#6b7fa0;letter-spacing:.5px;}
-.form-control{
-  background:#0a1525;border:1.5px solid #1e3050;border-radius:9px;
-  color:#d4dced;padding:9px 13px;font-size:13px;outline:none;
-  transition:border-color .2s;width:100%;
-}
-.form-control:focus{border-color:#2fa84f;}
-.form-control option{background:#0a1525;}
-
-.modal-footer{margin-top:20px;display:flex;justify-content:flex-end;gap:10px;}
-.btn-cancel{
-  background:transparent;border:1px solid #182640;border-radius:9px;
-  color:#6b7fa0;padding:10px 20px;font-size:14px;cursor:pointer;transition:.2s;
-}
-.btn-cancel:hover{border-color:#6b7fa0;color:#d4dced;}
-.btn-submit{
-  background:#2fa84f;color:#060c1a;border:none;border-radius:9px;
-  padding:10px 24px;font-weight:bold;font-size:14px;cursor:pointer;transition:.2s;
-}
-.btn-submit:hover{background:#249040;}
-
-.section-label{
-  font-size:11px;font-weight:bold;letter-spacing:1.5px;color:#2fa84f;
-  text-transform:uppercase;grid-column:1/-1;padding:8px 0 2px;
-  border-bottom:1px solid #182640;margin-bottom:4px;
+@media(max-width:768px){
+.stats-row{grid-template-columns:repeat(2,1fr)}
+.form-grid{grid-template-columns:1fr}
+table{display:block;overflow-x:auto}
 }
 </style>
 
-<div class="srv-wrap">
+<div class="pg-header">
+    <div>
+        <div class="pg-title">Serveurs <span>Gestion de l'infrastructure</span></div>
+    </div>
+    <button class="btn btn-neon" onclick="document.getElementById('addModal').classList.add('open')">+ Ajouter un serveur</button>
+</div>
 
-{{-- Flash messages --}}
-@if(session('success'))
-  <div class="flash success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
+@if(session('success_srv'))
+<div class="alert alert-success">&#10003; {{ session('success_srv') }}</div>
 @endif
-@if(session('error'))
-  <div class="flash error"><i class="fa-solid fa-circle-xmark"></i> {{ session('error') }}</div>
-@endif
 
-{{-- Stats --}}
-@php
-  $total       = $serveurs->count();
-  $actifs      = $serveurs->where('statut','actif')->count();
-  $inactifs    = $serveurs->where('statut','inactif')->count();
-  $maintenance = $serveurs->where('statut','maintenance')->count();
-  $panne       = $serveurs->where('statut','panne')->count();
-@endphp
-<div class="stat-row">
-  <div class="stat-card">
-    <span class="stat-label">Total</span>
-    <span class="stat-val">{{ $total }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Actifs</span>
-    <span class="stat-val green">{{ $actifs }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Inactifs</span>
-    <span class="stat-val red">{{ $inactifs }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Maintenance</span>
-    <span class="stat-val orange">{{ $maintenance }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">En panne</span>
-    <span class="stat-val red">{{ $panne }}</span>
-  </div>
+<!-- Stats -->
+<div class="stats-row">
+    <div class="stat-card blue"><div class="val">{{ $stats['total'] }}</div><div class="lbl">Total</div></div>
+    <div class="stat-card green"><div class="val">{{ $stats['en_ligne'] }}</div><div class="lbl">En ligne</div></div>
+    <div class="stat-card red"><div class="val">{{ $stats['hors_ligne'] }}</div><div class="lbl">Hors ligne</div></div>
+    <div class="stat-card warn"><div class="val">{{ $stats['maintenance'] }}</div><div class="lbl">Maintenance</div></div>
 </div>
 
-{{-- Header --}}
-<div class="page-header">
-  <div class="page-title"><i class="fa-solid fa-server" style="color:#2fa84f;margin-right:10px;"></i>Gestion des Serveurs</div>
-  <button class="btn-add" onclick="openModal('modal-add')">
-    <i class="fa-solid fa-plus"></i> Ajouter un serveur
-  </button>
+<!-- Table -->
+<div class="table-card">
+    <div class="table-toolbar">
+        <div class="title">Liste des serveurs</div>
+        <input type="text" class="search-box" id="searchInput" placeholder="Rechercher..." oninput="filterTable()">
+    </div>
+    <table id="serveursTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Adresse IP</th>
+                <th>Salle</th>
+                <th>OS</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @forelse($serveurs as $srv)
+        <tr>
+            <td style="color:#555;font-size:11px">#{{ $srv->id }}</td>
+            <td class="td-name">
+                {{ $srv->nom }}
+                @if($srv->nom_domaine)<div style="font-size:11px;color:#666;margin-top:2px">{{ $srv->nom_domaine }}</div>@endif
+            </td>
+            <td><span style="color:var(--blue);font-size:12px">{{ $srv->type }}</span></td>
+            <td class="td-ip">{{ $srv->adresse_ip ?? '—' }}</td>
+            <td>
+                @php $salle = $salles->firstWhere('id', $srv->salle_id) @endphp
+                {{ $salle ? $salle->nom : '—' }}
+            </td>
+            <td style="font-size:12px">{{ $srv->os ?? '—' }}</td>
+            <td><span class="badge badge-{{ $srv->statut }}">{{ str_replace('_',' ',$srv->statut) }}</span></td>
+            <td class="td-actions">
+                <button class="btn" style="background:transparent;border:1px solid #33ff8866;color:#33ff8899;padding:5px 10px;font-size:11px;border-radius:7px" title="Ping {{ $srv->adresse_ip ?? 'aucune IP' }}" onclick="pingServer(this,{{ $srv->id }})">Ping</button>
+                <button class="btn btn-blue" onclick="openEdit({{ $srv->id }},
+                    '{{ addslashes($srv->nom) }}',
+                    '{{ addslashes($srv->type) }}',
+                    '{{ addslashes($srv->adresse_ip ?? '') }}',
+                    '{{ addslashes($srv->nom_domaine ?? '') }}',
+                    '{{ addslashes($srv->localisation ?? '') }}',
+                    '{{ $srv->salle_id ?? '' }}',
+                    '{{ addslashes($srv->responsable ?? '') }}',
+                    '{{ addslashes($srv->os ?? '') }}',
+                    '{{ addslashes($srv->ram ?? '') }}',
+                    '{{ addslashes($srv->cpu ?? '') }}',
+                    '{{ addslashes($srv->stockage ?? '') }}',
+                    '{{ $srv->statut }}',
+                    '{{ $srv->date_installation ?? '' }}',
+                    '{{ addslashes($srv->notes ?? '') }}'
+                )">Modifier</button>
+                <form method="POST" action="/serveurs/{{ $srv->id }}" id="del-srv-{{ $srv->id }}" style="margin:0">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" class="btn btn-danger" onclick="delServeur(this,{{ $srv->id }})">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        @empty
+        <tr class="empty-row"><td colspan="8">Aucun serveur enregistré. Cliquez sur <strong>+ Ajouter un serveur</strong> pour commencer.</td></tr>
+        @endforelse
+        </tbody>
+    </table>
 </div>
 
-{{-- Table --}}
-<div class="table-wrap">
-  <table class="tbl">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Nom</th>
-        <th>Type</th>
-        <th>Adresse IP</th>
-        <th>Salle</th>
-        <th>OS</th>
-        <th>Statut</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      @forelse($serveurs as $s)
-      <tr>
-        <td style="color:#6b7fa0">{{ $s->id }}</td>
-        <td style="font-weight:bold;">{{ $s->nom }}</td>
-        <td style="color:#4a9fc4">{{ $s->type }}</td>
-        <td><code style="color:#2fa84f;font-size:12px;">{{ $s->adresse_ip ?: '—' }}</code></td>
-        <td>
-          @if($s->salle_nom)
-            <span style="background:rgba(47,168,79,.1);border:1px solid rgba(47,168,79,.3);border-radius:6px;padding:2px 8px;font-size:12px;color:#2fa84f;">
-              {{ $s->salle_code }} — {{ $s->salle_nom }}
-            </span>
-          @else
-            <span style="color:#6b7fa0">—</span>
-          @endif
-        </td>
-        <td style="font-size:12px;">{{ $s->systeme_exploitation ?: '—' }}{{ $s->version_os ? ' '.$s->version_os : '' }}</td>
-        <td>
-          @php
-            $badgeClass = match($s->statut ?? 'actif') {
-              'actif'       => 'actif',
-              'inactif'     => 'inactif',
-              'maintenance' => 'maintenance',
-              'panne'       => 'panne',
-              default       => 'actif',
-            };
-          @endphp
-          <span class="badge {{ $badgeClass }}">{{ strtoupper($s->statut ?? 'actif') }}</span>
-        </td>
-        <td>
-          <button class="btn-edit" onclick="openEdit({{ json_encode($s) }})">
-            <i class="fa-solid fa-pen"></i> Modifier
-          </button>
-          <form method="POST" action="/serveurs/delete/{{ $s->id }}" style="display:inline;"
-                onsubmit="event.preventDefault();const f=this;CyberConfirm.show({title:'Supprimer le serveur',message:'Supprimer ce serveur ? Cette action est irréversible.',icon:'fa-solid fa-server',confirmText:'Supprimer',confirmColor:'danger'}).then(ok=>{if(ok){f.onsubmit=null;f.submit();}})">
-            @csrf
-            <button type="submit" class="btn-del"><i class="fa-solid fa-trash"></i> Supprimer</button>
-          </form>
-        </td>
-      </tr>
-      @empty
-      <tr><td colspan="8" class="no-data"><i class="fa-solid fa-server" style="font-size:32px;opacity:.3;display:block;margin-bottom:10px;"></i>Aucun serveur enregistré</td></tr>
-      @endforelse
-    </tbody>
-  </table>
-</div>
-
-</div>
-
-{{-- ══ MODAL AJOUT ══ --}}
-<div class="modal-bg" id="modal-add">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-add')">&times;</button>
-    <h2><i class="fa-solid fa-plus" style="color:#2fa84f;"></i> Ajouter un serveur</h2>
-    <form method="POST" action="/serveurs/store">
-      @csrf
-      <div class="form-grid">
-        <div class="section-label">Informations générales</div>
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input class="form-control" type="text" name="nom" required placeholder="Nom du serveur">
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal">
+    <h3>&#10010; Nouveau Serveur <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">&#215;</button></h3>
+    <form method="POST" action="/serveurs">
+        @csrf
+        <div class="form-grid">
+            <div class="form-group span2">
+                <label>Nom du serveur *</label>
+                <input type="text" name="nom" required placeholder="SRV-PROD-01">
+            </div>
+            <div class="form-group">
+                <label>Type *</label>
+                <select name="type" required>
+                    <option value="">-- Choisir --</option>
+                    <optgroup label="Web & App">
+                        <option>Serveur Web Apache</option>
+                        <option>Serveur Web Nginx</option>
+                        <option>Serveur d'Application</option>
+                        <option>Serveur de Cache (Redis)</option>
+                        <option>Serveur de Cache (Memcached)</option>
+                        <option>Serveur d'API REST</option>
+                        <option>Serveur GraphQL</option>
+                        <option>Serveur Proxy Inverse</option>
+                        <option>Serveur Load Balancer</option>
+                    </optgroup>
+                    <optgroup label="Base de données">
+                        <option>Serveur BD MySQL</option>
+                        <option>Serveur BD PostgreSQL</option>
+                        <option>Serveur BD MariaDB</option>
+                        <option>Serveur BD MongoDB</option>
+                        <option>Serveur BD Oracle</option>
+                        <option>Serveur BD SQL Server</option>
+                        <option>Serveur BD Redis</option>
+                        <option>Serveur BD Elasticsearch</option>
+                    </optgroup>
+                    <optgroup label="Infrastructure">
+                        <option>Serveur DNS</option>
+                        <option>Serveur DHCP</option>
+                        <option>Serveur NTP</option>
+                        <option>Serveur LDAP / Active Directory</option>
+                        <option>Serveur VPN</option>
+                        <option>Serveur Firewall</option>
+                        <option>Serveur Backup</option>
+                        <option>Serveur NAS / SAN</option>
+                        <option>Serveur FTP / SFTP</option>
+                    </optgroup>
+                    <optgroup label="Communication">
+                        <option>Serveur Mail (SMTP/IMAP)</option>
+                        <option>Serveur de Messagerie</option>
+                        <option>Serveur VoIP</option>
+                        <option>Serveur XMPP</option>
+                    </optgroup>
+                    <optgroup label="Surveillance & DevOps">
+                        <option>Serveur de Monitoring</option>
+                        <option>Serveur CI/CD</option>
+                        <option>Serveur de Logs</option>
+                        <option>Serveur de Métriques</option>
+                        <option>Serveur Git</option>
+                    </optgroup>
+                    <optgroup label="Cloud & Virtualisation">
+                        <option>Hyperviseur (VMware)</option>
+                        <option>Hyperviseur (Proxmox)</option>
+                        <option>Conteneur Docker</option>
+                        <option>Cluster Kubernetes</option>
+                    </optgroup>
+                    <option>Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Adresse IP</label>
+                <input type="text" name="adresse_ip" placeholder="192.168.1.10">
+            </div>
+            <div class="form-group">
+                <label>Nom de domaine</label>
+                <input type="text" name="nom_domaine" placeholder="srv01.example.com">
+            </div>
+            <div class="form-group">
+                <label>Salle</label>
+                <select name="salle_id">
+                    <option value="">-- Aucune --</option>
+                    @foreach($salles as $salle)
+                    <option value="{{ $salle->id }}">{{ $salle->nom }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Responsable</label>
+                <input type="text" name="responsable" placeholder="Nom du responsable">
+            </div>
+            <div class="form-group">
+                <label>Localisation</label>
+                <input type="text" name="localisation" placeholder="Rack A, Baie 3">
+            </div>
+            <div class="form-group">
+                <label>Système d'exploitation</label>
+                <input type="text" name="os" placeholder="Ubuntu 22.04 LTS">
+            </div>
+            <div class="form-group">
+                <label>RAM</label>
+                <input type="text" name="ram" placeholder="32 Go DDR4">
+            </div>
+            <div class="form-group">
+                <label>CPU</label>
+                <input type="text" name="cpu" placeholder="Intel Xeon E5-2690">
+            </div>
+            <div class="form-group">
+                <label>Stockage</label>
+                <input type="text" name="stockage" placeholder="2 To SSD NVMe">
+            </div>
+            <div class="form-group">
+                <label>Statut</label>
+                <select name="statut">
+                    <option value="en_ligne">En ligne</option>
+                    <option value="hors_ligne">Hors ligne</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date d'installation</label>
+                <input type="date" name="date_installation">
+            </div>
+            <div class="form-group full-span">
+                <label>Notes</label>
+                <textarea name="notes" placeholder="Informations supplémentaires..."></textarea>
+            </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Type *</label>
-          <select class="form-control" name="type" required>
-            <option value="">-- Sélectionner --</option>
-            @foreach(['Serveur Web','Serveur Base de Données','Serveur DNS','Serveur DHCP','Serveur FTP','Serveur Mail','Serveur Proxy','Serveur Cloud','Serveur Virtualisation','Serveur IA','Serveur Backup','Serveur Monitoring','Serveur Linux','Serveur Windows','Serveur NAS','Serveur Applications','Serveur Streaming','Serveur Kubernetes','Serveur Docker','Serveur API','Serveur Sécurité','Serveur VPN','Serveur Active Directory','Serveur IoT','Serveur Apache','Serveur Nginx','Serveur MySQL','Serveur PostgreSQL','Serveur MongoDB','Serveur Oracle','Serveur Redis','Serveur Cassandra','Serveur GPU','Serveur HPC','Serveur ERP','Serveur Odoo','Serveur SAP'] as $t)
-            <option value="{{ $t }}">{{ $t }}</option>
-            @endforeach
-          </select>
+        <div class="form-actions">
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('addModal').classList.remove('open')">Annuler</button>
+            <button type="submit" class="btn btn-neon">Enregistrer</button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Adresse IP</label>
-          <input class="form-control" type="text" name="adresse_ip" placeholder="192.168.1.1">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nom de domaine</label>
-          <input class="form-control" type="text" name="nom_domaine" placeholder="srv.exemple.com">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Salle</label>
-          <select class="form-control" name="salle_id">
-            <option value="">-- Aucune --</option>
-            @foreach($salles as $sl)
-            <option value="{{ $sl->id }}">{{ $sl->code }} — {{ $sl->nom }}</option>
-            @endforeach
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Responsable</label>
-          <input class="form-control" type="text" name="responsable" placeholder="Nom du responsable">
-        </div>
-
-        <div class="section-label">Système & Matériel</div>
-        <div class="form-group">
-          <label class="form-label">Système d'exploitation</label>
-          <input class="form-control" type="text" name="systeme_exploitation" placeholder="Ubuntu, Windows Server...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Version OS</label>
-          <input class="form-control" type="text" name="version_os" placeholder="22.04 LTS, 2022...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">RAM</label>
-          <input class="form-control" type="text" name="ram" placeholder="16 Go, 64 Go...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">CPU</label>
-          <input class="form-control" type="text" name="cpu" placeholder="Intel Xeon E5-2690...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Stockage</label>
-          <input class="form-control" type="text" name="stockage" placeholder="1 To SSD, 4 To HDD...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Température (°C)</label>
-          <input class="form-control" type="number" step="0.1" name="temperature" placeholder="45.5">
-        </div>
-
-        <div class="section-label">Statut & Installation</div>
-        <div class="form-group">
-          <label class="form-label">Statut</label>
-          <select class="form-control" name="statut">
-            <option value="actif">Actif</option>
-            <option value="inactif">Inactif</option>
-            <option value="maintenance">En maintenance</option>
-            <option value="panne">En panne</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Date d'installation</label>
-          <input class="form-control" type="date" name="date_installation">
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Description</label>
-          <textarea class="form-control" name="description" rows="2" placeholder="Description du serveur..."></textarea>
-        </div>
-
-        <div class="section-label">Localisation & Réseau</div>
-        <div class="form-group">
-          <label class="form-label">Localisation physique</label>
-          <input class="form-control" type="text" name="localisation_physique" placeholder="Baie A, Rack 3...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Numéro de rack</label>
-          <input class="form-control" type="text" name="numero_rack" placeholder="Rack-01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Adresse MAC</label>
-          <input class="form-control" type="text" name="adresse_mac" placeholder="AA:BB:CC:DD:EE:FF">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Port réseau</label>
-          <input class="form-control" type="text" name="port_reseau" placeholder="Port 24, Switch-A">
-        </div>
-
-        <div class="section-label">Fournisseur & Énergie</div>
-        <div class="form-group">
-          <label class="form-label">Fournisseur</label>
-          <input class="form-control" type="text" name="fournisseur" placeholder="Dell, HP, Lenovo...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Numéro de série</label>
-          <input class="form-control" type="text" name="numero_serie" placeholder="SN-XXXXXXXX">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Type d'alimentation</label>
-          <input class="form-control" type="text" name="type_alimentation" placeholder="220V, Redondante...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Consommation (W)</label>
-          <input class="form-control" type="number" step="0.1" name="consommation_energetique" placeholder="350">
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="closeModal('modal-add')">Annuler</button>
-        <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
-      </div>
     </form>
-  </div>
+</div>
 </div>
 
-{{-- ══ MODAL ÉDITION ══ --}}
-<div class="modal-bg" id="modal-edit">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-edit')">&times;</button>
-    <h2><i class="fa-solid fa-pen" style="color:#2e86c1;"></i> Modifier le serveur</h2>
-    <form method="POST" id="edit-form" action="">
-      @csrf
-      <div class="form-grid">
-        <div class="section-label">Informations générales</div>
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input class="form-control" type="text" name="nom" id="e_nom" required>
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal">
+    <h3>&#9998; Modifier le Serveur <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">&#215;</button></h3>
+    <form method="POST" id="editForm" action="#">
+        @csrf
+        <div class="form-grid">
+            <div class="form-group span2">
+                <label>Nom du serveur *</label>
+                <input type="text" name="nom" id="e_nom" required>
+            </div>
+            <div class="form-group">
+                <label>Type *</label>
+                <input type="text" name="type" id="e_type" required>
+            </div>
+            <div class="form-group">
+                <label>Adresse IP</label>
+                <input type="text" name="adresse_ip" id="e_ip">
+            </div>
+            <div class="form-group">
+                <label>Nom de domaine</label>
+                <input type="text" name="nom_domaine" id="e_domaine">
+            </div>
+            <div class="form-group">
+                <label>Salle</label>
+                <select name="salle_id" id="e_salle">
+                    <option value="">-- Aucune --</option>
+                    @foreach($salles as $salle)
+                    <option value="{{ $salle->id }}">{{ $salle->nom }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Responsable</label>
+                <input type="text" name="responsable" id="e_resp">
+            </div>
+            <div class="form-group">
+                <label>Localisation</label>
+                <input type="text" name="localisation" id="e_loc">
+            </div>
+            <div class="form-group">
+                <label>OS</label>
+                <input type="text" name="os" id="e_os">
+            </div>
+            <div class="form-group">
+                <label>RAM</label>
+                <input type="text" name="ram" id="e_ram">
+            </div>
+            <div class="form-group">
+                <label>CPU</label>
+                <input type="text" name="cpu" id="e_cpu">
+            </div>
+            <div class="form-group">
+                <label>Stockage</label>
+                <input type="text" name="stockage" id="e_stockage">
+            </div>
+            <div class="form-group">
+                <label>Statut</label>
+                <select name="statut" id="e_statut">
+                    <option value="en_ligne">En ligne</option>
+                    <option value="hors_ligne">Hors ligne</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date d'installation</label>
+                <input type="date" name="date_installation" id="e_date">
+            </div>
+            <div class="form-group full-span">
+                <label>Notes</label>
+                <textarea name="notes" id="e_notes"></textarea>
+            </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Type *</label>
-          <select class="form-control" name="type" id="e_type" required>
-            <option value="">-- Sélectionner --</option>
-            @foreach(['Serveur Web','Serveur Base de Données','Serveur DNS','Serveur DHCP','Serveur FTP','Serveur Mail','Serveur Proxy','Serveur Cloud','Serveur Virtualisation','Serveur IA','Serveur Backup','Serveur Monitoring','Serveur Linux','Serveur Windows','Serveur NAS','Serveur Applications','Serveur Streaming','Serveur Kubernetes','Serveur Docker','Serveur API','Serveur Sécurité','Serveur VPN','Serveur Active Directory','Serveur IoT','Serveur Apache','Serveur Nginx','Serveur MySQL','Serveur PostgreSQL','Serveur MongoDB','Serveur Oracle','Serveur Redis','Serveur Cassandra','Serveur GPU','Serveur HPC','Serveur ERP','Serveur Odoo','Serveur SAP'] as $t)
-            <option value="{{ $t }}">{{ $t }}</option>
-            @endforeach
-          </select>
+        <div class="form-actions">
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('editModal').classList.remove('open')">Annuler</button>
+            <button type="submit" class="btn btn-neon">Mettre à jour</button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Adresse IP</label>
-          <input class="form-control" type="text" name="adresse_ip" id="e_adresse_ip">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nom de domaine</label>
-          <input class="form-control" type="text" name="nom_domaine" id="e_nom_domaine">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Salle</label>
-          <select class="form-control" name="salle_id" id="e_salle_id">
-            <option value="">-- Aucune --</option>
-            @foreach($salles as $sl)
-            <option value="{{ $sl->id }}">{{ $sl->code }} — {{ $sl->nom }}</option>
-            @endforeach
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Responsable</label>
-          <input class="form-control" type="text" name="responsable" id="e_responsable">
-        </div>
-
-        <div class="section-label">Système & Matériel</div>
-        <div class="form-group">
-          <label class="form-label">Système d'exploitation</label>
-          <input class="form-control" type="text" name="systeme_exploitation" id="e_systeme_exploitation">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Version OS</label>
-          <input class="form-control" type="text" name="version_os" id="e_version_os">
-        </div>
-        <div class="form-group">
-          <label class="form-label">RAM</label>
-          <input class="form-control" type="text" name="ram" id="e_ram">
-        </div>
-        <div class="form-group">
-          <label class="form-label">CPU</label>
-          <input class="form-control" type="text" name="cpu" id="e_cpu">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Stockage</label>
-          <input class="form-control" type="text" name="stockage" id="e_stockage">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Température (°C)</label>
-          <input class="form-control" type="number" step="0.1" name="temperature" id="e_temperature">
-        </div>
-
-        <div class="section-label">Statut & Installation</div>
-        <div class="form-group">
-          <label class="form-label">Statut</label>
-          <select class="form-control" name="statut" id="e_statut">
-            <option value="actif">Actif</option>
-            <option value="inactif">Inactif</option>
-            <option value="maintenance">En maintenance</option>
-            <option value="panne">En panne</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Date d'installation</label>
-          <input class="form-control" type="date" name="date_installation" id="e_date_installation">
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Description</label>
-          <textarea class="form-control" name="description" id="e_description" rows="2"></textarea>
-        </div>
-
-        <div class="section-label">Localisation & Réseau</div>
-        <div class="form-group">
-          <label class="form-label">Localisation physique</label>
-          <input class="form-control" type="text" name="localisation_physique" id="e_localisation_physique">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Numéro de rack</label>
-          <input class="form-control" type="text" name="numero_rack" id="e_numero_rack">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Adresse MAC</label>
-          <input class="form-control" type="text" name="adresse_mac" id="e_adresse_mac">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Port réseau</label>
-          <input class="form-control" type="text" name="port_reseau" id="e_port_reseau">
-        </div>
-
-        <div class="section-label">Fournisseur & Énergie</div>
-        <div class="form-group">
-          <label class="form-label">Fournisseur</label>
-          <input class="form-control" type="text" name="fournisseur" id="e_fournisseur">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Numéro de série</label>
-          <input class="form-control" type="text" name="numero_serie" id="e_numero_serie">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Type d'alimentation</label>
-          <input class="form-control" type="text" name="type_alimentation" id="e_type_alimentation">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Consommation (W)</label>
-          <input class="form-control" type="number" step="0.1" name="consommation_energetique" id="e_consommation_energetique">
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="closeModal('modal-edit')">Annuler</button>
-        <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Mettre à jour</button>
-      </div>
     </form>
-  </div>
+</div>
 </div>
 
 <script>
-function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function delServeur(btn, id) {
+    confirmDlg('Supprimer ce serveur ?','Ce serveur sera définitivement supprimé de l\'inventaire. Toutes ses données associées seront perdues. Cette action est irréversible.',{type:'danger',icon:'🖥️',confirmText:'Supprimer le serveur'}).then(function(ok) {
+        if (ok) { btnLoad(btn); document.getElementById('del-srv-'+id).submit(); }
+    });
+}
 
-// Fermer en cliquant sur le fond
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
-});
+function pingServer(btn, id) {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<span class="_spin-ico" style="width:11px;height:11px;border-width:1.5px"></span>';
+    btn.disabled = true;
+    fetch('/serveur/'+id+'/ping', {headers:{'Accept':'application/json'}})
+        .then(function(r){return r.json();})
+        .then(function(d) {
+            btn.innerHTML = orig;
+            btn.disabled = false;
+            if (d.reachable) {
+                btn.style.borderColor='#33ff88'; btn.style.color='#33ff88';
+                notify('✓ '+d.msg, 's', 4000);
+            } else {
+                btn.style.borderColor='#ff5733'; btn.style.color='#ff5733';
+                notify('✗ '+d.msg, 'e', 4000);
+            }
+            setTimeout(function(){btn.style.borderColor='';btn.style.color='';}, 6000);
+        })
+        .catch(function() {
+            btn.innerHTML = orig; btn.disabled = false;
+            notify('Erreur de connexion au serveur.', 'e');
+        });
+}
 
-function setVal(id, val){ var el=document.getElementById(id); if(el) el.value = val ?? ''; }
+function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('#serveursTable tbody tr').forEach(tr => {
+        tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
 
-function openEdit(s){
-  document.getElementById('edit-form').action = '/serveurs/update/' + s.id;
-  setVal('e_nom', s.nom);
-  setVal('e_type', s.type);
-  setVal('e_adresse_ip', s.adresse_ip);
-  setVal('e_nom_domaine', s.nom_domaine);
-  setVal('e_salle_id', s.salle_id);
-  setVal('e_responsable', s.responsable);
-  setVal('e_systeme_exploitation', s.systeme_exploitation);
-  setVal('e_version_os', s.version_os);
-  setVal('e_ram', s.ram);
-  setVal('e_cpu', s.cpu);
-  setVal('e_stockage', s.stockage);
-  setVal('e_temperature', s.temperature);
-  setVal('e_statut', s.statut);
-  setVal('e_date_installation', s.date_installation ? s.date_installation.substring(0,10) : '');
-  setVal('e_description', s.description);
-  setVal('e_localisation_physique', s.localisation_physique);
-  setVal('e_numero_rack', s.numero_rack);
-  setVal('e_adresse_mac', s.adresse_mac);
-  setVal('e_port_reseau', s.port_reseau);
-  setVal('e_fournisseur', s.fournisseur);
-  setVal('e_numero_serie', s.numero_serie);
-  setVal('e_type_alimentation', s.type_alimentation);
-  setVal('e_consommation_energetique', s.consommation_energetique);
-  openModal('modal-edit');
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+function setSel(id, val) {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value == val) { sel.selectedIndex = i; break; }
+    }
+}
+
+function openEdit(id, nom, type, ip, domaine, loc, salle_id, resp, os, ram, cpu, stockage, statut, date, notes) {
+    document.getElementById('editForm').action = '/serveurs/' + id;
+    setVal('e_nom', nom); setVal('e_type', type); setVal('e_ip', ip);
+    setVal('e_domaine', domaine); setVal('e_loc', loc);
+    setVal('e_resp', resp); setVal('e_os', os); setVal('e_ram', ram);
+    setVal('e_cpu', cpu); setVal('e_stockage', stockage);
+    setVal('e_date', date); setVal('e_notes', notes);
+    setSel('e_salle', salle_id); setSel('e_statut', statut);
+    document.getElementById('editModal').classList.add('open');
 }
 </script>
-
 @endsection

@@ -1,364 +1,459 @@
 @extends('layouts.app')
 
 @section('content')
-
 <style>
-@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.hist-wrap{animation:fadeIn .4s ease;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--card:#0e1a38;--border:#1e2f5a;}
+.pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.pg-title{font-size:22px;font-weight:700;color:var(--blue)}
+.btn{padding:8px 16px;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px;transition:.2s}
+.btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
+.btn-neon:hover{background:var(--neon);color:#000}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#000}
 
-/* ── Filtres ── */
-.filter-panel{
-  background:#0d1a2e;border:1px solid #182640;border-radius:16px;
-  padding:18px 20px;margin-bottom:18px;
-}
-.filter-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
-.filter-group{display:flex;flex-direction:column;gap:5px;flex:1 1 160px;}
-.filter-label{font-size:11px;font-weight:bold;color:#6b7fa0;letter-spacing:.5px;text-transform:uppercase;}
-.form-control{
-  background:#0a1525;border:1.5px solid #1e3050;border-radius:9px;
-  color:#d4dced;padding:9px 12px;font-size:13px;outline:none;transition:border-color .2s;
-}
-.form-control:focus{border-color:#2fa84f;}
-.form-control option{background:#0a1525;}
-.btn-filter{
-  background:#2fa84f;color:#060c1a;border:none;border-radius:9px;
-  padding:9px 18px;font-weight:bold;font-size:13px;cursor:pointer;transition:.2s;
-  display:inline-flex;align-items:center;gap:7px;
-}
-.btn-filter:hover{background:#249040;}
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px}
+.tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:#666;transition:.2s;white-space:nowrap}
+.tab:hover{color:#aaa;background:rgba(255,255,255,.04)}
+.tab.active{background:#1e2f5a;color:#fff}
+.tab.active.temp{color:var(--danger)}
+.tab.active.hum{color:var(--blue)}
+.tab.active.gaz{color:var(--warn)}
+.tab.active.cur{color:#ff9933}
+.tab.active.pwr{color:#cc88ff}
+.tab.active.alrt{color:var(--danger)}
 
-/* ── Onglets ── */
-.tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid #182640;}
-.tab{
-  padding:10px 20px;cursor:pointer;font-size:13px;font-weight:bold;
-  color:#6b7fa0;background:transparent;border:none;
-  border-bottom:2px solid transparent;margin-bottom:-2px;transition:.2s;
-}
-.tab.active{color:#2fa84f;border-bottom-color:#2fa84f;}
-.tab:hover{color:#d4dced;}
+/* filter bar */
+.filter-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px}
+.filter-group{display:flex;flex-direction:column;gap:5px}
+.filter-group label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.filter-group input,.filter-group select{background:#07102a;border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:#fff;font-size:12px;outline:none;transition:.2s}
+.filter-group input:focus,.filter-group select:focus{border-color:var(--blue)}
+.filter-group select option{background:#0e1a38}
 
-/* ── Toolbar ── */
-.toolbar{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:14px;flex-wrap:wrap;gap:10px;
-}
-.toolbar-right{display:flex;gap:8px;align-items:center;}
-.btn-sm{
-  padding:7px 14px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;transition:.2s;
-  display:inline-flex;align-items:center;gap:6px;border:1.5px solid;
-}
-.btn-refresh{background:transparent;color:#6b7fa0;border-color:#182640;}
-.btn-refresh:hover{color:#d4dced;border-color:#6b7fa0;}
-.btn-export-csv{background:rgba(47,168,79,.15);color:#2fa84f;border-color:#2fa84f;}
-.btn-export-csv:hover{background:#2fa84f;color:#060c1a;}
-.total-info{font-size:12px;color:#6b7fa0;}
+/* stats strip */
+.stats-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.stat-s{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
+.stat-s .v{font-size:22px;font-weight:800;margin-bottom:2px}
+.stat-s .l{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px}
+.stat-s.blue .v{color:var(--blue)}
+.stat-s.green .v{color:var(--neon)}
+.stat-s.warn  .v{color:var(--warn)}
+.stat-s.red   .v{color:var(--danger)}
+.stat-s.purple .v{color:#cc88ff}
 
-/* ── Table ── */
-.table-wrap{background:#0d1a2e;border:1px solid #182640;border-radius:16px;overflow:hidden;}
-.tbl{width:100%;border-collapse:collapse;font-size:13px;}
-.tbl th{
-  background:#091527;padding:12px 14px;text-align:left;
-  color:#6b7fa0;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
-  border-bottom:1px solid #182640;
+/* chart */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.chart-title{font-size:13px;font-weight:700;color:#fff}
+canvas{max-height:180px}
+
+/* table */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.table-toolbar .title{font-size:13px;font-weight:700;color:#fff}
+.search-box{background:#07102a;border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:#fff;font-size:12px;outline:none;width:200px}
+.search-box:focus{border-color:var(--blue)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#07102a}
+th{padding:9px 14px;text-align:left;font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:9px 14px;border-top:1px solid var(--border);font-size:12px;color:#ccc}
+tr:hover td{background:rgba(51,181,255,.03)}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.badge-warning{background:rgba(255,214,51,.1);color:var(--warn);border:1px solid rgba(255,214,51,.3)}
+.badge-critique{background:rgba(255,87,51,.1);color:var(--danger);border:1px solid rgba(255,87,51,.3)}
+.no-data{text-align:center;padding:40px;color:#555;font-size:12px}
+.loading{text-align:center;padding:40px;color:var(--blue);font-size:12px}
+
+/* pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;padding:14px;border-top:1px solid var(--border)}
+.page-btn{background:#07102a;border:1px solid var(--border);border-radius:6px;color:#aaa;padding:5px 12px;cursor:pointer;font-size:12px}
+.page-btn:hover{border-color:var(--blue);color:#fff}
+.page-btn.active{background:var(--blue);color:#000;border-color:var(--blue)}
+.page-info{font-size:12px;color:#555}
+
+@media(max-width:768px){
+.stats-strip{grid-template-columns:repeat(3,1fr)}
+.filter-bar{flex-direction:column}
+table{display:block;overflow-x:auto}
 }
-.tbl td{padding:11px 14px;border-bottom:1px solid rgba(24,38,64,.6);color:#d4dced;vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tbody tr:hover td{background:rgba(47,168,79,.03);}
-.loading-cell{text-align:center;padding:40px;color:#6b7fa0;}
-
-.val-temp{color:#ff5733;font-weight:bold;}
-.val-hum{color:#33b5ff;font-weight:bold;}
-.val-gaz{color:#ffd633;font-weight:bold;}
-.val-cur{color:#33ff88;font-weight:bold;}
-.val-pwr{color:#bb66ff;font-weight:bold;}
-
-.badge-crit{background:#3d0000;color:#ef4444;border:1px solid rgba(239,68,68,.4);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold;}
-.badge-warn{background:#3d2800;color:#f59e0b;border:1px solid rgba(245,158,11,.4);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold;}
-.badge-ok{color:#6b7fa0;}
-.badge-sent{background:rgba(47,168,79,.15);border:1px solid #2fa84f;color:#2fa84f;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:bold;}
-.badge-fail{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:bold;}
-
-/* ── Pagination ── */
-.pagination{display:flex;justify-content:center;gap:8px;padding:16px;flex-wrap:wrap;}
-.page-btn{
-  padding:6px 14px;border-radius:6px;border:1px solid #182640;
-  background:#091527;color:#6b7fa0;cursor:pointer;font-size:13px;transition:.2s;
-}
-.page-btn:hover,.page-btn.active{background:#182640;color:white;border-color:#2fa84f;}
-.page-btn:disabled{opacity:.4;cursor:not-allowed;}
 </style>
 
-<div class="hist-wrap">
-
-{{-- Filtres --}}
-<div class="filter-panel">
-  <div class="filter-row">
-    <div class="filter-group">
-      <label class="filter-label">Catégorie</label>
-      <select class="form-control" id="f_categorie" onchange="switchTab(this.value)">
-        <option value="capteurs">Capteurs</option>
-        <option value="alertes">Alertes</option>
-        <option value="sms">SMS</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label class="filter-label">Date début</label>
-      <input class="form-control" type="date" id="f_debut">
-    </div>
-    <div class="filter-group">
-      <label class="filter-label">Date fin</label>
-      <input class="form-control" type="date" id="f_fin">
-    </div>
-    <div class="filter-group">
-      <label class="filter-label">Par page</label>
-      <select class="form-control" id="f_limit">
-        <option value="25">25</option>
-        <option value="50" selected>50</option>
-        <option value="100">100</option>
-      </select>
-    </div>
-    <button class="btn-filter" onclick="charger(1)">
-      <i class="fa-solid fa-magnifying-glass"></i> Filtrer
-    </button>
-  </div>
+<div class="pg-header">
+    <div class="pg-title">Historique</div>
+    <div style="font-size:12px;color:#555" id="histTimestamp">—</div>
 </div>
 
-{{-- Onglets --}}
+<!-- Tabs -->
 <div class="tabs">
-  <button class="tab active" id="tab-capteurs" onclick="switchTab('capteurs')">
-    <i class="fa-solid fa-microchip"></i> Capteurs
-  </button>
-  <button class="tab" id="tab-alertes" onclick="switchTab('alertes')">
-    <i class="fa-solid fa-bell"></i> Alertes
-  </button>
-  <button class="tab" id="tab-sms" onclick="switchTab('sms')">
-    <i class="fa-solid fa-comment-sms"></i> SMS
-  </button>
+    <div class="tab active" data-tab="all"     onclick="switchTab(this,'all')">Toutes mesures</div>
+    <div class="tab" data-tab="alertes" onclick="switchTab(this,'alertes')">Alertes</div>
+    <div class="tab" data-tab="temperature" onclick="switchTab(this,'temperature')">Température</div>
+    <div class="tab" data-tab="humidite"    onclick="switchTab(this,'humidite')">Humidité</div>
+    <div class="tab" data-tab="gaz"         onclick="switchTab(this,'gaz')">Gaz</div>
+    <div class="tab" data-tab="courant"     onclick="switchTab(this,'courant')">Courant</div>
+    <div class="tab" data-tab="puissance"   onclick="switchTab(this,'puissance')">Puissance</div>
 </div>
 
-{{-- Toolbar --}}
-<div class="toolbar">
-  <span class="total-info" id="total-info">Chargement...</span>
-  <div class="toolbar-right">
-    <button class="btn-sm btn-refresh" onclick="charger(pageCourante)">
-      <i class="fa-solid fa-rotate"></i> Actualiser
-    </button>
-    <button class="btn-sm btn-export-csv" onclick="exportCSV()">
-      <i class="fa-solid fa-file-csv"></i> Export CSV
-    </button>
+<!-- Filter bar -->
+<div class="filter-bar">
+    <div class="filter-group">
+        <label>Date début</label>
+        <input type="date" id="hDebut" value="{{ now()->subDays(7)->toDateString() }}" onchange="loadHistory()">
+    </div>
+    <div class="filter-group">
+        <label>Date fin</label>
+        <input type="date" id="hFin" value="{{ now()->toDateString() }}" onchange="loadHistory()">
+    </div>
+    <div class="filter-group">
+        <label>Période rapide</label>
+        <select onchange="hApplyPeriod(this.value)">
+            <option value="">Personnalisée</option>
+            <option value="1">Aujourd'hui</option>
+            <option value="7" selected>7 jours</option>
+            <option value="30">30 jours</option>
+            <option value="90">3 mois</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Salle</label>
+        <select id="hSalle" onchange="loadHistory()">
+            <option value="">Toutes</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Limite</label>
+        <select id="hLimit" onchange="loadHistory()">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000">1 000</option>
+        </select>
+    </div>
+    <div class="filter-group" id="niveauGroup" style="display:none">
+        <label>Niveau</label>
+        <select id="hNiveau" onchange="loadHistory()">
+            <option value="">Tous</option>
+            <option value="warning">Warning</option>
+            <option value="critique">Critique</option>
+        </select>
+    </div>
+    <!-- Sensor range filters — shown per tab -->
+    <div class="filter-group" id="rangeGroup" style="display:none">
+        <label id="rangeLabel">Plage</label>
+        <div style="display:flex;gap:5px;align-items:center">
+            <input type="number" id="hRangeMin" placeholder="Min" step="any" style="width:68px" onchange="loadHistory()">
+            <span style="color:#555;font-size:11px">–</span>
+            <input type="number" id="hRangeMax" placeholder="Max" step="any" style="width:68px" onchange="loadHistory()">
+        </div>
+    </div>
+    <button class="btn btn-blue" onclick="loadHistory()">&#8635; Filtrer</button>
+</div>
+
+<!-- Export formats -->
+<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px">
+  <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:12px">&#8595; Exporter l'historique</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px">
+    <div onclick="exportHistory('csv')"   title="Tableur universel" style="background:#07102a;border:1px solid rgba(51,255,136,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,255,136,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128202;</div><div style="font-size:10px;font-weight:700;color:var(--neon)">CSV</div><div style="font-size:9px;color:#555">Tableur</div>
+    </div>
+    <div onclick="exportHistory('json')"  title="JSON API" style="background:#07102a;border:1px solid rgba(51,181,255,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,181,255,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#123;&#125;</div><div style="font-size:10px;font-weight:700;color:var(--blue)">JSON</div><div style="font-size:9px;color:#555">API</div>
+    </div>
+    <div onclick="exportHistory('xml')"   title="XML" style="background:#07102a;border:1px solid rgba(255,214,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,214,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#60;/&#62;</div><div style="font-size:10px;font-weight:700;color:var(--warn)">XML</div><div style="font-size:9px;color:#555">Échange</div>
+    </div>
+    <div onclick="exportHistory('xlsx')"  title="Excel 2007+" style="background:#07102a;border:1px solid rgba(51,255,136,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,255,136,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128202;</div><div style="font-size:10px;font-weight:700;color:#00cc66">XLSX</div><div style="font-size:9px;color:#555">Excel</div>
+    </div>
+    <div onclick="exportHistory('txt')"   title="Texte brut" style="background:#07102a;border:1px solid rgba(170,170,170,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(170,170,170,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128220;</div><div style="font-size:10px;font-weight:700;color:#aaa">TXT</div><div style="font-size:9px;color:#555">Brut</div>
+    </div>
+    <div onclick="exportHistory('sql')"   title="SQL INSERT" style="background:#07102a;border:1px solid rgba(255,153,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,153,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128190;</div><div style="font-size:10px;font-weight:700;color:#ff9933">SQL</div><div style="font-size:9px;color:#555">INSERT</div>
+    </div>
+    <div onclick="exportHistory('docx')"  title="Document Word" style="background:#07102a;border:1px solid rgba(51,181,255,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(51,181,255,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128196;</div><div style="font-size:10px;font-weight:700;color:var(--blue)">DOCX</div><div style="font-size:9px;color:#555">Word</div>
+    </div>
+    <div onclick="exportHistory('zip')"   title="Archive tous formats" style="background:#07102a;border:1px solid rgba(255,214,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,214,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128230;</div><div style="font-size:10px;font-weight:700;color:var(--warn)">ZIP</div><div style="font-size:9px;color:#555">Archive</div>
+    </div>
+    <div onclick="window.open('/rapports/print?type='+(currentTab==='alertes'?'alertes':'mesures')+'&debut='+document.getElementById('hDebut').value+'&fin='+document.getElementById('hFin').value,'_blank')" title="Imprimer / PDF" style="background:#07102a;border:1px solid rgba(255,87,51,.3);border-radius:9px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" onmouseover="this.style.background='rgba(255,87,51,.07)'" onmouseout="this.style.background='#07102a'">
+      <div style="font-size:18px">&#128438;</div><div style="font-size:10px;font-weight:700;color:var(--danger)">PDF</div><div style="font-size:9px;color:#555">Imprimer</div>
+    </div>
   </div>
 </div>
 
-{{-- Table capteurs --}}
-<div id="table-capteurs" class="table-wrap">
-  <table class="tbl">
-    <thead>
-      <tr>
-        <th>#</th><th>Date & Heure</th><th>Temp °C</th>
-        <th>Humidité %</th><th>Gaz ppm</th>
-        <th>Courant A</th><th>Puissance W</th><th>PIR</th><th>Niveau</th>
-      </tr>
-    </thead>
-    <tbody id="body-capteurs">
-      <tr><td colspan="9" class="loading-cell">Chargement...</td></tr>
-    </tbody>
-  </table>
+<!-- Stats strip -->
+<div class="stats-strip">
+    <div class="stat-s blue"><div class="v" id="hTotal">—</div><div class="l">Total</div></div>
+    <div class="stat-s green"><div class="v" id="hMin">—</div><div class="l">Min</div></div>
+    <div class="stat-s warn"><div class="v" id="hMax">—</div><div class="l">Max</div></div>
+    <div class="stat-s purple"><div class="v" id="hAvg">—</div><div class="l">Moyenne</div></div>
+    <div class="stat-s red"><div class="v" id="hAlerts">—</div><div class="l">Alertes</div></div>
 </div>
 
-{{-- Table alertes --}}
-<div id="table-alertes" class="table-wrap" style="display:none;">
-  <table class="tbl">
-    <thead>
-      <tr><th>#</th><th>Date & Heure</th><th>Type</th><th>Message</th><th>Niveau</th></tr>
-    </thead>
-    <tbody id="body-alertes">
-      <tr><td colspan="5" class="loading-cell">Cliquer sur "Alertes" pour charger</td></tr>
-    </tbody>
-  </table>
+<!-- Chart -->
+<div class="chart-card">
+    <div class="chart-header">
+        <div class="chart-title" id="chartTitle">Évolution</div>
+        <div style="font-size:11px;color:#555" id="chartMeta">—</div>
+    </div>
+    <canvas id="histChart"></canvas>
 </div>
 
-{{-- Table SMS --}}
-<div id="table-sms" class="table-wrap" style="display:none;">
-  <table class="tbl">
-    <thead>
-      <tr><th>#</th><th>Date & Heure</th><th>Destinataire</th><th>Message</th><th>Type</th><th>Statut</th></tr>
-    </thead>
-    <tbody id="body-sms">
-      <tr><td colspan="6" class="loading-cell">Cliquer sur "SMS" pour charger</td></tr>
-    </tbody>
-  </table>
+<!-- Table -->
+<div class="table-card">
+    <div class="table-toolbar">
+        <div class="title" id="tableTitle">Historique</div>
+        <input type="text" class="search-box" id="histSearch" placeholder="Rechercher..." oninput="filterTable()">
+    </div>
+    <div id="histTableWrapper">
+        <div class="loading">Chargement...</div>
+    </div>
+    <div class="pagination" id="paginationBar" style="display:none">
+        <button class="page-btn" id="prevBtn" onclick="changePage(-1)">&#8592; Préc.</button>
+        <span class="page-info" id="pageInfo">Page 1</span>
+        <button class="page-btn" id="nextBtn" onclick="changePage(1)">Suiv. &#8594;</button>
+    </div>
 </div>
 
-<div class="pagination" id="pagination"></div>
-
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-let pageCourante = 1;
-let ongletActif  = 'capteurs';
-let dernierData  = [];
+let currentTab = 'all';
+let allRows = [];
+let currentPage = 1;
+const perPage = 25;
+let histChart = null;
 
-const SEUILS = {
-  temp:{warn:30,crit:40}, hum:{warn:70,crit:80},
-  gaz:{warn:300,crit:500}, cur:{warn:10,crit:15},
-};
+const tabStyles = {temperature:'temp',humidite:'hum',gaz:'gaz',courant:'cur',puissance:'pwr',alertes:'alrt'};
+const rangeLabels = {temperature:'Température (°C)',humidite:'Humidité (%)',gaz:'Gaz (ppm)',courant:'Courant (A)',puissance:'Puissance (W)'};
+const rangeSteps  = {temperature:0.1,humidite:0.1,gaz:1,courant:0.1,puissance:1};
 
-function niveauRow(m){
-  if(m.temperature>=SEUILS.temp.crit||m.gaz>=SEUILS.gaz.crit||m.courant>=SEUILS.cur.crit||m.pir_detecte) return 'CRITIQUE';
-  if(m.temperature>=SEUILS.temp.warn||m.gaz>=SEUILS.gaz.warn||m.courant>=SEUILS.cur.warn) return 'AVERTISSEMENT';
-  return '';
+function switchTab(el, tab) {
+    document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
+    el.classList.add('active');
+    if (tabStyles[tab]) el.classList.add(tabStyles[tab]);
+    currentTab = tab;
+    document.getElementById('niveauGroup').style.display = tab === 'alertes' ? '' : 'none';
+    // Show sensor range filter for sensor-specific tabs
+    const rangeGroup = document.getElementById('rangeGroup');
+    if (rangeLabels[tab]) {
+        rangeGroup.style.display = '';
+        document.getElementById('rangeLabel').textContent = rangeLabels[tab];
+        document.getElementById('hRangeMin').step = rangeSteps[tab] || 1;
+        document.getElementById('hRangeMax').step = rangeSteps[tab] || 1;
+        document.getElementById('hRangeMin').value = '';
+        document.getElementById('hRangeMax').value = '';
+    } else {
+        rangeGroup.style.display = 'none';
+    }
+    loadHistory();
 }
 
-function switchTab(tab){
-  ongletActif = tab;
-  document.getElementById('f_categorie').value = tab;
-  ['capteurs','alertes','sms'].forEach(t=>{
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
-    document.getElementById('table-'+t).style.display = t===tab ? '' : 'none';
-  });
-  pageCourante = 1;
-  charger(1);
+function hApplyPeriod(days) {
+    if (!days) return;
+    const end = new Date(), start = new Date();
+    start.setDate(start.getDate() - parseInt(days) + 1);
+    document.getElementById('hDebut').value = start.toISOString().split('T')[0];
+    document.getElementById('hFin').value   = end.toISOString().split('T')[0];
+    loadHistory();
 }
 
-async function charger(page){
-  pageCourante = page;
-  const limit  = document.getElementById('f_limit').value;
-  const debut  = document.getElementById('f_debut').value;
-  const fin    = document.getElementById('f_fin').value;
-  const info   = document.getElementById('total-info');
-  const pag    = document.getElementById('pagination');
-  info.textContent = 'Chargement...';
-  pag.innerHTML = '';
+function loadHistory() {
+    const debut   = document.getElementById('hDebut').value;
+    const fin     = document.getElementById('hFin').value;
+    const limit   = document.getElementById('hLimit').value;
+    const niveau  = document.getElementById('hNiveau')?.value || '';
+    const salleId = document.getElementById('hSalle')?.value || '';
+    const rMin    = document.getElementById('hRangeMin')?.value || '';
+    const rMax    = document.getElementById('hRangeMax')?.value || '';
+    document.getElementById('histTimestamp').textContent = new Date().toLocaleString('fr-FR');
+    document.getElementById('histTableWrapper').innerHTML = '<div class="loading">Chargement...</div>';
+    currentPage = 1;
 
-  if(ongletActif === 'capteurs'){
-    const tbody = document.getElementById('body-capteurs');
-    tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">Chargement...</td></tr>';
-    try {
-      let url = `/api/historique?page=${page}&limit=${limit}`;
-      if(debut) url += '&debut=' + debut;
-      if(fin)   url += '&fin='   + fin;
-      const r = await fetch(url);
-      const j = await r.json();
-      dernierData = j.data || [];
-      info.textContent = `Total : ${(j.total||0).toLocaleString('fr-FR')} mesures — Page ${j.page||1}/${j.last_page||1}`;
-      if(!dernierData.length){
-        tbody.innerHTML='<tr><td colspan="9" class="loading-cell">Aucune donnée</td></tr>';
-        return;
-      }
-      tbody.innerHTML = dernierData.map(m=>{
-        const niv = niveauRow(m);
-        const badge = niv==='CRITIQUE'?'<span class="badge-crit">CRIT</span>':niv==='AVERTISSEMENT'?'<span class="badge-warn">WARN</span>':'<span class="badge-ok">OK</span>';
-        const dt = m.created_at ? new Date(m.created_at).toLocaleString('fr-FR') : '—';
-        return `<tr>
-          <td style="color:#6b7fa0">${m.id}</td>
-          <td style="font-size:12px">${dt}</td>
-          <td class="val-temp">${parseFloat(m.temperature||0).toFixed(1)}</td>
-          <td class="val-hum">${parseFloat(m.humidite||0).toFixed(1)}</td>
-          <td class="val-gaz">${Math.round(m.gaz||0)}</td>
-          <td class="val-cur">${parseFloat(m.courant||0).toFixed(2)}</td>
-          <td class="val-pwr">${Math.round(m.puissance||0)}</td>
-          <td style="color:${m.pir_detecte?'#ef4444':'#6b7fa0'}">${m.pir_detecte?'OUI':'—'}</td>
-          <td>${badge}</td>
-        </tr>`;
-      }).join('');
-      buildPagination(j.page||1, j.last_page||1);
-    } catch(e){
-      tbody.innerHTML='<tr><td colspan="9" class="loading-cell" style="color:#e74c3c">Erreur</td></tr>';
+    const type = currentTab === 'alertes' ? 'alertes' : 'mesures';
+    let url = `/api/historique-data?type=${type}&debut=${debut}&fin=${fin}&niveau=${niveau}&limit=${limit}&salle_id=${salleId}`;
+    // Append sensor range param for active tab
+    const rangeParamMap = {temperature:['temp_min','temp_max'],humidite:['hum_min','hum_max'],gaz:['gaz_min','gaz_max'],courant:['courant_min','courant_max'],puissance:['pwr_min','pwr_max']};
+    if (rangeParamMap[currentTab]) {
+        const [minKey, maxKey] = rangeParamMap[currentTab];
+        if (rMin !== '') url += `&${minKey}=${rMin}`;
+        if (rMax !== '') url += `&${maxKey}=${rMax}`;
     }
 
-  } else if(ongletActif === 'alertes'){
-    const tbody = document.getElementById('body-alertes');
-    tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Chargement...</td></tr>';
-    try {
-      const r = await fetch('/api/alertes/recent');
-      const alertes = await r.json();
-      dernierData = Array.isArray(alertes) ? alertes : [];
-      info.textContent = `Total : ${dernierData.length} alertes`;
-      if(!dernierData.length){
-        tbody.innerHTML='<tr><td colspan="5" class="loading-cell">Aucune alerte</td></tr>';
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            allRows = Array.isArray(data) ? data : (data.data || []);
+            document.getElementById('hTotal').textContent = allRows.length;
+            updateStats();
+            renderChart();
+            renderTable();
+        })
+        .catch(() => {
+            document.getElementById('histTableWrapper').innerHTML = '<div class="no-data">Erreur de chargement.</div>';
+        });
+}
+
+function getColForTab() {
+    const map = {temperature:'temperature',humidite:'humidite',gaz:'gaz',courant:'courant',puissance:'puissance'};
+    return map[currentTab] || null;
+}
+
+function getFilteredRows() {
+    const col = getColForTab();
+    if (!col || currentTab === 'all' || currentTab === 'alertes') return allRows;
+    return allRows.filter(r => r[col] != null);
+}
+
+function updateStats() {
+    const col = getColForTab();
+    const rows = getFilteredRows();
+    if (col && rows.length) {
+        const vals = rows.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+        document.getElementById('hMin').textContent = vals.length ? Math.min(...vals).toFixed(1) : '—';
+        document.getElementById('hMax').textContent = vals.length ? Math.max(...vals).toFixed(1) : '—';
+        document.getElementById('hAvg').textContent = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '—';
+    } else {
+        document.getElementById('hMin').textContent = '—';
+        document.getElementById('hMax').textContent = '—';
+        document.getElementById('hAvg').textContent = '—';
+    }
+    if (currentTab === 'alertes') {
+        document.getElementById('hAlerts').textContent = allRows.filter(r => r.niveau === 'critique').length;
+    } else {
+        const warn = allRows.filter(r => r.temperature > 35 || r.humidite > 75 || r.gaz > 300).length;
+        document.getElementById('hAlerts').textContent = warn;
+    }
+}
+
+function renderChart() {
+    const canvas = document.getElementById('histChart');
+    if (histChart) { histChart.destroy(); histChart = null; }
+    const col = getColForTab();
+    const rows = getFilteredRows().filter((_, i) => i % Math.max(1, Math.floor(allRows.length/60)) === 0).reverse();
+    const labels = rows.map(r => {
+        const d = new Date(r.created_at);
+        return d.toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    });
+
+    let datasets = [];
+    const colorMap = {temperature:'#ff5733',humidite:'#33b5ff',gaz:'#ffd633',courant:'#ff9933',puissance:'#cc88ff'};
+
+    if (col) {
+        datasets = [{ label: col, data: rows.map(r => r[col]), borderColor: colorMap[col]||'#33ff88', backgroundColor: 'rgba(51,255,136,.05)', tension:.4, pointRadius:0 }];
+        document.getElementById('chartTitle').textContent = col.charAt(0).toUpperCase() + col.slice(1) + ' sur la période';
+    } else if (currentTab === 'alertes') {
+        const byDay = {};
+        allRows.forEach(r => {
+            const d = (r.created_at||'').split('T')[0]||(r.created_at||'').split(' ')[0];
+            if (!byDay[d]) byDay[d] = {warning:0,critique:0};
+            (byDay[d][r.niveau] = (byDay[d][r.niveau]||0)+1);
+        });
+        const days = Object.keys(byDay).sort();
+        datasets = [
+            {label:'Warning', data:days.map(d=>byDay[d].warning),  backgroundColor:'rgba(255,214,51,.5)'},
+            {label:'Critique',data:days.map(d=>byDay[d].critique),backgroundColor:'rgba(255,87,51,.5)'},
+        ];
+        const newLabels = days;
+        histChart = new Chart(canvas.getContext('2d'), { type:'bar', data:{labels:newLabels, datasets},
+            options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#aaa',font:{size:11}}}},scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}}}}
+        });
+        document.getElementById('chartTitle').textContent = 'Alertes par jour';
+        document.getElementById('chartMeta').textContent = allRows.length + ' alertes';
         return;
-      }
-      tbody.innerHTML = dernierData.slice(0,parseInt(limit)).map((a,i)=>{
-        const dt = a.created_at ? new Date(a.created_at).toLocaleString('fr-FR') : '—';
-        const niv = a.niveau||a.type_alerte||'info';
-        const badge = niv==='critique'?'<span class="badge-crit">CRITIQUE</span>':niv==='avertissement'?'<span class="badge-warn">WARN</span>':'<span style="color:#6b7fa0">INFO</span>';
-        return `<tr>
-          <td style="color:#6b7fa0">${a.id||i+1}</td>
-          <td style="font-size:12px">${dt}</td>
-          <td style="color:#4a9fc4">${a.type||a.capteur||'—'}</td>
-          <td>${a.message||a.valeur||'—'}</td>
-          <td>${badge}</td>
-        </tr>`;
-      }).join('');
-    } catch(e){
-      tbody.innerHTML='<tr><td colspan="5" class="loading-cell" style="color:#e74c3c">Données indisponibles</td></tr>';
+    } else {
+        datasets = [
+            {label:'Temp (°C)',data:rows.map(r=>r.temperature),borderColor:'#ff5733',tension:.4,pointRadius:0},
+            {label:'Hum (%)',  data:rows.map(r=>r.humidite),   borderColor:'#33b5ff',tension:.4,pointRadius:0},
+        ];
+        document.getElementById('chartTitle').textContent = 'Température & Humidité';
     }
 
-  } else if(ongletActif === 'sms'){
-    const tbody = document.getElementById('body-sms');
-    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Chargement...</td></tr>';
-    try {
-      const r = await fetch('/api/sms/log');
-      const d = await r.json();
-      dernierData = Array.isArray(d) ? d : (d.data||[]);
-      info.textContent = `Total : ${dernierData.length} SMS`;
-      if(!dernierData.length){
-        tbody.innerHTML='<tr><td colspan="6" class="loading-cell">Aucun SMS</td></tr>';
-        return;
-      }
-      tbody.innerHTML = dernierData.slice(0,parseInt(limit)).map((s,i)=>{
-        const dt = s.created_at ? new Date(s.created_at).toLocaleString('fr-FR') : '—';
-        const st = s.statut||s.status||'';
-        const badge = st==='envoye'||st==='sent'?'<span class="badge-sent">ENVOYÉ</span>':st==='echec'||st==='failed'?'<span class="badge-fail">ECHEC</span>':'<span style="color:#6b7fa0">—</span>';
-        return `<tr>
-          <td style="color:#6b7fa0">${i+1}</td>
-          <td style="font-size:12px">${dt}</td>
-          <td style="color:#4a9fc4">${s.destinataire||s.numero||'—'}</td>
-          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.message||'—'}</td>
-          <td style="color:#6b7fa0;font-size:12px">${s.type||'manuel'}</td>
-          <td>${badge}</td>
-        </tr>`;
-      }).join('');
-    } catch(e){
-      tbody.innerHTML='<tr><td colspan="6" class="loading-cell" style="color:#e74c3c">Données indisponibles</td></tr>';
+    histChart = new Chart(canvas.getContext('2d'), { type:'line', data:{labels,datasets},
+        options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#aaa',font:{size:11}}}},scales:{x:{ticks:{color:'#555',maxTicksLimit:10,font:{size:10}},grid:{color:'#1e2f5a'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}}}}
+    });
+    document.getElementById('chartMeta').textContent = rows.length + ' points';
+}
+
+function renderTable() {
+    const filtered = getFilteredRows();
+    const start = (currentPage-1)*perPage;
+    const page  = filtered.slice(start, start+perPage);
+    const total = filtered.length;
+    const pages = Math.ceil(total/perPage);
+
+    document.getElementById('pageInfo').textContent = `Page ${currentPage}/${pages} (${total} entrées)`;
+    document.getElementById('paginationBar').style.display = total > perPage ? 'flex' : 'none';
+    document.getElementById('prevBtn').disabled = currentPage === 1;
+    document.getElementById('nextBtn').disabled = currentPage >= pages;
+
+    if (!page.length) { document.getElementById('histTableWrapper').innerHTML = '<div class="no-data">Aucune donnée sur cette période.</div>'; return; }
+
+    let html = '<div style="overflow-x:auto"><table id="histTable"><thead><tr>';
+    if (currentTab === 'alertes') {
+        html += '<th>Date</th><th>Message</th><th>Niveau</th><th>Valeur</th><th>Lu</th>';
+    } else {
+        html += '<th>Date</th><th>Temp °C</th><th>Hum %</th><th>Gaz ppm</th><th>Courant A</th><th>Puissance W</th><th>Tension V</th><th>PIR</th>';
     }
-  }
+    html += '</tr></thead><tbody>';
+    page.forEach(r => {
+        const t = new Date(r.created_at).toLocaleString('fr-FR');
+        if (currentTab === 'alertes') {
+            html += `<tr><td style="color:#555;font-size:11px">${t}</td><td>${r.message||'—'}</td><td><span class="badge badge-${r.niveau}">${r.niveau||'—'}</span></td><td style="color:var(--warn)">${r.valeur??'—'}</td><td style="color:${r.lu?'var(--neon)':'#555'}">${r.lu?'✓':'○'}</td></tr>`;
+        } else {
+            html += `<tr>
+                <td style="color:#555;font-size:11px">${t}</td>
+                <td style="color:${r.temperature>40?'var(--danger)':r.temperature>35?'var(--warn)':'var(--neon)'}">${r.temperature??'—'}</td>
+                <td style="color:${r.humidite>85?'var(--danger)':r.humidite>75?'var(--warn)':'var(--blue)'}">${r.humidite??'—'}</td>
+                <td style="color:${r.gaz>500?'var(--danger)':r.gaz>300?'var(--warn)':'#ccc'}">${r.gaz??'—'}</td>
+                <td>${r.courant??'—'}</td><td>${r.puissance??'—'}</td><td>${r.tension??'—'}</td>
+                <td style="color:${r.pir?'var(--danger)':'var(--neon)'}">${r.pir?'OUI':'NON'}</td>
+            </tr>`;
+        }
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('histTableWrapper').innerHTML = html;
+    document.getElementById('tableTitle').textContent = `Historique — ${total} entrées`;
 }
 
-function buildPagination(current, last){
-  const pag = document.getElementById('pagination');
-  if(last<=1){ pag.innerHTML=''; return; }
-  const pages = [];
-  pages.push(`<button class="page-btn" onclick="charger(${Math.max(1,current-1)})" ${current===1?'disabled':''}>← Préc</button>`);
-  let s=Math.max(1,current-2), e=Math.min(last,current+2);
-  if(s>1) pages.push('<span style="color:#6b7fa0;padding:0 4px">…</span>');
-  for(let p=s;p<=e;p++) pages.push(`<button class="page-btn ${p===current?'active':''}" onclick="charger(${p})">${p}</button>`);
-  if(e<last) pages.push('<span style="color:#6b7fa0;padding:0 4px">…</span>');
-  pages.push(`<button class="page-btn" onclick="charger(${Math.min(last,current+1)})" ${current===last?'disabled':''}>Suiv →</button>`);
-  pag.innerHTML = pages.join('');
+function changePage(dir) {
+    const filtered = getFilteredRows();
+    const pages = Math.ceil(filtered.length/perPage);
+    currentPage = Math.max(1, Math.min(pages, currentPage+dir));
+    renderTable();
 }
 
-function exportCSV(){
-  if(!dernierData.length){ alert('Aucune donnée à exporter'); return; }
-  let headers, rows;
-  if(ongletActif==='capteurs'){
-    headers=['ID','Date','Temp_C','Humidite_pct','Gaz_ppm','Courant_A','Puissance_W','PIR'];
-    rows=dernierData.map(m=>[m.id,m.created_at,m.temperature,m.humidite,m.gaz,m.courant,m.puissance,m.pir_detecte?'OUI':'NON'].join(','));
-  } else if(ongletActif==='alertes'){
-    headers=['ID','Date','Type','Message','Niveau'];
-    rows=dernierData.map(a=>[a.id||'',a.created_at,a.type||'','"'+(a.message||'')+'"',a.niveau||''].join(','));
-  } else {
-    headers=['Date','Destinataire','Message','Type','Statut'];
-    rows=dernierData.map(s=>[s.created_at,s.destinataire||s.numero||'','"'+(s.message||'')+'"',s.type||'',s.statut||''].join(','));
-  }
-  const csv=[headers.join(','),...rows].join('\n');
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=`historique_${ongletActif}_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+function filterTable() {
+    const q = document.getElementById('histSearch').value.toLowerCase();
+    document.querySelectorAll('#histTable tbody tr').forEach(tr => {
+        tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+    });
 }
 
-charger(1);
+function exportHistory(format) {
+    format = format || 'csv';
+    const debut   = document.getElementById('hDebut').value;
+    const fin     = document.getElementById('hFin').value;
+    const salleId = document.getElementById('hSalle')?.value || '';
+    const type    = currentTab === 'alertes' ? 'alertes' : 'mesures';
+    window.location.href = `/rapports/export?type=${type}&format=${format}&debut=${debut}&fin=${fin}&salle_id=${salleId}`;
+    const labels = {csv:'CSV',json:'JSON',xml:'XML',xlsx:'Excel',txt:'Texte',sql:'SQL',docx:'Word',zip:'Archive ZIP'};
+    if (typeof notify === 'function') notify('Téléchargement ' + (labels[format]||format.toUpperCase()) + ' en cours...','i',2500);
+}
+
+// Load salles into dropdown
+fetch('/api/salles-list').then(r => r.json()).then(salles => {
+    const sel = document.getElementById('hSalle');
+    salles.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id; o.textContent = s.nom;
+        sel.appendChild(o);
+    });
+}).catch(() => {});
+
+loadHistory();
 </script>
-
 @endsection

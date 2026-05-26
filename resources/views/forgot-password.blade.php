@@ -4,135 +4,210 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mot de passe oublié — Surveillance</title>
-<link rel="stylesheet" href="/css/noselect.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
-::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#1e3050;border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:#2fa84f;}
-html{scrollbar-width:thin;scrollbar-color:#1e3050 transparent;}
 
-body{
-  background:#060c1a;
-  color:#d4dced;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:#020c1a;
   min-height:100vh;
-  display:flex;flex-direction:column;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:'Segoe UI', Arial, sans-serif;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
 }
 
-.navbar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:15px 32px;
-  background:rgba(8,15,30,0.97);
-  border-bottom:1px solid #182640;
-  position:sticky;top:0;z-index:100;
-  flex-wrap:wrap;gap:10px;
-}
-.logo{font-size:19px;font-weight:bold;color:#2fa84f;letter-spacing:2px;text-decoration:none;}
-.btn-nav{
-  padding:8px 20px;border:1.5px solid #2fa84f;
-  background:transparent;color:#2fa84f;
-  border-radius:8px;font-size:13px;font-weight:bold;
-  text-decoration:none;transition:.2s;
-}
-.btn-nav:hover{background:#2fa84f;color:#060c1a;}
-
-.page-center{
-  flex:1;display:flex;justify-content:center;align-items:center;padding:30px 16px;
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,255,136,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,.03) 1px, transparent 1px);
+  background-size:45px 45px;
+  pointer-events:none;
 }
 
-.card{
-  width:100%;max-width:420px;
-  background:#0d1a2e;
-  padding:36px 32px;
-  border-radius:16px;
-  border:1px solid #182640;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+body::after {
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(0,255,136,.05) 0%, transparent 70%);
+  pointer-events:none;
 }
 
-.card-icon{
-  text-align:center;font-size:44px;margin-bottom:14px;color:#2fa84f;opacity:.8;
+.box {
+  position:relative;z-index:1;
+  width:100%;max-width:440px;
+  background:linear-gradient(135deg,#0e1a38,#0a1225);
+  padding:40px 38px;
+  border-radius:20px;
+  border:1px solid #1e2f5a;
+  box-shadow:0 0 60px rgba(0,0,0,.6), 0 0 30px rgba(0,255,136,.05);
+  animation:fadeUp .5s ease;
 }
-.card-title{color:#2fa84f;text-align:center;margin-bottom:6px;font-size:24px;font-weight:bold;}
-.card-sub{text-align:center;color:#6b7fa0;font-size:13px;margin-bottom:26px;line-height:1.6;}
 
-.alert{padding:11px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;font-weight:bold;}
-.alert-error{background:#3a0a0a;border:1px solid #c0392b;color:#f1948a;}
-.alert-success{background:#062010;border:1px solid #27ae60;color:#82e0aa;}
-
-.field{margin-bottom:16px;}
-.field label{display:block;font-size:12px;color:#8090b0;font-weight:bold;margin-bottom:5px;}
-.field input{
-  width:100%;padding:11px 14px;
-  background:#0a1525;border:1.5px solid #1e3050;
-  border-radius:9px;font-size:14px;color:#d4dced;
-  outline:none;transition:border-color .2s;
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
 }
-.field input:focus{border-color:#2fa84f;}
-.field input::placeholder{color:#3d5070;}
 
-.btn-submit{
-  width:100%;padding:13px;background:#2fa84f;
-  color:#060c1a;border:none;border-radius:9px;
-  font-size:15px;font-weight:bold;cursor:pointer;
-  margin-top:4px;transition:.2s;
+.box-top {
+  text-align:center;
+  margin-bottom:28px;
 }
-.btn-submit:hover{background:#249040;}
 
-.back-link{
-  display:block;text-align:center;margin-top:18px;
-  color:#5a7090;text-decoration:none;font-size:13px;transition:color .2s;
+.box-icon {
+  width:64px;height:64px;
+  border-radius:50%;
+  background:rgba(51,181,255,.1);
+  border:1.5px solid rgba(51,181,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  font-size:26px;color:#33b5ff;
 }
-.back-link:hover{color:#2fa84f;}
 
-@media(max-width:480px){
-  .navbar{padding:12px 18px;}
-  .card{padding:24px 18px;}
+h1 {
+  font-size:22px;font-weight:800;color:#fff;
+  letter-spacing:.5px;margin:0 0 8px;
 }
+
+.subtitle {
+  color:#5a6a99;font-size:13px;line-height:1.5;
+}
+
+.alert-box {
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;border-radius:10px;
+  margin-bottom:16px;font-size:13px;font-weight:600;line-height:1.4;
+  animation:fadeUp .3s ease;
+}
+.alert-error  {background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff7755}
+.alert-success{background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:#33ff88}
+
+.field {
+  margin-bottom:18px;
+}
+.field label {
+  display:block;
+  font-size:11px;font-weight:700;letter-spacing:.8px;
+  color:#5a6a99;text-transform:uppercase;margin-bottom:6px;
+}
+.field input {
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,.04);
+  border:1px solid #1e2f5a;border-radius:9px;
+  color:#e0e8ff;font-size:15px;outline:none;
+  transition:.25s;font-family:inherit;
+  user-select:text;-webkit-user-select:text;
+}
+.field input:focus {
+  border-color:#33b5ff;
+  box-shadow:0 0 0 3px rgba(51,181,255,.08);
+}
+.field input::placeholder{color:#3a4a6a}
+
+.btn-submit {
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,rgba(51,181,255,.15),rgba(51,181,255,.08));
+  border:1px solid rgba(51,181,255,.35);border-radius:9px;
+  color:#33b5ff;font-size:15px;font-weight:800;
+  letter-spacing:1.2px;cursor:pointer;transition:.25s;
+  text-transform:uppercase;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-submit:hover {
+  background:linear-gradient(135deg,rgba(51,181,255,.22),rgba(51,181,255,.12));
+  box-shadow:0 0 24px rgba(51,181,255,.3);
+  transform:translateY(-1px);
+}
+.btn-submit:active{transform:scale(.97)}
+
+.links {
+  margin-top:22px;
+  display:flex;flex-direction:column;gap:10px;align-items:center;
+}
+.links a {
+  color:#5a6a99;text-decoration:none;font-size:13px;transition:.2s;
+}
+.links a:hover{color:#33ff88}
+
+.sep {
+  height:1px;margin:20px 0;
+  background:linear-gradient(90deg,transparent,#1e2f5a,transparent);
+}
+
+.info-box {
+  background:rgba(51,181,255,.06);
+  border:1px solid rgba(51,181,255,.2);
+  border-radius:10px;
+  padding:12px 14px;
+  margin-bottom:20px;
+  font-size:12px;
+  color:#6a88bb;
+  line-height:1.6;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.info-box i {color:#33b5ff;margin-top:2px;flex-shrink:0}
+
 </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <a class="logo" href="/accueil">SURVEILLANCE</a>
-  <a href="/login" class="btn-nav"><i class="fa-solid fa-arrow-left"></i> Retour</a>
-</nav>
+<div class="box">
 
-<div class="page-center">
-  <div class="card">
+  <div class="box-top">
+    <div class="box-icon"><i class="fa-solid fa-key"></i></div>
+    <h1>Mot de passe oublié</h1>
+    <p class="subtitle">Entrez votre adresse email pour recevoir un nouveau mot de passe</p>
+  </div>
 
-    <div class="card-icon"><i class="fa-solid fa-key"></i></div>
-    <div class="card-title">Mot de passe oublié</div>
-    <div class="card-sub">
-      Saisissez votre adresse email. Vous recevrez un lien pour réinitialiser votre mot de passe.
+  @if(session('error'))
+    <div class="alert-box alert-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ session('error') }}</span>
+    </div>
+  @endif
+
+  @if(session('success'))
+    <div class="alert-box alert-success">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ session('success') }}</span>
+    </div>
+  @endif
+
+  @if(!session('success'))
+  <div class="info-box">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>Un nouveau mot de passe sera généré automatiquement et envoyé à votre adresse email.</span>
+  </div>
+
+  <form method="POST" action="/forgot-password">
+    @csrf
+
+    <div class="field">
+      <label><i class="fa-solid fa-envelope" style="margin-right:4px"></i>Adresse email</label>
+      <input type="email" name="email" placeholder="votre@email.com" required autofocus value="{{ old('email') }}">
     </div>
 
-    @if(session('error'))
-      <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
-    @endif
-    @if(session('success'))
-      <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
-    @endif
+    <button type="submit" class="btn-submit">
+      <i class="fa-solid fa-paper-plane"></i>
+      Envoyer le nouveau mot de passe
+    </button>
 
-    @if(!session('success'))
-    <form method="POST" action="/forgot-password">
-      @csrf
-      <div class="field">
-        <label><i class="fa-solid fa-envelope"></i> Adresse email</label>
-        <input type="email" name="email" placeholder="Votre adresse email" required autocomplete="email">
-      </div>
-      <button type="submit" class="btn-submit">
-        <i class="fa-solid fa-paper-plane"></i> ENVOYER LE LIEN
-      </button>
-    </form>
-    @endif
+  </form>
+  @endif
 
-    <a href="/login" class="back-link">
-      <i class="fa-solid fa-arrow-left"></i> Retour à la connexion
-    </a>
+  <div class="sep"></div>
 
+  <div class="links">
+    <a href="/login"><i class="fa-solid fa-arrow-left" style="margin-right:4px"></i>Retour à la connexion</a>
   </div>
+
 </div>
 
 </body>

@@ -2,484 +2,455 @@
 
 @section('content')
 
+@php
+$s = $seuils;
+$def = [
+    'temperature' => ['warning'=>35,   'critique'=>40,   'unite'=>'°C',  'max'=>100,  'ico'=>'🌡', 'label'=>'Température',   'color'=>'#ff5733', 'desc'=>'Surchauffe des serveurs'],
+    'humidite'    => ['warning'=>75,   'critique'=>85,   'unite'=>'%',   'max'=>100,  'ico'=>'💧', 'label'=>'Humidité',       'color'=>'#33b5ff', 'desc'=>'Condensation et corrosion'],
+    'gaz'         => ['warning'=>300,  'critique'=>500,  'unite'=>'ppm', 'max'=>1000, 'ico'=>'💨', 'label'=>'Gaz / Air',      'color'=>'#ffd633', 'desc'=>'Fuite dangereuse, risque incendie'],
+    'courant'     => ['warning'=>10,   'critique'=>15,   'unite'=>'A',   'max'=>30,   'ico'=>'⚡', 'label'=>'Courant',        'color'=>'#33ff88', 'desc'=>'Surcharge électrique'],
+    'puissance'   => ['warning'=>3000, 'critique'=>5000, 'unite'=>'W',   'max'=>8000, 'ico'=>'🔋', 'label'=>'Puissance',      'color'=>'#bb66ff', 'desc'=>'Surconsommation critique'],
+];
+$fieldMap = [
+    'temperature' => ['w'=>'temp_warning',  'c'=>'temp_critique'],
+    'humidite'    => ['w'=>'hum_warning',   'c'=>'hum_critique'],
+    'gaz'         => ['w'=>'gaz_warning',   'c'=>'gaz_critique'],
+    'courant'     => ['w'=>'cour_warning',  'c'=>'cour_critique'],
+    'puissance'   => ['w'=>'puis_warning',  'c'=>'puis_critique'],
+];
+@endphp
+
 <style>
-/* ─── BASE ─── */
-.param-wrap{
-    max-width:1200px;
-    animation:pfadeIn .5s ease;
-}
-@keyframes pfadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+*{box-sizing:border-box}
+body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
-/* ─── PAGE TITLE ─── */
-.page-header{
-    display:flex;align-items:center;gap:14px;
-    margin-bottom:22px;
+/* ── Page header ──────────────────────────────────────── */
+.p-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:12px;
 }
-.page-header i{font-size:22px;color:#2fa84f;}
-.page-header h1{font-size:20px;font-weight:bold;color:#e8edf8;margin:0;}
-.page-header p{font-size:13px;color:#6b7fa0;margin:3px 0 0;}
+.p-header h1{
+  font-size:24px;font-weight:700;color:#fff;
+  letter-spacing:1px;display:flex;align-items:center;gap:10px;
+}
+.p-header h1 span{color:#33ff88}
+.breadcrumb{font-size:12px;color:#5a6a99}
+.breadcrumb a{color:#33ff88;text-decoration:none}
 
-/* ─── ALERT ─── */
-.p-alert{
-    display:flex;align-items:center;gap:10px;
-    padding:12px 18px;border-radius:10px;
-    font-size:13px;font-weight:bold;
-    margin-bottom:20px;
+/* ── Flash ────────────────────────────────────────────── */
+.flash{
+  padding:12px 18px;border-radius:10px;margin-bottom:20px;
+  font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;
+  animation:fadeUp .4s ease;
 }
-.p-alert-ok {background:#052010;border:1px solid #2fa84f;color:#6ee7a0;}
+.flash-ok{background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:#33ff88}
+.flash-err{background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff5733}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
-/* ─── SECTION TITLE ─── */
-.section-title{
-    display:flex;align-items:center;gap:10px;
-    font-size:13px;font-weight:bold;
-    color:#2fa84f;letter-spacing:1px;
-    text-transform:uppercase;
-    margin:0 0 18px;
-    padding-bottom:10px;
-    border-bottom:1px solid #182640;
+/* ── Card base ────────────────────────────────────────── */
+.card{
+  background:linear-gradient(135deg,#0e1a38,#0c1530);
+  border:1px solid #1e2f5a;border-radius:18px;
+  padding:26px;position:relative;overflow:hidden;
+  transition:border-color .3s;margin-bottom:20px;
 }
-.section-title i{font-size:14px;}
-
-/* ─── SEUILS GRID ─── */
-.seuils-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-    gap:18px;
-    margin-bottom:18px;
+.card:hover{border-color:rgba(51,255,136,.18)}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(51,255,136,.35),transparent);
+  opacity:0;transition:.3s;
 }
-
-/* ─── CARTE CAPTEUR ─── */
-.capteur-card{
-    background:#0d1a2e;
-    border:1px solid #182640;
-    border-radius:16px;
-    padding:22px 24px;
-    position:relative;
-    overflow:hidden;
-    transition:border-color .25s;
+.card:hover::before{opacity:1}
+.card-title{
+  font-size:13px;font-weight:700;letter-spacing:1.5px;color:#8899cc;
+  text-transform:uppercase;margin-bottom:22px;
+  display:flex;align-items:center;gap:8px;
 }
-.capteur-card::before{
-    content:'';position:absolute;top:0;left:0;right:0;
-    height:2px;
-}
-.capteur-card:hover{border-color:rgba(47,168,79,0.25);}
-
-.capteur-header{
-    display:flex;align-items:center;gap:12px;
-    margin-bottom:18px;
-}
-.capteur-icon{
-    width:42px;height:42px;
-    border-radius:10px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:18px;
-    flex-shrink:0;
-}
-.capteur-name{font-size:15px;font-weight:bold;color:#e8edf8;}
-.capteur-desc{font-size:12px;color:#6b7fa0;margin-top:2px;}
-
-/* ─── CHAMPS SEUIL ─── */
-.seuil-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
+.card-title::before{
+  content:'';width:3px;height:14px;border-radius:2px;
+  background:linear-gradient(180deg,#33ff88,#33b5ff);flex-shrink:0;
 }
 
-.seuil-field{display:flex;flex-direction:column;gap:5px;}
-
-.seuil-label{
-    font-size:11px;font-weight:bold;
-    color:#6b7fa0;letter-spacing:.5px;
-    text-transform:uppercase;
-    display:flex;align-items:center;gap:5px;
+/* ── Sensor grid ──────────────────────────────────────── */
+.sensor-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:16px;
 }
 
-.seuil-dot{
-    width:7px;height:7px;
-    border-radius:50%;
-    flex-shrink:0;
+/* ── Sensor card ──────────────────────────────────────── */
+.sc{
+  background:rgba(255,255,255,.025);
+  border:1px solid #1e2f5a;border-radius:14px;
+  padding:18px;transition:.3s;position:relative;overflow:hidden;
+}
+.sc:hover{border-color:rgba(51,255,136,.2);background:rgba(255,255,255,.04)}
+
+.sc-head{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.sc-ico{
+  font-size:22px;width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;flex-shrink:0;
+  background:rgba(255,255,255,.04);border:1px solid #1e2f5a;
+}
+.sc-info{flex:1}
+.sc-name{font-size:15px;font-weight:700;color:#fff}
+.sc-desc{font-size:11px;color:#5a6a99;margin-top:2px}
+
+/* Current value bar */
+.sc-bar{
+  height:4px;border-radius:2px;background:#1e2f5a;
+  margin-bottom:14px;overflow:hidden;
+}
+.sc-fill{height:100%;border-radius:2px;transition:width .6s ease}
+
+/* Threshold inputs */
+.sc-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc-field{display:flex;flex-direction:column;gap:4px}
+.sc-field label{
+  font-size:10px;font-weight:700;color:#5a6a99;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.sc-field input{
+  background:rgba(255,255,255,.04);
+  border:1px solid #1e2f5a;border-radius:7px;
+  padding:9px 12px;color:#e0e8ff;font-size:14px;
+  font-weight:600;outline:none;transition:.25s;
+  font-family:inherit;width:100%;
+}
+.sc-field input:focus{
+  border-color:#33ff88;
+  box-shadow:0 0 0 3px rgba(51,255,136,.07);
+}
+.lbl-warn{color:#ffd633!important}
+.lbl-crit{color:#ff5733!important}
+.input-warn:focus{border-color:#ffd633!important;box-shadow:0 0 0 3px rgba(255,214,51,.07)!important}
+.input-crit:focus{border-color:#ff5733!important;box-shadow:0 0 0 3px rgba(255,87,51,.07)!important}
+
+/* Unite tag */
+.unite-tag{
+  display:inline-block;padding:1px 6px;border-radius:4px;
+  font-size:10px;font-weight:700;background:rgba(255,255,255,.06);
+  color:#8899cc;margin-left:4px;vertical-align:middle;
 }
 
-.seuil-input-wrap{position:relative;}
+/* ── PIR card ─────────────────────────────────────────── */
+.pir-card{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.025);
+  border:1px solid #1e2f5a;border-radius:14px;
+  padding:18px 22px;transition:.3s;
+}
+.pir-card:hover{border-color:rgba(51,255,136,.2);background:rgba(255,255,255,.04)}
+.pir-left{display:flex;align-items:center;gap:12px}
+.pir-ico{
+  font-size:24px;width:46px;height:46px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.04);border:1px solid #1e2f5a;border-radius:10px;
+}
+.pir-name{font-size:15px;font-weight:700;color:#fff}
+.pir-desc{font-size:11px;color:#5a6a99;margin-top:2px}
 
-.seuil-input{
-    width:100%;
-    padding:10px 44px 10px 13px;
-    background:#0a1525;
-    border:1.5px solid #1e3050;
-    border-radius:9px;
-    font-size:14px;font-weight:bold;
-    color:#d4dced;
-    outline:none;
-    transition:border-color .2s,box-shadow .2s;
-    -moz-appearance:textfield;
+/* Toggle switch */
+.toggle{position:relative;display:inline-block;width:52px;height:28px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{
+  position:absolute;inset:0;background:#1e2f5a;
+  border-radius:28px;cursor:pointer;transition:.3s;
 }
-.seuil-input::-webkit-outer-spin-button,
-.seuil-input::-webkit-inner-spin-button{-webkit-appearance:none;}
-.seuil-input:focus{
-    border-color:#2fa84f;
-    box-shadow:0 0 0 3px rgba(47,168,79,0.1);
+.slider::before{
+  content:'';position:absolute;height:22px;width:22px;
+  left:3px;top:3px;background:#5a6a99;
+  border-radius:50%;transition:.3s;
 }
+.toggle input:checked + .slider{background:rgba(51,255,136,.2);border:1px solid rgba(51,255,136,.4)}
+.toggle input:checked + .slider::before{transform:translateX(24px);background:#33ff88;box-shadow:0 0 10px rgba(51,255,136,.5)}
 
-.seuil-unit{
-    position:absolute;right:12px;top:50%;
-    transform:translateY(-50%);
-    font-size:11px;font-weight:bold;color:#6b7fa0;
-    pointer-events:none;
-}
-
-/* ─── SAVE BUTTON ─── */
-.save-bar{
-    display:flex;align-items:center;justify-content:space-between;
-    background:#0d1a2e;border:1px solid #182640;
-    border-radius:14px;padding:18px 24px;
-    flex-wrap:wrap;gap:14px;
-    margin-top:4px;
-}
-.save-hint{
-    font-size:13px;color:#6b7fa0;
-    display:flex;align-items:center;gap:8px;
-}
-.save-hint i{color:#2fa84f;}
-
+/* ── Save button ──────────────────────────────────────── */
 .btn-save{
-    display:inline-flex;align-items:center;gap:9px;
-    padding:12px 28px;
-    background:#2fa84f;color:#060c1a;
-    border:none;border-radius:50px;
-    font-size:14px;font-weight:bold;
-    cursor:pointer;transition:.2s;
-    letter-spacing:.3px;
+  display:inline-flex;align-items:center;gap:9px;
+  padding:13px 28px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,rgba(51,255,136,.15),rgba(51,255,136,.08));
+  border:1px solid rgba(51,255,136,.35);
+  color:#33ff88;font-size:15px;font-weight:700;
+  cursor:pointer;transition:.25s;letter-spacing:.8px;
+  text-transform:uppercase;
 }
-.btn-save:hover{background:#249040;transform:translateY(-1px);box-shadow:0 4px 16px rgba(47,168,79,0.3);}
+.btn-save:hover{
+  background:linear-gradient(135deg,rgba(51,255,136,.22),rgba(51,255,136,.12));
+  box-shadow:0 0 24px rgba(51,255,136,.3);transform:translateY(-1px);
+}
 
-/* ─── RESPONSIVE ─── */
-@media(max-width:700px){
-    .seuils-grid{grid-template-columns:1fr;}
-    .seuil-row{grid-template-columns:1fr;}
-    .capteur-card{padding:16px 16px;}
-    .save-bar{flex-direction:column;align-items:stretch;}
-    .btn-save{justify-content:center;}
+/* ── Config grid ──────────────────────────────────────── */
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.cfg-grid{grid-template-columns:1fr}}
+.cfg-item{
+  display:flex;align-items:flex-start;gap:12px;padding:14px;
+  background:rgba(255,255,255,.025);border-radius:10px;
+  border:1px solid transparent;transition:.25s;
+}
+.cfg-item:hover{border-color:#1e2f5a}
+.cfg-ico{
+  font-size:18px;width:36px;height:36px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.04);border-radius:8px;border:1px solid #1e2f5a;
+}
+.cfg-key{font-size:11px;color:#5a6a99;letter-spacing:.5px;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.cfg-val{font-size:14px;color:#c7d2ff;font-weight:500;word-break:break-all}
+.cfg-val.green{color:#33ff88}
+
+/* ── Status card ──────────────────────────────────────── */
+.status-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.stat-c{
+  background:rgba(255,255,255,.025);border-radius:12px;
+  padding:16px;text-align:center;border:1px solid transparent;transition:.25s;
+}
+.stat-c:hover{border-color:#1e2f5a}
+.stat-num{font-size:28px;font-weight:700;color:#33ff88;line-height:1}
+.stat-lab{font-size:11px;color:#5a6a99;margin-top:5px;letter-spacing:.5px;text-transform:uppercase}
+.stat-c.warn .stat-num{color:#ffd633}
+.stat-c.crit .stat-num{color:#ff5733}
+
+/* ── Sep ──────────────────────────────────────────────── */
+.sep{height:1px;margin:20px 0;background:linear-gradient(90deg,transparent,#1e2f5a,transparent)}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media(max-width:600px){
+  .sensor-grid{grid-template-columns:1fr}
+  .sc-fields{grid-template-columns:1fr}
+  .pir-card{flex-direction:column;gap:14px;align-items:flex-start}
 }
 </style>
 
-<div class="param-wrap">
 
-    {{-- En-tête --}}
-    <div class="page-header">
-        <i class="fa-solid fa-gear"></i>
-        <div>
-            <h1>Paramètres système</h1>
-            <p>Configuration des seuils capteurs IoT et des alertes automatiques</p>
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="p-alert p-alert-ok">
-            <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
-        </div>
-    @endif
-
-    <form method="POST" action="/parametres/save">
-        @csrf
-
-        {{-- ══ SEUILS CAPTEURS ══ --}}
-        <div class="section-title">
-            <i class="fa-solid fa-sliders"></i>
-            Seuils des capteurs
-        </div>
-
-        <div class="seuils-grid">
-
-            {{-- TEMPÉRATURE --}}
-            <div class="capteur-card" style="border-top-color:#ef4444;">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ef4444,transparent);"></div>
-                <div class="capteur-header">
-                    <div class="capteur-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
-                        <i class="fa-solid fa-temperature-high"></i>
-                    </div>
-                    <div>
-                        <div class="capteur-name">Température</div>
-                        <div class="capteur-desc">Capteur DHT22 · Salle serveurs</div>
-                    </div>
-                </div>
-                <div class="seuil-row">
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#f59e0b;"></div>
-                            Avertissement
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_temp_warn"
-                                   value="{{ $settings['seuil_temp_warn'] ?? 30 }}" min="0" max="100" step="1">
-                            <span class="seuil-unit">°C</span>
-                        </div>
-                    </div>
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#ef4444;"></div>
-                            Critique
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_temp_crit"
-                                   value="{{ $settings['seuil_temp_crit'] ?? 40 }}" min="0" max="100" step="1">
-                            <span class="seuil-unit">°C</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- HUMIDITÉ --}}
-            <div class="capteur-card">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#3b82f6,transparent);"></div>
-                <div class="capteur-header">
-                    <div class="capteur-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
-                        <i class="fa-solid fa-droplet"></i>
-                    </div>
-                    <div>
-                        <div class="capteur-name">Humidité</div>
-                        <div class="capteur-desc">Capteur DHT22 · Taux HR</div>
-                    </div>
-                </div>
-                <div class="seuil-row">
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#3b82f6;"></div>
-                            Minimum
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_hum_min"
-                                   value="{{ $settings['seuil_hum_min'] ?? 30 }}" min="0" max="100" step="1">
-                            <span class="seuil-unit">%</span>
-                        </div>
-                    </div>
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#ef4444;"></div>
-                            Maximum
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_hum_max"
-                                   value="{{ $settings['seuil_hum_max'] ?? 80 }}" min="0" max="100" step="1">
-                            <span class="seuil-unit">%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- GAZ --}}
-            <div class="capteur-card">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f59e0b,transparent);"></div>
-                <div class="capteur-header">
-                    <div class="capteur-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b;">
-                        <i class="fa-solid fa-smog"></i>
-                    </div>
-                    <div>
-                        <div class="capteur-name">Gaz / Fumée</div>
-                        <div class="capteur-desc">Capteur MQ135 · PPM</div>
-                    </div>
-                </div>
-                <div class="seuil-row">
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#f59e0b;"></div>
-                            Avertissement
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_gaz_warn"
-                                   value="{{ $settings['seuil_gaz_warn'] ?? 300 }}" min="0" step="10">
-                            <span class="seuil-unit">ppm</span>
-                        </div>
-                    </div>
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#ef4444;"></div>
-                            Critique
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_gaz_crit"
-                                   value="{{ $settings['seuil_gaz_crit'] ?? 500 }}" min="0" step="10">
-                            <span class="seuil-unit">ppm</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- COURANT --}}
-            <div class="capteur-card">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a855f7,transparent);"></div>
-                <div class="capteur-header">
-                    <div class="capteur-icon" style="background:rgba(168,85,247,0.12);color:#a855f7;">
-                        <i class="fa-solid fa-bolt"></i>
-                    </div>
-                    <div>
-                        <div class="capteur-name">Courant électrique</div>
-                        <div class="capteur-desc">Capteur ACS712 · Ampères</div>
-                    </div>
-                </div>
-                <div class="seuil-row">
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#f59e0b;"></div>
-                            Avertissement
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_cur_warn"
-                                   value="{{ $settings['seuil_cur_warn'] ?? 10 }}" min="0" step="0.5">
-                            <span class="seuil-unit">A</span>
-                        </div>
-                    </div>
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#ef4444;"></div>
-                            Critique
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_cur_crit"
-                                   value="{{ $settings['seuil_cur_crit'] ?? 15 }}" min="0" step="0.5">
-                            <span class="seuil-unit">A</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- PUISSANCE --}}
-            <div class="capteur-card">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#06b6d4,transparent);"></div>
-                <div class="capteur-header">
-                    <div class="capteur-icon" style="background:rgba(6,182,212,0.12);color:#06b6d4;">
-                        <i class="fa-solid fa-plug-circle-bolt"></i>
-                    </div>
-                    <div>
-                        <div class="capteur-name">Puissance électrique</div>
-                        <div class="capteur-desc">Calcul P = V × I · Watts</div>
-                    </div>
-                </div>
-                <div class="seuil-row">
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#f59e0b;"></div>
-                            Avertissement
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_pwr_warn"
-                                   value="{{ $settings['seuil_pwr_warn'] ?? 1500 }}" min="0" step="50">
-                            <span class="seuil-unit">W</span>
-                        </div>
-                    </div>
-                    <div class="seuil-field">
-                        <label class="seuil-label">
-                            <div class="seuil-dot" style="background:#ef4444;"></div>
-                            Critique
-                        </label>
-                        <div class="seuil-input-wrap">
-                            <input class="seuil-input" type="number" name="seuil_pwr_crit"
-                                   value="{{ $settings['seuil_pwr_crit'] ?? 2000 }}" min="0" step="50">
-                            <span class="seuil-unit">W</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- MOUVEMENT PIR --}}
-            <div class="capteur-card">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#2fa84f,transparent);"></div>
-                <div class="capteur-header">
-                    <div class="capteur-icon" style="background:rgba(47,168,79,0.12);color:#2fa84f;">
-                        <i class="fa-solid fa-person-walking"></i>
-                    </div>
-                    <div>
-                        <div class="capteur-name">Mouvement PIR</div>
-                        <div class="capteur-desc">Détecteur infrarouge · Intrusion</div>
-                    </div>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0a1525;border:1px solid #182640;border-radius:9px;">
-                    <div>
-                        <div style="font-size:13px;font-weight:bold;color:#d4dced;">Alerte mouvement activée</div>
-                        <div style="font-size:11px;color:#6b7fa0;margin-top:2px;">Envoyer SMS + email si mouvement détecté</div>
-                    </div>
-                    <label style="position:relative;width:42px;height:22px;flex-shrink:0;">
-                        <input type="checkbox" name="seuil_pir" value="1" id="pirToggle"
-                               {{ ($settings['seuil_pir'] ?? 1) ? 'checked' : '' }}
-                               style="opacity:0;width:0;height:0;">
-                        <span id="pirSlider" style="position:absolute;cursor:pointer;inset:0;background:#1e3050;border-radius:22px;transition:.3s;"
-                              onclick="togglePir(this)"></span>
-                        <span id="pirDot" style="position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#6b7fa0;border-radius:50%;transition:.3s;pointer-events:none;"></span>
-                    </label>
-                </div>
-                <input type="hidden" name="seuil_pir" id="pirVal" value="{{ ($settings['seuil_pir'] ?? 1) ? 1 : 0 }}">
-            </div>
-
-        </div>
-
-        {{-- ══ BARRE DE SAUVEGARDE ══ --}}
-        <div class="save-bar">
-            <div class="save-hint">
-                <i class="fa-solid fa-circle-info"></i>
-                Les seuils sont appliqués immédiatement aux alertes GSM, emails et dashboard temps réel.
-            </div>
-            <button type="submit" class="btn-save">
-                <i class="fa-solid fa-floppy-disk"></i>
-                Sauvegarder les seuils
-            </button>
-        </div>
-
-    </form>
-
+<div class="p-header">
+  <h1>⚙️ <span>Paramètres</span> Système</h1>
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> / Paramètres</div>
 </div>
 
+@if(session('success_seuils'))
+  <div class="flash flash-ok">✅ {{ session('success_seuils') }}</div>
+@endif
+@if($errors->any())
+  @foreach($errors->all() as $err)
+    <div class="flash flash-err">⚠️ {{ $err }}</div>
+  @endforeach
+@endif
+
+
+{{-- ═══════════════════════════════════════
+     SEUILS CAPTEURS
+════════════════════════════════════════ --}}
+<div class="card">
+  <div class="card-title">📡 Seuils d'alerte capteurs</div>
+
+  <form action="/parametres/seuils" method="POST">
+    @csrf
+
+    <div class="sensor-grid">
+
+      @foreach($def as $key => $meta)
+      @php
+        $wVal = $s[$key]['warning']  ?? $meta['warning'];
+        $cVal = $s[$key]['critique'] ?? $meta['critique'];
+        $fw   = $fieldMap[$key]['w'];
+        $fc   = $fieldMap[$key]['c'];
+      @endphp
+      <div class="sc">
+        <div class="sc-head">
+          <div class="sc-ico">{{ $meta['ico'] }}</div>
+          <div class="sc-info">
+            <div class="sc-name">{{ $meta['label'] }} <span class="unite-tag">{{ $meta['unite'] }}</span></div>
+            <div class="sc-desc">{{ $meta['desc'] }}</div>
+          </div>
+        </div>
+        <div class="sc-bar">
+          <div class="sc-fill" style="width:{{ min(100, ($cVal/$meta['max'])*100) }}%;background:{{ $meta['color'] }}"></div>
+        </div>
+        <div class="sc-fields">
+          <div class="sc-field">
+            <label class="lbl-warn">⚠ Avertissement</label>
+            <input type="number" name="{{ $fw }}" value="{{ $wVal }}"
+              step="0.1" min="0" max="{{ $meta['max'] }}"
+              class="input-warn" required>
+          </div>
+          <div class="sc-field">
+            <label class="lbl-crit">🔴 Critique</label>
+            <input type="number" name="{{ $fc }}" value="{{ $cVal }}"
+              step="0.1" min="0" max="{{ $meta['max'] }}"
+              class="input-crit" required>
+          </div>
+        </div>
+      </div>
+      @endforeach
+
+    </div>{{-- /sensor-grid --}}
+
+    <div class="sep"></div>
+
+    {{-- PIR --}}
+    <div class="pir-card">
+      <div class="pir-left">
+        <div class="pir-ico">🚶</div>
+        <div>
+          <div class="pir-name">Détecteur PIR <span class="unite-tag">mouvement</span></div>
+          <div class="pir-desc">Alerte intrusion — Surveillance active de la salle</div>
+        </div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" name="pir_actif" value="1" {{ ($s['pir']['actif'] ?? 1) ? 'checked' : '' }}>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:22px">
+      <button type="submit" class="btn-save">💾 Sauvegarder les seuils</button>
+    </div>
+
+  </form>
+</div>
+
+
+{{-- ═══════════════════════════════════════
+     CONFIGURATION SYSTÈME
+════════════════════════════════════════ --}}
+<div class="card">
+  <div class="card-title">🔧 Configuration système</div>
+
+  <div class="cfg-grid">
+    <div class="cfg-item">
+      <div class="cfg-ico">📧</div>
+      <div>
+        <div class="cfg-key">Email administrateur</div>
+        <div class="cfg-val">franckazegue0007@gmail.com</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">📱</div>
+      <div>
+        <div class="cfg-key">Numéro SMS (SIM900)</div>
+        <div class="cfg-val">+237 687 988 340</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">⏱</div>
+      <div>
+        <div class="cfg-key">Intervalle envoi Arduino</div>
+        <div class="cfg-val">10 secondes</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">🔄</div>
+      <div>
+        <div class="cfg-key">Actualisation dashboard</div>
+        <div class="cfg-val">1 seconde (AJAX temps réel)</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">🌐</div>
+      <div>
+        <div class="cfg-key">SMTP Gmail</div>
+        <div class="cfg-val green">● Configuré</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">🔒</div>
+      <div>
+        <div class="cfg-key">Validation comptes</div>
+        <div class="cfg-val green">● Activée</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">📡</div>
+      <div>
+        <div class="cfg-key">Capteurs actifs</div>
+        <div class="cfg-val">DHT22, MQ135, PIR, ACS712</div>
+      </div>
+    </div>
+    <div class="cfg-item">
+      <div class="cfg-ico">🚀</div>
+      <div>
+        <div class="cfg-key">Version plateforme</div>
+        <div class="cfg-val">Plateforme de Surveillance v2.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{{-- ═══════════════════════════════════════
+     STATUT TEMPS RÉEL
+════════════════════════════════════════ --}}
+<div class="card">
+  <div class="card-title" style="justify-content:space-between;display:flex;align-items:center">
+    <span style="display:flex;align-items:center;gap:8px">
+      <span style="content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,#33ff88,#33b5ff);display:inline-block"></span>
+      📊 Statut en temps réel
+    </span>
+    <span style="font-size:11px;color:#5a6a99;font-weight:400;letter-spacing:0;text-transform:none">Mise à jour auto — 10s</span>
+  </div>
+
+  <div class="status-row" id="status-row">
+    <div class="stat-c">
+      <div class="stat-num" id="st-mesures">—</div>
+      <div class="stat-lab">Mesures enreg.</div>
+    </div>
+    <div class="stat-c warn">
+      <div class="stat-num" id="st-warn">—</div>
+      <div class="stat-lab">Alertes warning</div>
+    </div>
+    <div class="stat-c crit">
+      <div class="stat-num" id="st-crit">—</div>
+      <div class="stat-lab">Alertes critiques</div>
+    </div>
+    <div class="stat-c">
+      <div class="stat-num" id="st-users">—</div>
+      <div class="stat-lab">Utilisateurs actifs</div>
+    </div>
+    <div class="stat-c">
+      <div class="stat-num" id="st-nonlues">—</div>
+      <div class="stat-lab">Alertes non lues</div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;font-size:12px;color:#3a4a6a;text-align:right">
+    Dernière mesure : <span id="st-last" style="color:#33ff88">—</span>
+  </div>
+</div>
+
+
 <script>
-// Initialiser le toggle PIR au chargement
-(function(){
-    const chk = document.getElementById('pirToggle');
-    const slider = document.getElementById('pirSlider');
-    const dot = document.getElementById('pirDot');
-    if(chk && chk.checked){
-        slider.style.background = '#2fa84f';
-        slider.style.boxShadow  = '0 0 8px rgba(47,168,79,0.4)';
-        dot.style.transform     = 'translateX(20px)';
-        dot.style.background    = 'white';
+// Validation: warning < critique
+document.querySelectorAll('.sc').forEach(sc => {
+  const warn = sc.querySelector('.input-warn');
+  const crit = sc.querySelector('.input-crit');
+  if (!warn || !crit) return;
+  [warn, crit].forEach(inp => inp.addEventListener('change', () => {
+    if (parseFloat(warn.value) >= parseFloat(crit.value)) {
+      crit.value = (parseFloat(warn.value) + 1).toFixed(1);
     }
-})();
-
-function togglePir(slider){
-    const chk = document.getElementById('pirToggle');
-    const dot = document.getElementById('pirDot');
-    const val = document.getElementById('pirVal');
-    chk.checked = !chk.checked;
-    if(chk.checked){
-        slider.style.background = '#2fa84f';
-        slider.style.boxShadow  = '0 0 8px rgba(47,168,79,0.4)';
-        dot.style.transform     = 'translateX(20px)';
-        dot.style.background    = 'white';
-        val.value = 1;
-    } else {
-        slider.style.background = '#1e3050';
-        slider.style.boxShadow  = 'none';
-        dot.style.transform     = 'translateX(0)';
-        dot.style.background    = '#6b7fa0';
-        val.value = 0;
-    }
-}
-
-// Validation : seuil warn < seuil crit
-document.querySelector('form').addEventListener('submit', function(e){
-    const pairs = [
-        ['seuil_temp_warn','seuil_temp_crit','Température'],
-        ['seuil_gaz_warn', 'seuil_gaz_crit', 'Gaz'],
-        ['seuil_cur_warn', 'seuil_cur_crit', 'Courant'],
-        ['seuil_pwr_warn', 'seuil_pwr_crit', 'Puissance'],
-    ];
-    for(const [w,c,name] of pairs){
-        const vw = parseFloat(document.querySelector(`[name="${w}"]`).value);
-        const vc = parseFloat(document.querySelector(`[name="${c}"]`).value);
-        if(vw >= vc){
-            e.preventDefault();
-            alert(`${name} : le seuil d'avertissement (${vw}) doit être inférieur au seuil critique (${vc}).`);
-            return;
-        }
-    }
+  }));
 });
+
+// Live stats
+function loadStats() {
+  fetch('/api/stats')
+    .then(r => r.json())
+    .then(s => {
+      document.getElementById('st-mesures').textContent = s.totalMesures     ?? '—';
+      document.getElementById('st-warn').textContent    = s.alertesWarning   ?? '—';
+      document.getElementById('st-crit').textContent    = s.alertesCritiques ?? '—';
+      document.getElementById('st-users').textContent   = s.totalUtilisateurs ?? '—';
+      document.getElementById('st-nonlues').textContent = s.alertesNonLues   ?? '—';
+      if (s.derniereMesure) {
+        document.getElementById('st-last').textContent  = s.derniereMesure.substring(0,16).replace('T',' ');
+      }
+    }).catch(() => {});
+}
+loadStats();
+setInterval(loadStats, 10000);
 </script>
 
 @endsection
