@@ -284,6 +284,19 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
   .form-row{flex-direction:column;gap:0}
   .form-row .field-sm{flex:1}
 }
+
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+input,select,textarea{max-width:100%!important;width:100%!important}
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+[class*="card"],[class*="modal"],[class*="box"]{max-width:100%!important}
+}
+@media(max-width:400px){
+h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
+}
 </style>
 </head>
 <body>

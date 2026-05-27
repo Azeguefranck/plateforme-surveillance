@@ -2,684 +2,183 @@
 
 @section('content')
 
-
 <style>
-:root{
-  --vert:#39ff14;
-  --amber:#f59e0b;
-  --rouge:#ef4444;
-  --bleu:#33b5ff;
-  --violet:#bb66ff;
-  --bg:#050816;
-  --card:#111c3d;
-  --card2:#0b1225;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f6f9;color:#1a2340;font-family:'Segoe UI',Arial,sans-serif}
 
-/* ── En-tête IoT ── */
-.iot-header{
-  display:flex;align-items:center;gap:16px;
-  background:var(--card);border-radius:14px;
-  padding:14px 20px;margin-bottom:22px;flex-wrap:wrap;
-}
-.live-dot{
-  width:10px;height:10px;border-radius:50%;
-  background:var(--vert);
-  box-shadow:0 0 8px var(--vert);
-  animation:blink 1s infinite;
-  flex-shrink:0;
-}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.live-label{
-  font-size:12px;font-weight:bold;letter-spacing:2px;
-  color:var(--vert);text-transform:uppercase;
-}
-.salle-badge{
-  background:#1f2d5e;padding:6px 14px;border-radius:20px;
-  font-size:13px;font-weight:bold;color:white;
-}
-.niveau-badge{
-  padding:6px 14px;border-radius:20px;font-size:12px;
-  font-weight:bold;letter-spacing:1px;
-  background:#0f3020;color:var(--vert);
-  border:1px solid var(--vert);
-  transition:.3s;
-}
-.niveau-badge.warn{background:#3d2800;color:var(--amber);border-color:var(--amber);}
-.niveau-badge.crit{background:#3d0000;color:var(--rouge);border-color:var(--rouge);animation:pulse-border 1s infinite;}
-@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
-.iot-time{margin-left:auto;font-size:20px;font-weight:bold;color:#00ffcc;font-family:monospace;}
-
-/* ── Grille capteurs ── */
-.sensors-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
-  gap:16px;margin-bottom:22px;
-}
-
-.sensor-card{
-  background:var(--card);border-radius:16px;padding:18px;
-  text-align:center;border:1px solid #1f2d5e;
-  transition:border-color .3s,box-shadow .3s;
-  position:relative;overflow:hidden;
-}
-.sensor-card::before{
-  content:'';position:absolute;inset:0;border-radius:16px;
-  background:radial-gradient(circle at 50% 0,rgba(57,255,20,.05),transparent 70%);
-  pointer-events:none;
-}
-.sensor-card.warn{border-color:var(--amber);box-shadow:0 0 12px rgba(245,158,11,.15);}
-.sensor-card.crit{border-color:var(--rouge);box-shadow:0 0 16px rgba(239,68,68,.25);animation:card-pulse 1.5s infinite;}
-@keyframes card-pulse{0%,100%{box-shadow:0 0 16px rgba(239,68,68,.25)}50%{box-shadow:0 0 28px rgba(239,68,68,.5)}}
-
-.sensor-label{font-size:11px;font-weight:bold;letter-spacing:1.5px;color:#6b7280;margin-bottom:10px;}
-
-/* SVG Gauge */
-.gauge-wrap{position:relative;width:100px;height:100px;margin:0 auto 10px;}
-.gauge-wrap svg{width:100%;height:100%;}
-.gauge-bg{fill:none;stroke:#1f2d5e;stroke-width:7;}
-.gauge-arc{
-  fill:none;stroke:var(--vert);stroke-width:7;
-  stroke-linecap:round;
-  stroke-dasharray:251.2;stroke-dashoffset:251.2;
-  transform:rotate(-90deg);transform-origin:50px 50px;
-  transition:stroke-dashoffset .8s ease,stroke .3s;
-}
-.gauge-text{
-  font-size:18px;font-weight:bold;fill:white;
-  dominant-baseline:middle;text-anchor:middle;
-}
-.gauge-unit{font-size:10px;fill:#9ca3af;}
-
-.sensor-status{
-  font-size:11px;font-weight:bold;letter-spacing:1px;
-  padding:3px 10px;border-radius:20px;display:inline-block;
-  background:#0f3020;color:var(--vert);border:1px solid rgba(57,255,20,.3);
-}
-.sensor-status.warn{background:#3d2800;color:var(--amber);border-color:rgba(245,158,11,.3);}
-.sensor-status.crit{background:#3d0000;color:var(--rouge);border-color:rgba(239,68,68,.3);}
-
-/* PIR spécial */
-.pir-card .pir-icon{
-  font-size:40px;margin:10px 0;
-  filter:drop-shadow(0 0 8px rgba(57,255,20,.4));
-  transition:filter .3s;
-}
-.pir-card.actif .pir-icon{
-  filter:drop-shadow(0 0 20px rgba(239,68,68,.8));
-  animation:pir-pulse 0.5s infinite alternate;
-}
-@keyframes pir-pulse{from{transform:scale(1)}to{transform:scale(1.1)}}
-.pir-val{font-size:16px;font-weight:bold;color:var(--vert);}
-.pir-card.actif .pir-val{color:var(--rouge);}
-
-/* ── Graphiques ── */
-.charts-row{
-  display:grid;grid-template-columns:2fr 1fr;
-  gap:16px;margin-bottom:22px;
-}
-.chart-box{
-  background:var(--card);border-radius:16px;padding:20px;
-  border:1px solid #1f2d5e;
-}
-.chart-box h3{
-  font-size:13px;letter-spacing:1px;color:#9ca3af;
-  text-transform:uppercase;margin-bottom:14px;
-}
-canvas{max-height:220px;}
-
-/* ── Panneau bas ── */
-.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-
-.alerts-panel{background:var(--card);border-radius:16px;padding:20px;border:1px solid #1f2d5e;}
-.alerts-panel h3{font-size:13px;letter-spacing:1px;color:#9ca3af;text-transform:uppercase;margin-bottom:14px;}
-
-.alert-item{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:10px;border-radius:8px;margin-bottom:8px;
-  background:var(--card2);border-left:3px solid #333;
-  animation:slideIn .3s ease;
-}
-@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
-.alert-item.info{border-left-color:#6b7280;}
-.alert-item.warn{border-left-color:var(--amber);}
-.alert-item.crit{border-left-color:var(--rouge);}
-.alert-dot{
-  width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;
-}
-.alert-dot.info{background:#6b7280;}
-.alert-dot.warn{background:var(--amber);}
-.alert-dot.crit{background:var(--rouge);animation:blink .8s infinite;}
-.alert-text{font-size:13px;color:#d1d5db;flex:1;}
-.alert-time{font-size:11px;color:#6b7280;white-space:nowrap;}
-.no-alert{text-align:center;padding:30px;color:#6b7280;font-size:13px;}
-
-.status-panel{background:var(--card);border-radius:16px;padding:20px;border:1px solid #1f2d5e;}
-.status-panel h3{font-size:13px;letter-spacing:1px;color:#9ca3af;text-transform:uppercase;margin-bottom:14px;}
-.status-row{
+.dash-header{
   display:flex;justify-content:space-between;align-items:center;
-  padding:10px 0;border-bottom:1px solid #1f2d5e;font-size:13px;
+  padding:18px 0 28px;flex-wrap:wrap;gap:12px;
 }
-.status-row:last-child{border:none;}
-.status-row label{color:#9ca3af;}
-.status-val{font-weight:bold;}
-.ok{color:var(--vert);}
-.nok{color:var(--rouge);}
-.med{color:var(--amber);}
+.dash-title{font-size:26px;font-weight:700;letter-spacing:1px;color:#1a2340}
+.dash-live{display:flex;align-items:center;gap:8px;font-size:13px;color:#16a34a;font-weight:600;letter-spacing:.5px}
+.dot{width:10px;height:10px;border-radius:50%;background:#16a34a;animation:pulse 1.2s infinite;box-shadow:0 0 8px rgba(22,163,74,.4)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
 
-/* Power mini chart */
-.power-chart-box{background:var(--card);border-radius:16px;padding:20px;border:1px solid #1f2d5e;}
-.power-chart-box h3{font-size:13px;letter-spacing:1px;color:#9ca3af;text-transform:uppercase;margin-bottom:14px;}
+.gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.gauge-card{
+  background:#fff;
+  border:1.5px solid #e2e8f0;border-radius:18px;
+  padding:22px 16px;text-align:center;transition:.3s;
+  box-shadow:0 2px 12px rgba(0,0,0,.07);
+}
+.gauge-card:hover{transform:translateY(-4px);box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.gauge-card.alerte-warning{border-color:#f59e0b;box-shadow:0 0 20px rgba(245,158,11,.2)}
+.gauge-card.alerte-critique{border-color:#ef4444;box-shadow:0 0 25px rgba(239,68,68,.25);animation:cardPulse 1.5s infinite}
+@keyframes cardPulse{0%,100%{box-shadow:0 0 25px rgba(239,68,68,.25)}50%{box-shadow:0 0 40px rgba(239,68,68,.45)}}
 
-@media(max-width:900px){
-  .charts-row,.bottom-row{grid-template-columns:1fr;}
-  .sensors-grid{grid-template-columns:repeat(3,1fr);}
+.gauge-label{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#64748b;text-transform:uppercase;margin-bottom:14px}
+.gauge-ring{
+  width:130px;height:130px;border-radius:50%;margin:0 auto 14px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  border:12px solid #e2e8f0;background:#f8fafc;transition:.4s;
 }
-@media(max-width:500px){
-  .sensors-grid{grid-template-columns:1fr 1fr;}
+.gauge-val{font-size:26px;font-weight:700;color:#1a2340;line-height:1}
+.gauge-unit{font-size:12px;color:#94a3b8;margin-top:3px}
+.gauge-bar{height:6px;border-radius:3px;background:#e2e8f0;margin-top:10px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:3px;transition:width .6s ease,background .4s}
+
+.ok   .gauge-ring{border-color:#22c55e;box-shadow:0 0 16px rgba(34,197,94,.2)}
+.ok   .gauge-val {color:#16a34a}
+.ok   .gauge-fill{background:#22c55e}
+.warn .gauge-ring{border-color:#f59e0b;box-shadow:0 0 16px rgba(245,158,11,.25)}
+.warn .gauge-val {color:#d97706}
+.warn .gauge-fill{background:#f59e0b}
+.crit .gauge-ring{border-color:#ef4444;box-shadow:0 0 20px rgba(239,68,68,.3)}
+.crit .gauge-val {color:#dc2626}
+.crit .gauge-fill{background:#ef4444}
+
+.pir-badge{display:inline-block;padding:6px 18px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:.5px;margin-top:8px}
+.pir-ok {background:rgba(34,197,94,.1);color:#16a34a;border:1px solid #22c55e}
+.pir-det{background:rgba(239,68,68,.1);color:#dc2626;border:1px solid #ef4444;animation:pir-flash .8s infinite}
+@keyframes pir-flash{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── Bandeau déconnecté ── */
+.no-data-banner{
+  display:none;background:rgba(239,68,68,.07);border:1px solid #ef4444;
+  border-radius:12px;padding:14px 20px;margin-bottom:22px;
+  text-align:center;color:#dc2626;font-weight:700;font-size:14px;letter-spacing:.5px;
 }
+.no-data-banner.visible{display:block}
 </style>
 
-{{-- EN-TÊTE IoT --}}
-<div class="iot-header">
-  <div class="live-dot"></div>
-  <span class="live-label">En direct</span>
-  <span class="salle-badge" id="header-salle">Salle Serveur</span>
-  <span class="niveau-badge" id="header-niveau">NORMAL</span>
-  <span class="iot-time" id="iot-clock">--:--:--</span>
-</div>
-
-{{-- CAPTEURS --}}
-<div class="sensors-grid">
-
-  {{-- Température --}}
-  <div class="sensor-card" id="card-temp">
-    <div class="sensor-label">🌡️ TEMPÉRATURE</div>
-    <div class="gauge-wrap">
-      <svg viewBox="0 0 100 100">
-        <circle class="gauge-bg" cx="50" cy="50" r="40"/>
-        <circle class="gauge-arc" id="arc-temp" cx="50" cy="50" r="40"/>
-        <text class="gauge-text" id="val-temp" x="50" y="46">--</text>
-        <text class="gauge-unit" x="50" y="60">°C</text>
-      </svg>
-    </div>
-    <div class="sensor-status" id="st-temp">NORMAL</div>
-  </div>
-
-  {{-- Humidité --}}
-  <div class="sensor-card" id="card-hum">
-    <div class="sensor-label">💧 HUMIDITÉ</div>
-    <div class="gauge-wrap">
-      <svg viewBox="0 0 100 100">
-        <circle class="gauge-bg" cx="50" cy="50" r="40"/>
-        <circle class="gauge-arc" id="arc-hum" cx="50" cy="50" r="40" style="stroke:var(--bleu)"/>
-        <text class="gauge-text" id="val-hum" x="50" y="46">--</text>
-        <text class="gauge-unit" x="50" y="60">%</text>
-      </svg>
-    </div>
-    <div class="sensor-status" id="st-hum">NORMAL</div>
-  </div>
-
-  {{-- Gaz --}}
-  <div class="sensor-card" id="card-gaz">
-    <div class="sensor-label">🔥 GAZ / FUMÉE</div>
-    <div class="gauge-wrap">
-      <svg viewBox="0 0 100 100">
-        <circle class="gauge-bg" cx="50" cy="50" r="40"/>
-        <circle class="gauge-arc" id="arc-gaz" cx="50" cy="50" r="40" style="stroke:var(--amber)"/>
-        <text class="gauge-text" id="val-gaz" x="50" y="46">--</text>
-        <text class="gauge-unit" x="50" y="60">ppm</text>
-      </svg>
-    </div>
-    <div class="sensor-status" id="st-gaz">NORMAL</div>
-  </div>
-
-  {{-- Courant --}}
-  <div class="sensor-card" id="card-cur" style="display:none">
-    <div class="sensor-label">⚡ COURANT</div>
-    <div class="gauge-wrap">
-      <svg viewBox="0 0 100 100">
-        <circle class="gauge-bg" cx="50" cy="50" r="40"/>
-        <circle class="gauge-arc" id="arc-cur" cx="50" cy="50" r="40" style="stroke:var(--violet)"/>
-        <text class="gauge-text" id="val-cur" x="50" y="46">--</text>
-        <text class="gauge-unit" x="50" y="60">A</text>
-      </svg>
-    </div>
-    <div class="sensor-status" id="st-cur">NORMAL</div>
-  </div>
-
-  {{-- Puissance --}}
-  <div class="sensor-card" id="card-pwr" style="display:none">
-    <div class="sensor-label">💡 PUISSANCE</div>
-    <div class="gauge-wrap">
-      <svg viewBox="0 0 100 100">
-        <circle class="gauge-bg" cx="50" cy="50" r="40"/>
-        <circle class="gauge-arc" id="arc-pwr" cx="50" cy="50" r="40" style="stroke:#bb66ff"/>
-        <text class="gauge-text" id="val-pwr" x="50" y="46">--</text>
-        <text class="gauge-unit" x="50" y="60">W</text>
-      </svg>
-    </div>
-    <div class="sensor-status" id="st-pwr">NORMAL</div>
-  </div>
-
-  {{-- Tension --}}
-  <div class="sensor-card" id="card-ten" style="display:none">
-    <div class="sensor-label">🔌 TENSION</div>
-    <div class="gauge-wrap">
-      <svg viewBox="0 0 100 100">
-        <circle class="gauge-bg" cx="50" cy="50" r="40"/>
-        <circle class="gauge-arc" id="arc-ten" cx="50" cy="50" r="40" style="stroke:#00ffcc"/>
-        <text class="gauge-text" id="val-ten" x="50" y="46">--</text>
-        <text class="gauge-unit" x="50" y="60">V</text>
-      </svg>
-    </div>
-    <div class="sensor-status" id="st-ten">NORMAL</div>
-  </div>
-
-  {{-- PIR --}}
-  <div class="sensor-card pir-card" id="card-pir">
-    <div class="sensor-label">👁️ MOUVEMENT PIR</div>
-    <div class="pir-icon" id="pir-icon">🚫</div>
-    <div class="pir-val" id="val-pir">AUCUN</div>
-    <div class="sensor-status" id="st-pir">INACTIF</div>
-  </div>
-
-</div>
-
-{{-- GRAPHIQUES --}}
-<div class="charts-row">
-  <div class="chart-box">
-    <h3>📈 Température • Humidité • Gaz (temps réel)</h3>
-    <canvas id="chart-thg"></canvas>
-  </div>
-  <div class="chart-box" style="display:none">
-    <h3>⚡ Courant • Puissance</h3>
-    <canvas id="chart-pow"></canvas>
+<div class="dash-header">
+  <div class="dash-title">TABLEAU DE BORD EN TEMPS RÉEL</div>
+  <div class="dash-live">
+    <div class="dot"></div>
+    EN DIRECT — <span id="last-update">--</span>
   </div>
 </div>
 
-{{-- BAS : ALERTES + ÉTAT SYSTÈME --}}
-<div class="bottom-row">
+<!-- Bandeau déconnecté -->
+<div class="no-data-banner" id="no-data-banner">⚠ Arduino déconnecté — Aucune donnée en temps réel</div>
 
-  <div class="alerts-panel">
-    <h3>🚨 Alertes récentes</h3>
-    <div id="alerts-feed">
-      <div class="no-alert">Chargement des alertes…</div>
+<!-- Jauges capteurs -->
+<div class="gauges">
+
+  <div class="gauge-card ok" id="card-temperature">
+    <div class="gauge-label">Température</div>
+    <div class="gauge-ring">
+      <span class="gauge-val" id="g-temperature">0</span>
+      <span class="gauge-unit">°C</span>
     </div>
+    <div class="gauge-bar"><div class="gauge-fill" id="f-temperature" style="width:0%"></div></div>
   </div>
 
-  <div class="status-panel">
-    <h3>📡 État du système</h3>
-    <div class="status-row">
-      <label>Système</label>
-      <span class="status-val ok" id="sys-status">EN LIGNE</span>
+  <div class="gauge-card ok" id="card-humidite">
+    <div class="gauge-label">Humidité</div>
+    <div class="gauge-ring">
+      <span class="gauge-val" id="g-humidite">0</span>
+      <span class="gauge-unit">%</span>
     </div>
-    <div class="status-row">
-      <label>Salle serveur</label>
-      <span class="status-val ok" id="salle-status">ACTIVE</span>
+    <div class="gauge-bar"><div class="gauge-fill" id="f-humidite" style="width:0%"></div></div>
+  </div>
+
+  <div class="gauge-card ok" id="card-gaz">
+    <div class="gauge-label">Gaz / Qualité air</div>
+    <div class="gauge-ring">
+      <span class="gauge-val" id="g-gaz">0</span>
+      <span class="gauge-unit">ppm</span>
     </div>
-    <div class="status-row">
-      <label>Arduino</label>
-      <span class="status-val" id="arduino-status">--</span>
-    </div>
-    <div class="status-row">
-      <label>Alertes actives</label>
-      <span class="status-val" id="alertes-count">0</span>
-    </div>
-    <div class="status-row">
-      <label>Dernière donnée</label>
-      <span class="status-val ok" id="last-update" style="font-size:11px;">--</span>
-    </div>
-    <div class="status-row">
-      <label>Total mesures</label>
-      <span class="status-val" id="total-mesures" style="color:#9ca3af;">--</span>
-    </div>
-    <div class="status-row">
-      <label>GSM / SIM900</label>
-      <span class="status-val ok">CONFIGURÉ</span>
-    </div>
-    <div class="status-row">
-      <label>Numéro admin</label>
-      <span class="status-val" style="color:#9ca3af;font-size:11px;">+237 687 988 340</span>
-    </div>
+    <div class="gauge-bar"><div class="gauge-fill" id="f-gaz" style="width:0%"></div></div>
+  </div>
+
+
+  <div class="gauge-card ok" id="card-pir" style="display:flex;flex-direction:column;justify-content:center;align-items:center">
+    <div class="gauge-label">Détecteur PIR</div>
+    <div style="font-size:48px;margin:14px 0">🚶</div>
+    <div class="pir-badge pir-ok" id="pir-badge">AUCUN MOUVEMENT</div>
   </div>
 
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// ── Config seuils ──────────────────────────────────────────
 const SEUILS = {
-  temp:  {warn:30, crit:40, max:80},
-  hum:   {minWarn:30, maxWarn:80, minCrit:20, maxCrit:85, max:100},
-  gaz:   {warn:300, crit:500, max:1000},
-  cur:   {warn:10, crit:15, max:25},
-  pwr:   {warn:2200, crit:3300, max:5000},
-  ten:   {nominal:220, tol:15, max:260},
+  temperature: { warn:35,  crit:40,  max:80   },
+  humidite:    { warn:75,  crit:85,  max:100  },
+  gaz:         { warn:300, crit:500, max:1000 },
 };
 
-// ── Gauge SVG ──────────────────────────────────────────────
-const CIRC = 251.2; // 2π × 40
-
-function setGauge(arcId, pct, color) {
-  const arc = document.getElementById(arcId);
-  if (!arc) return;
-  const offset = CIRC * (1 - Math.max(0, Math.min(1, pct)));
-  arc.style.strokeDashoffset = offset;
-  if (color) arc.style.stroke = color;
+function majJauge(nom, val) {
+  const s    = SEUILS[nom];
+  const el   = document.getElementById('g-' + nom);
+  const fill = document.getElementById('f-' + nom);
+  const card = document.getElementById('card-' + nom);
+  if (!el || !s) return;
+  el.textContent   = val;
+  fill.style.width = Math.min(100, (val / s.max) * 100) + '%';
+  const level      = val >= s.crit ? 'crit' : val >= s.warn ? 'warn' : 'ok';
+  card.className   = 'gauge-card ' + level;
+  if (val >= s.crit) card.classList.add('alerte-critique');
+  else if (val >= s.warn) card.classList.add('alerte-warning');
 }
 
-function niveauTemp(v) {
-  if (v >= SEUILS.temp.crit)  return 'crit';
-  if (v >= SEUILS.temp.warn)  return 'warn';
-  return 'ok';
-}
-function niveauHum(v) {
-  if (v > SEUILS.hum.maxCrit || v < SEUILS.hum.minCrit) return 'crit';
-  if (v > SEUILS.hum.maxWarn || v < SEUILS.hum.minWarn) return 'warn';
-  return 'ok';
-}
-function niveauGaz(v) {
-  if (v >= SEUILS.gaz.crit)  return 'crit';
-  if (v >= SEUILS.gaz.warn)  return 'warn';
-  return 'ok';
-}
-function niveauCur(v) {
-  if (v >= SEUILS.cur.crit)  return 'crit';
-  if (v >= SEUILS.cur.warn)  return 'warn';
-  return 'ok';
-}
-function niveauPwr(v) {
-  if (v >= SEUILS.pwr.crit)  return 'crit';
-  if (v >= SEUILS.pwr.warn)  return 'warn';
-  return 'ok';
-}
-function niveauTen(v) {
-  const diff = Math.abs(v - SEUILS.ten.nominal);
-  if (diff > SEUILS.ten.tol * 2) return 'crit';
-  if (diff > SEUILS.ten.tol)     return 'warn';
-  return 'ok';
-}
-
-const COLOR_LEVEL = {ok:'#39ff14', warn:'#f59e0b', crit:'#ef4444'};
-const LABEL_LEVEL = {ok:'NORMAL', warn:'ATTENTION', crit:'CRITIQUE'};
-
-function setCard(cardId, stId, niveau) {
-  const card = document.getElementById(cardId);
-  const st   = document.getElementById(stId);
-  if (!card || !st) return;
-  card.className = 'sensor-card ' + (niveau !== 'ok' ? niveau : '');
-  st.className   = 'sensor-status ' + (niveau !== 'ok' ? niveau : '');
-  st.textContent = LABEL_LEVEL[niveau] || 'NORMAL';
-}
-
-// ── Graphiques Chart.js ───────────────────────────────────
-
-const chartLabels   = [];
-const dTemp = [], dHum = [], dGaz = [], dCur = [], dPwr = [];
-const MAX_POINTS = 30;
-
-Chart.defaults.color = '#9ca3af';
-Chart.defaults.borderColor = '#1f2d5e';
-
-const ctxTHG = document.getElementById('chart-thg').getContext('2d');
-const chartTHG = new Chart(ctxTHG, {
-  type: 'line',
-  data: {
-    labels: chartLabels,
-    datasets: [
-      {label:'Temp (°C)',  data:dTemp, borderColor:'#ff5733', backgroundColor:'rgba(255,87,51,.08)',  borderWidth:2, tension:.4, pointRadius:0, fill:true},
-      {label:'Humidité (%)',data:dHum, borderColor:'#33b5ff', backgroundColor:'rgba(51,181,255,.06)', borderWidth:2, tension:.4, pointRadius:0, fill:true},
-      {label:'Gaz (ppm)', data:dGaz, borderColor:'#ffd633', backgroundColor:'rgba(255,214,51,.06)', borderWidth:2, tension:.4, pointRadius:0, fill:true},
-    ]
-  },
-  options: {
-    responsive:true, maintainAspectRatio:true,
-    animation:{duration:400},
-    plugins:{legend:{labels:{color:'#9ca3af',boxWidth:12}}},
-    scales:{
-      x:{grid:{color:'#1f2d5e'},ticks:{maxTicksLimit:8, font:{size:10}}},
-      y:{grid:{color:'#1f2d5e'},ticks:{font:{size:10}}},
-    }
-  }
-});
-
-const ctxPow = document.getElementById('chart-pow').getContext('2d');
-const chartPow = new Chart(ctxPow, {
-  type: 'line',
-  data: {
-    labels: chartLabels,
-    datasets: [
-      {label:'Courant (A)',  data:dCur, borderColor:'#33ff88', backgroundColor:'rgba(51,255,136,.08)', borderWidth:2, tension:.4, pointRadius:0, fill:true},
-      {label:'Puissance (W)',data:dPwr, borderColor:'#bb66ff', backgroundColor:'rgba(187,102,255,.06)',borderWidth:2, tension:.4, pointRadius:0, fill:true},
-    ]
-  },
-  options: {
-    responsive:true, maintainAspectRatio:true,
-    animation:{duration:400},
-    plugins:{legend:{labels:{color:'#9ca3af',boxWidth:12}}},
-    scales:{
-      x:{grid:{color:'#1f2d5e'},ticks:{maxTicksLimit:6, font:{size:10}}},
-      y:{grid:{color:'#1f2d5e'},ticks:{font:{size:10}}},
-    }
-  }
-});
-
-function push(arr, val) {
-  arr.push(val);
-  if (arr.length > MAX_POINTS) arr.shift();
-}
-
-// ── Mise à jour dashboard ─────────────────────────────────
-
-let lastNiveau = 'NORMAL';
-let arduinoOk  = false;
-let totalMes   = 0;
-
-function afficherHorsLigne() {
-  arduinoOk = false;
-  document.getElementById('arduino-status').textContent = 'HORS LIGNE';
-  document.getElementById('arduino-status').className   = 'status-val nok';
-
-  const ids = ['val-temp','val-hum','val-gaz','val-cur','val-pwr','val-ten'];
-  ids.forEach(id => { document.getElementById(id).textContent = '--'; });
-
-  setGauge('arc-temp', 0, '#374151'); setGauge('arc-hum',  0, '#374151');
-  setGauge('arc-gaz',  0, '#374151'); setGauge('arc-cur',  0, '#374151');
-  setGauge('arc-pwr',  0, '#374151'); setGauge('arc-ten',  0, '#374151');
-
-  ['card-temp','card-hum','card-gaz','card-cur','card-pwr','card-ten'].forEach(id => {
-    const c = document.getElementById(id);
-    if (c) { c.classList.remove('warn','crit'); }
+function viderJauges() {
+  ['temperature','humidite','gaz'].forEach(nom => {
+    const el   = document.getElementById('g-' + nom);
+    const fill = document.getElementById('f-' + nom);
+    const card = document.getElementById('card-' + nom);
+    if (el)   el.textContent   = '—';
+    if (fill) fill.style.width = '0%';
+    if (card) card.className   = 'gauge-card';
   });
-  ['st-temp','st-hum','st-gaz','st-cur','st-pwr','st-ten'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.className = 'sensor-status'; el.textContent = 'HORS LIGNE'; }
-  });
-
-  document.getElementById('val-pir').textContent = '--';
-  document.getElementById('pir-icon').textContent = '⚫';
+  const badge   = document.getElementById('pir-badge');
+  const pirCard = document.getElementById('card-pir');
+  if (badge)   { badge.className = 'pir-badge pir-ok'; badge.textContent = '—'; }
+  if (pirCard) pirCard.className = 'gauge-card';
+  document.getElementById('no-data-banner').classList.add('visible');
+  document.getElementById('last-update').textContent = '--';
 }
 
-async function updateDashboard() {
-  try {
-    const res  = await fetch('/api/dashboard-data');
-    const data = await res.json();
+function pollLive() {
+  fetch('/api/live-data')
+    .then(r => {
+      if (r.status === 204 || !r.ok) { viderJauges(); return null; }
+      return r.json();
+    })
+    .then(data => {
+      if (!data || data.error === 'no_data') { viderJauges(); return; }
 
-    // Si Arduino non connecté : ne pas afficher de données en direct
-    if (!data.arduino_connecte) {
-      afficherHorsLigne();
-      document.getElementById('header-salle' ).textContent = data.nom_salle  || 'Salle Serveur';
-      document.getElementById('salle-status' ).textContent = data.etat_salle || 'ACTIVE';
-      document.getElementById('alertes-count').textContent = data.alertes_actives || 0;
-      document.getElementById('alertes-count').className   = (data.alertes_actives > 0) ? 'status-val nok' : 'status-val ok';
-      document.getElementById('last-update'  ).textContent = new Date().toLocaleTimeString('fr-FR');
-      return;
-    }
+      document.getElementById('no-data-banner').classList.remove('visible');
 
-    const temp = parseFloat(data.temperature || 0);
-    const hum  = parseFloat(data.humidite    || 0);
-    const gaz  = parseFloat(data.gaz         || 0);
-    const cur  = parseFloat(data.courant      || 0);
-    const pwr  = parseFloat(data.puissance    || 0);
-    const ten  = parseFloat(data.tension       || 220);
-    const pir  = parseInt  (data.pir_detecte   || 0);
+      majJauge('temperature', parseFloat(data.temperature) || 0);
+      majJauge('humidite',    parseFloat(data.humidite)    || 0);
+      majJauge('gaz',         parseFloat(data.gaz)         || 0);
 
-    // Valeurs texte
-    document.getElementById('val-temp').textContent = temp.toFixed(1);
-    document.getElementById('val-hum' ).textContent = hum.toFixed(1);
-    document.getElementById('val-gaz' ).textContent = Math.round(gaz);
-    document.getElementById('val-cur' ).textContent = cur.toFixed(2);
-    document.getElementById('val-pwr' ).textContent = Math.round(pwr);
-    document.getElementById('val-ten' ).textContent = ten.toFixed(0);
+      const pir     = data.pir == 1 || data.pir === true || data.pir === 'true';
+      const badge   = document.getElementById('pir-badge');
+      const pirCard = document.getElementById('card-pir');
+      badge.className   = pir ? 'pir-badge pir-det' : 'pir-badge pir-ok';
+      badge.textContent = pir ? 'MOUVEMENT DÉTECTÉ' : 'AUCUN MOUVEMENT';
+      pirCard.className = 'gauge-card ' + (pir ? 'crit alerte-critique' : 'ok');
 
-    // Jauges
-    const lvTemp = niveauTemp(temp);
-    const lvHum  = niveauHum(hum);
-    const lvGaz  = niveauGaz(gaz);
-    const lvCur  = niveauCur(cur);
-    const lvPwr  = niveauPwr(pwr);
-    const lvTen  = niveauTen(ten);
-
-    setGauge('arc-temp', temp / SEUILS.temp.max, COLOR_LEVEL[lvTemp]);
-    setGauge('arc-hum',  hum  / SEUILS.hum.max,  COLOR_LEVEL[lvHum]);
-    setGauge('arc-gaz',  gaz  / SEUILS.gaz.max,  COLOR_LEVEL[lvGaz]);
-    setGauge('arc-cur',  cur  / SEUILS.cur.max,  COLOR_LEVEL[lvCur]);
-    setGauge('arc-pwr',  pwr  / SEUILS.pwr.max,  COLOR_LEVEL[lvPwr]);
-    setGauge('arc-ten',  Math.min(ten / SEUILS.ten.max, 1), COLOR_LEVEL[lvTen]);
-
-    setCard('card-temp', 'st-temp', lvTemp);
-    setCard('card-hum',  'st-hum',  lvHum);
-    setCard('card-gaz',  'st-gaz',  lvGaz);
-    setCard('card-cur',  'st-cur',  lvCur);
-    setCard('card-pwr',  'st-pwr',  lvPwr);
-    setCard('card-ten',  'st-ten',  lvTen);
-
-    // PIR
-    const pirCard = document.getElementById('card-pir');
-    document.getElementById('pir-icon').textContent = pir ? '🚨' : '✅';
-    document.getElementById('val-pir' ).textContent = pir ? 'DÉTECTÉ !' : 'AUCUN';
-    const stPir = document.getElementById('st-pir');
-    if (pir) {
-      pirCard.classList.add('actif');
-      stPir.className = 'sensor-status crit';
-      stPir.textContent = 'INTRUSION !';
-    } else {
-      pirCard.classList.remove('actif');
-      stPir.className = 'sensor-status';
-      stPir.textContent = 'INACTIF';
-    }
-
-    // En-tête niveau global
-    const niv = data.niveau_global || 'NORMAL';
-    if (niv !== lastNiveau) {
-      const badge = document.getElementById('header-niveau');
-      badge.textContent = niv;
-      badge.className   = 'niveau-badge' + (niv==='CRITIQUE'?' crit':(niv==='AVERTISSEMENT'?' warn':''));
-      lastNiveau = niv;
-    }
-    document.getElementById('header-salle'  ).textContent = data.nom_salle  || 'Salle Serveur';
-    document.getElementById('salle-status'  ).textContent = data.etat_salle || 'ACTIVE';
-    document.getElementById('alertes-count' ).textContent = data.alertes_actives || 0;
-    document.getElementById('last-update'   ).textContent = new Date().toLocaleTimeString('fr-FR');
-
-    if (data.alertes_actives > 0) {
-      document.getElementById('alertes-count').className = 'status-val nok';
-    } else {
-      document.getElementById('alertes-count').className = 'status-val ok';
-    }
-
-    arduinoOk = true;
-    document.getElementById('arduino-status').textContent = 'EN LIGNE';
-    document.getElementById('arduino-status').className   = 'status-val ok';
-
-    // Graphiques
-    const now = new Date();
-    const timeLabel = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    push(chartLabels, timeLabel);
-    push(dTemp, temp); push(dHum, hum);  push(dGaz, gaz);
-    push(dCur,  cur);  push(dPwr,  pwr);
-
-    chartTHG.update('none');
-    chartPow.update('none');
-
-  } catch(e) {
-    afficherHorsLigne();
-  }
+      document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+    })
+    .catch(() => viderJauges());
 }
 
-// ── Alertes récentes ──────────────────────────────────────
-
-async function updateAlertes() {
-  try {
-    const res  = await fetch('/api/alertes/recent?limit=8');
-    const json = await res.json();
-
-    const feed = document.getElementById('alerts-feed');
-
-    if (!json.alertes || json.alertes.length === 0) {
-      feed.innerHTML = '<div class="no-alert">✅ Aucune alerte enregistrée</div>';
-      return;
-    }
-
-    let html = '';
-    json.alertes.forEach(a => {
-      const niv = (a.niveau || '').toLowerCase().includes('crit') ? 'crit'
-                : (a.niveau || '').toLowerCase().includes('avert') ? 'warn' : 'info';
-      const time = a.created_at ? new Date(a.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) : '--';
-      const resTag = a.resolu ? ' ✓' : '';
-      html += `<div class="alert-item ${niv}">
-        <div class="alert-dot ${niv}"></div>
-        <div class="alert-text">
-          <strong>${a.type || 'alerte'}</strong> — ${a.valeur || '--'}${resTag}
-          <div style="color:#6b7280;font-size:11px;margin-top:2px;">${a.message || ''}</div>
-        </div>
-        <div class="alert-time">${time}</div>
-      </div>`;
-    });
-    feed.innerHTML = html;
-
-    // Mise à jour du compteur total
-    if (json.stats) {
-      document.getElementById('total-mesures').textContent = json.stats.total;
-    }
-  } catch(e) {}
-}
-
-// ── Horloge IoT ───────────────────────────────────────────
-
-function updateClock() {
-  document.getElementById('iot-clock').textContent =
-    new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-
-// ── Initialisation ────────────────────────────────────────
-
-updateDashboard();
-updateAlertes();
-setInterval(updateDashboard, 1000);
-setInterval(updateAlertes,   5000);
-setInterval(updateClock,     1000);
-
+pollLive();
+setInterval(pollLive, 1000);
 </script>
-
-<style id="dashboard-scroll-style">
-  /* Injecté ici pour surpasser le *::-webkit-scrollbar du layout */
-  html { overflow: hidden !important; }
-  body { overflow: hidden !important; height: 100vh !important; }
-
-  .main {
-    height: 100vh !important;
-    overflow-y: scroll !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: #2fa84f #0a1525 !important;
-  }
-
-  /* Chrome / Safari / Edge */
-  .main::-webkit-scrollbar         { display: block !important; width: 8px !important; }
-  .main::-webkit-scrollbar-track   { background: #0a1525 !important; border-radius: 6px !important; }
-  .main::-webkit-scrollbar-thumb   { background: #2fa84f !important; border-radius: 6px !important; }
-  .main::-webkit-scrollbar-thumb:hover { background: #39ff14 !important; }
-</style>
 
 @endsection

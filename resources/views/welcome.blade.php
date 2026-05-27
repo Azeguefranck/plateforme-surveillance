@@ -113,6 +113,18 @@ font-size:35px;
 
 }
 
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+[class*="container"],[class*="card"],[class*="box"],[class*="left"],[class*="right"]{max-width:100%!important}
+}
+@media(max-width:400px){
+h1{font-size:clamp(18px,6vw,35px)!important}
+h2,h3{font-size:clamp(14px,4vw,22px)!important}
+}
+
 </style>
 
 </head>
@@ -136,7 +148,7 @@ Plateforme intelligente de surveillance des salles serveurs :
 ✔ Gaz  
 ✔ Puissance électrique  
 ✔ Alertes temps réel  
-✔ SMS GSM  
+✔ Alertes Email
 ✔ Caméras IP  
 ✔ Rapports automatiques  
 
@@ -145,7 +157,7 @@ Plateforme intelligente de surveillance des salles serveurs :
 <div class="features">
 
 <div class="feature">Surveillance Temps Réel</div>
-<div class="feature">Alertes SMS GSM</div>
+<div class="feature">Alertes Email</div>
 <div class="feature">Graphiques Modernes</div>
 <div class="feature">Rapports PDF</div>
 

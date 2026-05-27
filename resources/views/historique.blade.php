@@ -195,7 +195,7 @@ table{display:block;overflow-x:auto}
 </div>
 
 <!-- Chart -->
-<div class="chart-card">
+<div class="chart-card" id="histChartCard" style="display:none">
     <div class="chart-header">
         <div class="chart-title" id="chartTitle">Évolution</div>
         <div style="font-size:11px;color:#555" id="chartMeta">—</div>
@@ -365,13 +365,11 @@ function renderChart() {
         document.getElementById('chartMeta').textContent = allRows.length + ' alertes';
         return;
     } else {
-        datasets = [
-            {label:'Temp (°C)',data:rows.map(r=>r.temperature),borderColor:'#ff5733',tension:.4,pointRadius:0},
-            {label:'Hum (%)',  data:rows.map(r=>r.humidite),   borderColor:'#33b5ff',tension:.4,pointRadius:0},
-        ];
-        document.getElementById('chartTitle').textContent = 'Température & Humidité';
+        document.getElementById('histChartCard').style.display = 'none';
+        return;
     }
 
+    document.getElementById('histChartCard').style.display = '';
     histChart = new Chart(canvas.getContext('2d'), { type:'line', data:{labels,datasets},
         options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#aaa',font:{size:11}}}},scales:{x:{ticks:{color:'#555',maxTicksLimit:10,font:{size:10}},grid:{color:'#1e2f5a'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e2f5a'}}}}
     });

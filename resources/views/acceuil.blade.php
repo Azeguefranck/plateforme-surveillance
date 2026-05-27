@@ -89,6 +89,16 @@ font-size:18px;
 
 }
 
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+[class*="card"],[class*="box"],[class*="container"]{max-width:100%!important}
+h1,h2{font-size:clamp(16px,5vw,28px)!important}
+.subtitle{font-size:14px!important}
+}
+
 </style>
 
 </head>

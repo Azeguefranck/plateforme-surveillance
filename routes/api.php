@@ -4,672 +4,808 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\GeoController;
 
-// ═══════════════════════════════════════════════════════════
-//  SEUILS D'ALERTE (configurables via .env)
-// ═══════════════════════════════════════════════════════════
+// ── Géographie ────────────────────────────────────────────
+Route::get('/geo/states/{country}',                    [GeoController::class, 'states']);
+Route::get('/geo/cities/{country}',                    [GeoController::class, 'cities']);
+Route::get('/geo/state-cities/{country}/{state}',      [GeoController::class, 'stateCities']);
+Route::get('/geo/subcities/{country}/{city}',          [GeoController::class, 'subcities']);
 
-define('SEUIL_TEMP_WARN', (float) env('ALERTE_TEMP_WARN', 30));
-define('SEUIL_TEMP_CRIT', (float) env('ALERTE_TEMP_CRIT', 40));
-define('SEUIL_HUM_MIN',   (float) env('ALERTE_HUM_MIN', 30));
-define('SEUIL_HUM_MAX',   (float) env('ALERTE_HUM_MAX', 80));
-define('SEUIL_GAZ_WARN',  (float) env('ALERTE_GAZ_WARN', 300));
-define('SEUIL_GAZ_CRIT',  (float) env('ALERTE_GAZ_CRIT', 500));
-define('SEUIL_CUR_WARN',  (float) env('ALERTE_CUR_WARN', 10));
-define('SEUIL_CUR_CRIT',  (float) env('ALERTE_CUR_CRIT', 15));
 
-// ═══════════════════════════════════════════════════════════
-//  HELPER : analyse des seuils
-// ═══════════════════════════════════════════════════════════
+// ── Méta-données capteurs (texte fixe) ────────────────────
+function getSeuilsMeta(): array
+{
+    return [
+        'temperature' => [
+            'unite'    => '°C',
+            'risque'   => 'Surchauffe serveurs, défaillance matérielle',
+            'solution' => 'Vérifier climatisation, ventilation, redémarrer les systèmes de refroidissement',
+        ],
+        'humidite' => [
+            'unite'    => '%',
+            'risque'   => 'Condensation, court-circuit, corrosion des équipements',
+            'solution' => 'Activer le déshumidificateur, vérifier l\'étanchéité de la salle',
+        ],
+        'gaz' => [
+            'unite'    => 'ppm',
+            'risque'   => 'Fuite de gaz dangereux, risque d\'incendie ou d\'explosion',
+            'solution' => 'Évacuer la salle, couper l\'alimentation, appeler les secours',
+        ],
+        'courant' => [
+            'unite'    => 'A',
+            'risque'   => 'Surcharge électrique, risque de court-circuit',
+            'solution' => 'Réduire la charge, vérifier les disjoncteurs',
+        ],
+        'puissance' => [
+            'unite'    => 'W',
+            'risque'   => 'Consommation excessive, risque de coupure générale',
+            'solution' => 'Éteindre les équipements non critiques, vérifier l\'alimentation',
+        ],
+    ];
+}
 
-function analyserSeuils(array $data): array {
-    $alertes = [];
+// ── Seuils dynamiques depuis storage/app/seuils.json ──────
+function getSeuilsValeurs(): array
+{
+    static $cache = null;
+    if ($cache !== null) return $cache;
 
-    $temp = (float) ($data['temperature'] ?? 0);
-    $hum  = (float) ($data['humidite']    ?? 0);
-    $gaz  = (float) ($data['gaz']         ?? 0);
-    $cur  = (float) ($data['courant']     ?? 0);
-    $pwr  = (float) ($data['puissance']   ?? 0);
-    $pir  = (int)   ($data['pir']         ?? 0);
-
-    // Température
-    if ($temp >= SEUIL_TEMP_CRIT) {
-        $alertes[] = ['type'=>'temperature','valeur'=>"{$temp}°C",'niveau'=>'CRITIQUE',
-            'risques'=>'surchauffe serveurs, incendie','solutions'=>'activer ventilation, couper alimentation','sms'=>true];
-    } elseif ($temp >= SEUIL_TEMP_WARN) {
-        $alertes[] = ['type'=>'temperature','valeur'=>"{$temp}°C",'niveau'=>'AVERTISSEMENT',
-            'risques'=>'échauffement progressif','solutions'=>'vérifier climatisation','sms'=>false];
+    $path = storage_path('app/seuils.json');
+    if (file_exists($path)) {
+        $data = json_decode(file_get_contents($path), true);
+        if (is_array($data)) {
+            $cache = $data;
+            return $cache;
+        }
     }
 
-    // Humidité
-    if ($hum > SEUIL_HUM_MAX || $hum < SEUIL_HUM_MIN) {
-        $niv = ($hum > 85 || $hum < 20) ? 'CRITIQUE' : 'AVERTISSEMENT';
-        $alertes[] = ['type'=>'humidite','valeur'=>"{$hum}%",'niveau'=>$niv,
-            'risques'=>($hum>SEUIL_HUM_MAX?'condensation, courts-circuits':'dessèchement composants'),
-            'solutions'=>'ajuster humidificateur/déshumidificateur','sms'=>$niv==='CRITIQUE'];
-    }
+    $cache = [
+        'temperature' => ['warning' => 35,   'critique' => 40],
+        'humidite'    => ['warning' => 75,   'critique' => 85],
+        'gaz'         => ['warning' => 300,  'critique' => 500],
+        'courant'     => ['warning' => 10,   'critique' => 15],
+        'puissance'   => ['warning' => 3000, 'critique' => 5000],
+        'pir'         => ['actif' => 1],
+    ];
+    return $cache;
+}
 
-    // Gaz / Fumée
-    if ($gaz >= SEUIL_GAZ_CRIT) {
-        $alertes[] = ['type'=>'gaz','valeur'=>"{$gaz} ppm",'niveau'=>'CRITIQUE',
-            'risques'=>'fuite gaz, incendie, intoxication','solutions'=>'évacuer salle, couper alimentation, contacter pompiers','sms'=>true];
-    } elseif ($gaz >= SEUIL_GAZ_WARN) {
-        $alertes[] = ['type'=>'gaz','valeur'=>"{$gaz} ppm",'niveau'=>'AVERTISSEMENT',
-            'risques'=>'pollution air, surchauffe','solutions'=>'aérer la salle, vérifier équipements','sms'=>false];
-    }
+// ── Analyse des mesures selon seuils dynamiques ───────────
+function analyserMesures(array $valeurs): array
+{
+    $alertes  = [];
+    $seuils   = getSeuilsValeurs();
+    $meta     = getSeuilsMeta();
 
-    // Courant
-    if ($cur >= SEUIL_CUR_CRIT) {
-        $alertes[] = ['type'=>'courant','valeur'=>"{$cur} A",'niveau'=>'CRITIQUE',
-            'risques'=>'surcharge électrique, incendie','solutions'=>'déconnecter charges, vérifier disjoncteur','sms'=>true];
-    } elseif ($cur >= SEUIL_CUR_WARN) {
-        $alertes[] = ['type'=>'courant','valeur'=>"{$cur} A",'niveau'=>'AVERTISSEMENT',
-            'risques'=>'charge élevée','solutions'=>'surveiller la consommation','sms'=>false];
-    }
+    foreach ($meta as $capteur => $m) {
+        $val = $valeurs[$capteur] ?? null;
+        if ($val === null) continue;
 
-    // PIR
-    if ($pir) {
-        $alertes[] = ['type'=>'intrusion','valeur'=>'Mouvement détecté','niveau'=>'CRITIQUE',
-            'risques'=>'intrusion non autorisée, vol, sabotage','solutions'=>'alerter sécurité, vérifier caméras, sécuriser salle','sms'=>true];
-    }
+        $warn = $seuils[$capteur]['warning']  ?? null;
+        $crit = $seuils[$capteur]['critique'] ?? null;
+        if ($warn === null || $crit === null) continue;
 
+        if ($val >= $crit) {
+            $alertes[] = [
+                'capteur'  => $capteur,
+                'valeur'   => $val,
+                'niveau'   => 'critique',
+                'seuil'    => $crit,
+                'unite'    => $m['unite'],
+                'risque'   => $m['risque'],
+                'solution' => $m['solution'],
+            ];
+        } elseif ($val >= $warn) {
+            $alertes[] = [
+                'capteur'  => $capteur,
+                'valeur'   => $val,
+                'niveau'   => 'warning',
+                'seuil'    => $warn,
+                'unite'    => $m['unite'],
+                'risque'   => $m['risque'],
+                'solution' => $m['solution'],
+            ];
+        }
+    }
     return $alertes;
 }
 
-// ═══════════════════════════════════════════════════════════
-//  HELPER : construire message SMS
-// ═══════════════════════════════════════════════════════════
+// ── Envoi email alerte critique HTML ──────────────────────
+function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = []): void
+{
+    $adminEmail = 'franckazegue0007@gmail.com';
+    $adminUser  = DB::table('users')->where('email', $adminEmail)->first();
+    $users      = $adminUser ? collect([$adminUser]) : collect();
+    if ($users->isEmpty()) return;
 
-function construireSMS(array $alertesCrit, array $data, string $salle): string {
-    $now    = now()->format('d/m/Y H:i');
-    $types  = array_column($alertesCrit, 'type');
-    $risques = [];
-    $solutions = [];
-    foreach ($alertesCrit as $a) {
-        $risques[]   = $a['risques'];
-        $solutions[] = $a['solutions'];
+    $capteurNom  = strtoupper($alerte['capteur']);
+    $niveauLabel = 'CRITIQUE';
+    $couleur     = '#ff5733';
+    $sujet       = '🚨 [CRITIQUE] Alerte ' . $capteurNom . ' — Salle Serveurs';
+
+    $platformUrl = rtrim(config('app.url'), '/') . '/dashboard';
+
+    $html =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        . 'body{background:#060d1f;font-family:Arial,sans-serif;margin:0;padding:0}'
+        . '.w{max-width:560px;width:100%;margin:0 auto;background:#060d1f}'
+        . '.h{background:linear-gradient(135deg,#1a0a0a,#060d1f);padding:28px 24px;text-align:center;border-bottom:3px solid #ff5733}'
+        . '.hl{color:#ff5733;font-size:20px;font-weight:900;letter-spacing:1px;margin:0;word-break:break-word}'
+        . '.hs{color:#5a6a99;font-size:10px;margin-top:6px;letter-spacing:1px}'
+        . '.b{background:#0a1428;padding:20px}'
+        . '.badge{display:inline-block;background:rgba(255,87,51,.12);color:#ff5733;border:1px solid #ff573355;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:14px;word-break:break-word}'
+        . 'table{width:100%;border-collapse:collapse;margin:10px 0;table-layout:fixed}'
+        . 'td{padding:9px 10px;font-size:13px;border-bottom:1px solid #0e1c35;word-break:break-word;overflow-wrap:break-word;white-space:normal}'
+        . '.k{color:#8899cc;width:38%;font-weight:600;vertical-align:top}'
+        . '.v{color:#c7d2ff}'
+        . '.val-crit{color:#ff5733;font-weight:700;font-size:14px}'
+        . '.cta{display:block;margin:18px auto 0;padding:11px 24px;background:#ff5733;color:#fff;font-weight:700;font-size:13px;text-decoration:none;border-radius:8px;text-align:center;max-width:220px}'
+        . '.f{background:#060d1f;padding:12px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35;margin-top:8px;word-break:break-word}'
+        . '</style></head><body>'
+        . '<div class="w">'
+        . '<div class="h">'
+        . '<h1 class="hl">&#128680; SYST&Egrave;ME DE SURVEILLANCE &mdash; ALERTE CRITIQUE</h1>'
+        . '<div class="hs">PLATEFORME DE SURVEILLANCE DES PARAM&Egrave;TRES DES &Eacute;QUIPEMENTS D&rsquo;UNE SALLE SERVEURS</div>'
+        . '</div>'
+        . '<div class="b">'
+        . '<div><span class="badge">&#9888; CAPTEUR : ' . $capteurNom . '</span></div>'
+
+        // ── Détail de l'alerte ──
+        . '<table>'
+        . '<tr><td class="k">Capteur</td><td class="v">' . $capteurNom . '</td></tr>'
+        . '<tr><td class="k">Valeur mesur&eacute;e</td><td class="v val-crit">' . htmlspecialchars($alerte['valeur']) . ' ' . htmlspecialchars($alerte['unite']) . '</td></tr>'
+        . '<tr><td class="k">Seuil critique</td><td class="v">' . htmlspecialchars($alerte['seuil']) . ' ' . htmlspecialchars($alerte['unite']) . '</td></tr>'
+        . '<tr><td class="k">Niveau</td><td class="v" style="color:#ff5733;font-weight:700">&#128308; CRITIQUE</td></tr>'
+        . '<tr><td class="k">Date / Heure</td><td class="v">' . htmlspecialchars($horodatage) . '</td></tr>'
+        . '</table>'
+
+        // ── Mesures actuelles de tous les capteurs ──
+        . (empty($mesures) ? '' :
+            '<div style="background:#060f28;border:1px solid #1e2f5a;border-radius:8px;padding:14px;margin:16px 0">'
+          . '<div style="color:#33b5ff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">&#128202; Mesures actuelles au moment de l\'alerte</div>'
+          . '<table style="margin:0">'
+          . '<tr>'
+          .   '<td class="k" style="width:50%">&#127777; Temp&eacute;rature</td>'
+          .   '<td class="v" style="' . (($mesures['temperature'] ?? 0) >= 40 ? 'color:#ff5733;font-weight:700' : '') . '">'
+          .   htmlspecialchars($mesures['temperature'] ?? '—') . ' °C</td>'
+          . '</tr>'
+          . '<tr>'
+          .   '<td class="k">&#128167; Humidit&eacute;</td>'
+          .   '<td class="v" style="' . (($mesures['humidite'] ?? 0) >= 85 ? 'color:#ff5733;font-weight:700' : '') . '">'
+          .   htmlspecialchars($mesures['humidite'] ?? '—') . ' %</td>'
+          . '</tr>'
+          . '<tr>'
+          .   '<td class="k">&#128168; Gaz / Air</td>'
+          .   '<td class="v" style="' . (($mesures['gaz'] ?? 0) >= 500 ? 'color:#ff5733;font-weight:700' : '') . '">'
+          .   htmlspecialchars($mesures['gaz'] ?? '—') . ' ppm</td>'
+          . '</tr>'
+          . '<tr style="border-bottom:none">'
+          .   '<td class="k" style="border-bottom:none">&#128683; D&eacute;tecteur PIR</td>'
+          .   '<td class="v" style="border-bottom:none;' . (!empty($mesures['pir']) ? 'color:#ff5733;font-weight:700' : 'color:#33ff88') . '">'
+          .   (!empty($mesures['pir']) ? '&#128308; Mouvement d&eacute;tect&eacute;' : '&#128994; Aucun mouvement') . '</td>'
+          . '</tr>'
+          . '</table>'
+          . '</div>'
+        )
+
+        // ── Risques et solutions ──
+        . '<div style="background:#0e1428;border-left:3px solid #ff5733;border-radius:6px;padding:12px 14px;margin:14px 0">'
+        . '<div style="color:#ff9966;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9888; Risques identifi&eacute;s</div>'
+        . '<div style="color:#c7d2ff;font-size:13px;word-break:break-word;overflow-wrap:break-word">' . htmlspecialchars($alerte['risque']) . '</div>'
+        . '</div>'
+        . '<div style="background:#071428;border-left:3px solid #33ff88;border-radius:6px;padding:12px 14px;margin:14px 0">'
+        . '<div style="color:#33ff88;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9989; Actions &agrave; entreprendre</div>'
+        . '<div style="color:#c7d2ff;font-size:13px;word-break:break-word;overflow-wrap:break-word">' . htmlspecialchars($alerte['solution']) . '</div>'
+        . '</div>'
+        . '<a class="cta" href="' . htmlspecialchars($platformUrl) . '">&#128064; Voir le tableau de bord</a>'
+        . '</div>'
+        . '<div class="f">Syst&egrave;me de Surveillance &mdash; Alerte automatique temps r&eacute;el &mdash; Ne pas r&eacute;pondre &agrave; cet email</div>'
+        . '</div></body></html>';
+
+    foreach ($users as $user) {
+        try {
+            Mail::html($html, function ($mail) use ($user, $sujet) {
+                $mail->to($user->email)->subject($sujet);
+            });
+        } catch (\Exception $e) {}
     }
-
-    $msg = "ALERTE CRITIQUE - {$salle}\n";
-    $msg .= "Date: {$now}\n\n";
-
-    if (in_array('temperature', $types))  $msg .= "Temp: {$data['temperature']}C\n";
-    if (in_array('humidite',    $types))  $msg .= "Hum: {$data['humidite']}%\n";
-    if (in_array('gaz',         $types))  $msg .= "Gaz: {$data['gaz']}ppm\n";
-    if (in_array('courant',     $types))  $msg .= "Cur: {$data['courant']}A\n";
-    if (in_array('intrusion',   $types))  $msg .= "Mouvement: OUI\n";
-
-    $msg .= "\nRISQUES: " . implode(', ', array_unique($risques));
-    $msg .= "\n\nSOLUTIONS: " . implode('; ', array_unique($solutions));
-
-    return substr($msg, 0, 320);
 }
 
-// ═══════════════════════════════════════════════════════════
-//  ENDPOINT ARDUINO (principal)
-// ═══════════════════════════════════════════════════════════
 
-Route::post('/arduino/data', function (Request $request) {
+// ── SMS via SIM900 (serial port) ──────────────────────────
+function envoyerSMS(array $phones, string $msg): void
+{
+    if (empty($phones)) return;
+    $msg = mb_substr($msg, 0, 160);
 
-    // Vérification clé API
-    $apiKey = $request->input('api_key') ?? $request->header('X-API-KEY');
-    if ($apiKey !== env('ARDUINO_API_KEY')) {
-        return response()->json(['error' => 'Unauthorized'], 401);
+    // Detect serial port
+    $port = null;
+    foreach (['/dev/ttyUSB0','/dev/ttyUSB1','/dev/ttyACM0','/dev/ttyACM1'] as $p) {
+        if (file_exists($p)) { $port = $p; break; }
     }
+    if (!$port) return;
 
-    $salleId = (int) ($request->input('salle_id') ?? 1);
-    $salle   = DB::table('salles_serveurs')->find($salleId);
-    $salleNom = $salle ? $salle->nom : 'Salle Serveur';
+    try {
+        exec('stty -F ' . escapeshellarg($port) . ' 9600 cs8 -cstopb -parenb raw 2>/dev/null');
+        $fd = @fopen($port, 'r+b');
+        if (!$fd) return;
+        stream_set_blocking($fd, false);
 
-    $data = [
-        'temperature' => (float) $request->input('temperature', 0),
-        'humidite'    => (float) $request->input('humidite', 0),
-        'gaz'         => (float) $request->input('gaz', 0),
-        'courant'     => (float) $request->input('courant', 0),
-        'tension'     => (float) $request->input('tension', 220),
-        'puissance'   => (float) $request->input('puissance', 0),
-        'pir'         => (int)   $request->input('pir', 0),
+        foreach ($phones as $phone) {
+            $phone = trim($phone);
+            if (strlen($phone) < 6) continue;
+            @fwrite($fd, "AT\r\n");         usleep(400000);
+            @fwrite($fd, "AT+CMGF=1\r\n"); usleep(400000);
+            @fwrite($fd, 'AT+CMGS="' . $phone . '"' . "\r\n"); usleep(800000);
+            @fwrite($fd, $msg . chr(26));   usleep(6000000);
+        }
+        @fclose($fd);
+    } catch (\Exception $e) {}
+}
+
+function collecterPhonesUtilisateurs(): array
+{
+    $phones = [];
+    try {
+        $users = DB::table('users')
+            ->where('validation_status', 'valide')
+            ->whereNotNull('telephone')
+            ->where('telephone', '!=', '')
+            ->get();
+        foreach ($users as $u) {
+            $tel = trim($u->telephone ?? '');
+            if ($tel === '') continue;
+            // Prepend indicatif if not already international
+            if (!str_starts_with($tel, '+')) {
+                $ind = trim($u->indicatif_tel ?? '');
+                $tel = $ind . preg_replace('/\D/', '', $tel);
+            }
+            if (strlen(preg_replace('/\D/', '', $tel)) >= 7) {
+                $phones[] = $tel;
+            }
+        }
+    } catch (\Exception $e) {}
+    // Always include admin
+    if (!in_array('+237692543407', $phones)) {
+        $phones[] = '+237692543407';
+    }
+    return array_unique($phones);
+}
+
+function envoyerSMSAlerte(array $alerte, string $horodatage): void
+{
+    $niv = $alerte['niveau'] === 'critique' ? 'CRITIQUE' : 'WARNING';
+    $msg = 'SUPSERVER ' . $niv . ': ' . strtoupper($alerte['capteur'])
+         . '=' . $alerte['valeur'] . $alerte['unite']
+         . ' Seuil=' . $alerte['seuil'] . $alerte['unite']
+         . ' ' . $horodatage;
+    envoyerSMS(collecterPhonesUtilisateurs(), $msg);
+}
+
+function envoyerSMSMouvement(string $horodatage): void
+{
+    $msg = 'SUPSERVER ALERTE SECURITE: Mouvement detecte dans la salle serveurs! ' . $horodatage;
+    envoyerSMS(collecterPhonesUtilisateurs(), $msg);
+}
+
+// ── État alertes — évite les spams répétés ────────────────
+function chargerEtatAlertes(): array
+{
+    $path = storage_path('app/alert_state.json');
+    if (file_exists($path)) {
+        $d = json_decode(file_get_contents($path), true);
+        if (is_array($d)) return $d;
+    }
+    return [
+        'temperature' => 'normal',
+        'humidite'    => 'normal',
+        'gaz'         => 'normal',
+        'courant'     => 'normal',
+        'puissance'   => 'normal',
+        'pir_last'    => 0,
     ];
+}
 
-    // Calcul puissance si non fournie
-    if ($data['puissance'] == 0 && $data['courant'] > 0) {
-        $data['puissance'] = round($data['courant'] * $data['tension'], 2);
+function sauvegarderEtatAlertes(array $state): void
+{
+    @file_put_contents(storage_path('app/alert_state.json'), json_encode($state));
+}
+
+function envoyerEmailMouvement(string $horodatage, ?int $salleId): void
+{
+    $couleur    = '#ffd633';
+    $adminEmail = 'franckazegue0007@gmail.com';
+    $adminUser  = DB::table('users')->where('email', $adminEmail)->first();
+    $users      = $adminUser ? collect([$adminUser]) : collect();
+    if ($users->isEmpty()) return;
+
+    $esc = fn($v) => htmlspecialchars($v ?? '', ENT_QUOTES, 'UTF-8');
+    $html =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        . 'body{background:#060d1f;font-family:Arial,sans-serif;margin:0}'
+        . '.w{max-width:560px;width:100%;margin:0 auto;background:#060d1f}'
+        . '.h{background:linear-gradient(135deg,#0e1a38,#060d1f);padding:22px;text-align:center;border-bottom:3px solid #ffd633}'
+        . '.hl{color:#ffd633;font-size:19px;font-weight:900;letter-spacing:1px;margin:0;word-break:break-word}'
+        . '.b{background:#0a1428;padding:20px}'
+        . 'table{width:100%;border-collapse:collapse;margin:10px 0;table-layout:fixed}'
+        . 'td{padding:9px 10px;font-size:13px;border-bottom:1px solid #0e1c35;word-break:break-word;overflow-wrap:break-word;white-space:normal}'
+        . '.k{color:#8899cc;width:38%;font-weight:600;vertical-align:top}'
+        . '.v{color:#c7d2ff}'
+        . '.f{background:#060d1f;padding:12px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35;word-break:break-word}'
+        . '</style></head><body><div class="w">'
+        . '<div class="h"><h1 class="hl">&#128680; INTRUSION D&Eacute;TECT&Eacute;E</h1></div>'
+        . '<div class="b"><table>'
+        . '<tr><td class="k">Type</td><td class="v" style="color:#ffd633;font-weight:700">Mouvement PIR d&eacute;tect&eacute;</td></tr>'
+        . '<tr><td class="k">Salle ID</td><td class="v">' . (int)$salleId . '</td></tr>'
+        . '<tr><td class="k">Date / Heure</td><td class="v">' . $esc($horodatage) . '</td></tr>'
+        . '</table>'
+        . '<div style="background:#1a1400;border-left:3px solid #ffd633;border-radius:6px;padding:12px 14px;margin:14px 0">'
+        . '<div style="color:#ffd633;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9888; Risques identifi&eacute;s</div>'
+        . '<div style="color:#c7d2ff;font-size:13px;word-break:break-word;overflow-wrap:break-word">Intrusion ou acc&egrave;s non autoris&eacute; dans la salle serveurs. Risque de vol, sabotage ou dommages sur les &eacute;quipements critiques.</div>'
+        . '</div>'
+        . '<div style="background:#071428;border-left:3px solid #33ff88;border-radius:6px;padding:12px 14px;margin:14px 0">'
+        . '<div style="color:#33ff88;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9989; Actions &agrave; entreprendre</div>'
+        . '<div style="color:#c7d2ff;font-size:13px;word-break:break-word;overflow-wrap:break-word">V&eacute;rifier imm&eacute;diatement les acc&egrave;s physiques, visionner les cam&eacute;ras de surveillance, pr&eacute;venir le responsable de s&eacute;curit&eacute; et consigner l\'incident.</div>'
+        . '</div>'
+        . '</div>'
+        . '<div class="f">Plateforme de Surveillance &mdash; Alerte automatique</div>'
+        . '</div></body></html>';
+
+    foreach ($users as $user) {
+        try {
+            Mail::html($html, function ($mail) use ($user) {
+                $mail->to($user->email)->subject('[INTRUSION] Mouvement détecté — Salle Serveurs');
+            });
+        } catch (\Exception $e) {}
     }
+}
 
-    // Enregistrement mesure
+// ── POST /api/capteurs — réception données Arduino ────────
+Route::post('/capteurs', function (Request $request) {
+
+    $temperature = (float) ($request->temperature ?? 0);
+    $humidite    = (float) ($request->humidite    ?? 0);
+    $gaz         = (float) ($request->gaz         ?? 0);
+    $courant     = (float) ($request->courant      ?? 0);
+    $puissance   = (float) ($request->puissance   ?? 0);
+    $tension     = $request->tension !== null ? (float) $request->tension : 220.0;
+    $pir         = (bool)  ($request->pir          ?? false);
+    $rssi        = $request->rssi     ? (int) $request->rssi     : null;
+    $salleId     = $request->salle_id ? (int) $request->salle_id : null;
+
+    // Toujours enregistrer la mesure
     DB::table('mesures')->insert([
-        'salle_id'    => $salleId,
-        'temperature' => $data['temperature'],
-        'humidite'    => $data['humidite'],
-        'gaz'         => $data['gaz'],
-        'courant'     => $data['courant'],
-        'tension'     => $data['tension'],
-        'puissance'   => $data['puissance'],
-        'pir_detecte' => $data['pir'],
-        'created_at'  => now(),
-        'updated_at'  => now(),
+        'temperature'  => $temperature,
+        'humidite'     => $humidite,
+        'gaz'          => $gaz,
+        'courant'      => $courant,
+        'puissance'    => $puissance,
+        'tension'      => $tension,
+        'pir_detecte'  => $pir ? 1 : 0,
+        'salle_id'     => $salleId,
+        'created_at'   => now(),
+        'updated_at'   => now(),
     ]);
 
-    // Analyse des seuils
-    $toutesAlertes = analyserSeuils($data);
-    $alertesCrit   = array_filter($toutesAlertes, fn($a) => $a['sms']);
-    $alertesCrit   = array_values($alertesCrit);
-    $niveauGlobal  = 'NORMAL';
-    if (count($alertesCrit))  $niveauGlobal = 'CRITIQUE';
-    elseif (count($toutesAlertes)) $niveauGlobal = 'AVERTISSEMENT';
+    $horodatage = now()->format('d/m/Y H:i:s');
+    $alertes    = analyserMesures(compact('temperature', 'humidite', 'gaz', 'courant', 'puissance'));
+    $seuils     = getSeuilsValeurs();
 
-    // Sauvegarde des alertes
-    foreach ($toutesAlertes as $a) {
+    // Charger l'état précédent des alertes
+    $prevState = chargerEtatAlertes();
+    $newState  = $prevState;
+
+    // Construire map capteur → alerte
+    $alertMap = [];
+    foreach ($alertes as $a) { $alertMap[$a['capteur']] = $a; }
+
+    $nbAlertes = 0;
+
+    // Pour chaque capteur : notifier uniquement si état change ou s'aggrave
+    foreach (['temperature', 'humidite', 'gaz', 'courant', 'puissance'] as $cap) {
+        $newNiveau = isset($alertMap[$cap]) ? $alertMap[$cap]['niveau'] : 'normal';
+        $oldNiveau = $prevState[$cap] ?? 'normal';
+        $newState[$cap] = $newNiveau;
+
+        if ($newNiveau === 'normal') continue;
+
+        // Insérer l'alerte dans la table (pour le dashboard)
         DB::table('alertes')->insert([
-            'salle_id'    => $salleId,
-            'type'        => $a['type'],
-            'niveau'      => $a['niveau'],
-            'valeur'      => $a['valeur'],
-            'message'     => "RISQUES: {$a['risques']} | SOLUTIONS: {$a['solutions']}",
-            'envoi_sms'   => $a['sms'] ? 1 : 0,
-            'envoi_email' => count($alertesCrit) > 0 ? 1 : 0,
-            'resolu'      => 0,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-    }
-
-    // Log historique
-    if (count($toutesAlertes)) {
-        DB::table('historiques')->insert([
-            'action'     => "ALERTE {$niveauGlobal} — Salle {$salleNom} — Capteurs: T={$data['temperature']}°C H={$data['humidite']}% G={$data['gaz']}ppm",
+            'type'       => $alertMap[$cap]['capteur'],
+            'message'    => 'Dépassement seuil ' . $newNiveau . ' — ' . $cap
+                          . ' : ' . $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite'],
+            'niveau'     => $newNiveau,
+            'valeur'     => $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite'],
+            'salle_id'   => $salleId,
+            'resolu'     => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-    }
+        $nbAlertes++;
 
-    // Emails aux utilisateurs validés
-    $smsMessage = '';
-    $numerosDestinataires = [env('ADMIN_SMS', '+237687988340')];
-
-    if (count($alertesCrit) > 0) {
-        $smsMessage = construireSMS($alertesCrit, $data, $salleNom);
-
-        $users = DB::table('users')->where('validation_status', 'valide')->get();
-        foreach ($users as $user) {
-            // Numéros SMS si disponibles
-            if (!empty($user->telephone) && str_starts_with($user->telephone, '+')) {
-                $numerosDestinataires[] = $user->telephone;
-            }
-
-            // Email d'alerte
-            try {
-                $alertesHtml = '';
-                foreach ($alertesCrit as $a) {
-                    $color = $a['niveau'] === 'CRITIQUE' ? '#ef4444' : '#f59e0b';
-                    $alertesHtml .= "<tr>
-                        <td style='padding:8px;color:{$color};font-weight:bold;'>{$a['niveau']}</td>
-                        <td style='padding:8px;color:white;'>" . ucfirst($a['type']) . "</td>
-                        <td style='padding:8px;color:#39ff14;'>{$a['valeur']}</td>
-                        <td style='padding:8px;color:#9ca3af;'>{$a['risques']}</td>
-                    </tr>";
-                }
-
-                Mail::send([], [], function ($m) use ($user, $salleNom, $alertesHtml, $niveauGlobal, $data) {
-                    $m->to($user->email)
-                      ->subject("🚨 ALERTE {$niveauGlobal} — {$salleNom}")
-                      ->html('<!DOCTYPE html><html><body style="background:#050816;font-family:Arial;padding:30px;">
-<div style="max-width:600px;margin:auto;background:#101935;border-radius:16px;padding:35px;">
-<h2 style="color:#ef4444;text-align:center;margin-bottom:5px;">🚨 ALERTE ' . $niveauGlobal . '</h2>
-<p style="color:#9ca3af;text-align:center;margin-bottom:25px;">' . $salleNom . ' — ' . now()->format('d/m/Y H:i:s') . '</p>
-
-<div style="background:#0b1225;border-radius:12px;padding:20px;margin-bottom:20px;">
-<table style="width:100%;border-collapse:collapse;">
-<tr style="border-bottom:1px solid #1f2d5e;">
-  <th style="padding:8px;color:#9ca3af;text-align:left;">Niveau</th>
-  <th style="padding:8px;color:#9ca3af;text-align:left;">Type</th>
-  <th style="padding:8px;color:#9ca3af;text-align:left;">Valeur</th>
-  <th style="padding:8px;color:#9ca3af;text-align:left;">Risques</th>
-</tr>
-' . $alertesHtml . '
-</table>
-</div>
-
-<div style="background:#0b1225;border-radius:12px;padding:15px;margin-bottom:20px;">
-<p style="color:#9ca3af;font-size:13px;margin-bottom:8px;">Mesures actuelles :</p>
-<p style="color:white;">Température: <strong style="color:#ff5733;">' . $data['temperature'] . '°C</strong> &nbsp;
-Humidité: <strong style="color:#33b5ff;">' . $data['humidite'] . '%</strong> &nbsp;
-Gaz: <strong style="color:#ffd633;">' . $data['gaz'] . ' ppm</strong></p>
-<p style="color:white;">Courant: <strong style="color:#33ff88;">' . $data['courant'] . ' A</strong> &nbsp;
-Puissance: <strong style="color:#bb66ff;">' . $data['puissance'] . ' W</strong> &nbsp;
-Tension: <strong>' . $data['tension'] . ' V</strong></p>
-</div>
-
-<p style="color:#9ca3af;text-align:center;font-size:12px;">Plateforme Surveillance IoT — Ne pas répondre à cet email</p>
-</div></body></html>');
-                });
-            } catch (\Exception $e) {
-                Log::warning("Email alerte non envoyé à {$user->email}: " . $e->getMessage());
-            }
-        }
-
-        // Log SMS dans la base
-        $numsUniq = array_unique($numerosDestinataires);
-        foreach ($numsUniq as $num) {
-            DB::table('sms_gsm')->insert([
-                'numero'     => $num,
-                'message'    => $smsMessage,
-                'etat'       => 'EN_ATTENTE_ARDUINO',
-                'created_at' => now(),
-                'updated_at' => now(),
+        // Email immédiat à chaque alerte critique
+        if ($newNiveau === 'critique') {
+            envoyerEmailAlerte($alertMap[$cap], $horodatage, [
+                'temperature' => $temperature,
+                'humidite'    => $humidite,
+                'gaz'         => $gaz,
+                'pir'         => $pir,
             ]);
         }
     }
 
-    // Mise à jour état salle
-    $nouvelEtat = $niveauGlobal === 'CRITIQUE' ? 'ALERTE' : ($niveauGlobal === 'AVERTISSEMENT' ? 'ATTENTION' : 'ACTIVE');
-    DB::table('salles_serveurs')->where('id', $salleId)->update(['etat' => $nouvelEtat]);
-
-    return response()->json([
-        'success'       => true,
-        'timestamp'     => now()->format('Y-m-d H:i:s'),
-        'alerte_active' => count($alertesCrit) > 0,
-        'niveau'        => $niveauGlobal,
-        'nb_alertes'    => count($toutesAlertes),
-        'alertes'       => $alertesCrit,
-        'envoyer_sms'   => count($alertesCrit) > 0,
-        'sms_message'   => $smsMessage,
-        'numeros_sms'   => array_values(array_unique($numerosDestinataires)),
-    ]);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  ENDPOINT LEGACY (compatibilité ancienne API)
-// ═══════════════════════════════════════════════════════════
-
-Route::post('/capteurs', function (Request $request) {
-    DB::table('mesures')->insert([
-        'temperature' => $request->temperature,
-        'humidite'    => $request->humidite,
-        'gaz'         => $request->gaz,
-        'courant'     => $request->courant,
-        'puissance'   => $request->puissance,
-        'tension'     => $request->tension ?? 220,
-        'pir_detecte' => $request->pir ?? 0,
-        'created_at'  => now(),
-        'updated_at'  => now(),
-    ]);
-
-    $alertesDetect = analyserSeuils([
-        'temperature' => $request->temperature,
-        'humidite'    => $request->humidite,
-        'gaz'         => $request->gaz,
-        'courant'     => $request->courant,
-        'puissance'   => $request->puissance,
-        'pir'         => $request->pir ?? 0,
-    ]);
-
-    foreach ($alertesDetect as $a) {
-        DB::table('alertes')->insert([
-            'type'       => $a['type'],
-            'niveau'     => $a['niveau'],
-            'valeur'     => $a['valeur'],
-            'message'    => $a['risques'],
-            'envoi_sms'  => $a['sms'] ? 1 : 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+    // PIR : cooldown 5 minutes pour éviter les fausses alertes
+    if ($pir && ($seuils['pir']['actif'] ?? 1)) {
+        $pirCooldown = 15; // secondes
+        if (time() - ($prevState['pir_last'] ?? 0) >= $pirCooldown) {
+            DB::table('alertes')->insert([
+                'type'       => 'pir',
+                'message'    => 'Mouvement détecté dans la salle serveurs (salle ' . $salleId . ')',
+                'niveau'     => 'warning',
+                'valeur'     => 'Détecté',
+                'salle_id'   => $salleId,
+                'resolu'     => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            envoyerEmailMouvement($horodatage, $salleId);
+            $newState['pir_last'] = time();
+            $nbAlertes++;
+        }
     }
 
-    return response()->json(['success' => true]);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  DASHBOARD DATA
-// ═══════════════════════════════════════════════════════════
-
-Route::get('/dashboard-data', function () {
-    $last = DB::table('mesures')->latest('id')->first();
-
-    $defaultData = [
-        'temperature' => 0, 'humidite' => 0, 'gaz' => 0,
-        'courant' => 0, 'puissance' => 0, 'tension' => 220,
-        'pir_detecte' => 0, 'salle_id' => 1,
-    ];
-
-    $data = $last ? (array) $last : $defaultData;
-
-    // Arduino considéré connecté si une mesure est arrivée dans les 30 dernières secondes
-    $arduinoConnecte = $last && \Carbon\Carbon::parse($last->created_at)->diffInSeconds(now()) < 30;
-
-    // Alertes non résolues
-    $alertesActives = DB::table('alertes')
-        ->where('resolu', 0)
-        ->where('created_at', '>=', now()->subMinutes(30))
-        ->count();
-
-    // Dernière alerte
-    $derniereAlerte = DB::table('alertes')->latest('id')->first();
-
-    // État salle
-    $salle = DB::table('salles_serveurs')->find($data['salle_id'] ?? 1);
-
-    $data['alertes_actives']  = $alertesActives;
-    $data['derniere_alerte']  = $derniereAlerte;
-    $data['etat_salle']       = $salle ? $salle->etat : 'ACTIVE';
-    $data['nom_salle']        = $salle ? $salle->nom : 'Salle Serveur';
-    $data['timestamp']        = now()->format('Y-m-d H:i:s');
-
-    // Niveaux alertes actuelles
-    $alertesCourantes = analyserSeuils([
-        'temperature' => $data['temperature'],
-        'humidite'    => $data['humidite'],
-        'gaz'         => $data['gaz'],
-        'courant'     => $data['courant'],
-        'puissance'   => $data['puissance'],
-        'pir'         => $data['pir_detecte'],
-    ]);
-    $niveauGlobal = 'NORMAL';
-    foreach ($alertesCourantes as $a) {
-        if ($a['niveau'] === 'CRITIQUE')       { $niveauGlobal = 'CRITIQUE'; break; }
-        if ($a['niveau'] === 'AVERTISSEMENT')  { $niveauGlobal = 'AVERTISSEMENT'; }
-    }
-    $data['niveau_global']      = $niveauGlobal;
-    $data['alertes_courantes']  = $alertesCourantes;
-    $data['arduino_connecte']   = $arduinoConnecte;
-
-    return response()->json($data);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  HISTORIQUE CAPTEURS (pagination)
-// ═══════════════════════════════════════════════════════════
-
-Route::get('/historique', function (Request $request) {
-    $limit = min((int) ($request->input('limit', 50)), 500);
-    $page  = (int) ($request->input('page', 1));
-    $debut = $request->input('debut');
-    $fin   = $request->input('fin');
-
-    $q = DB::table('mesures');
-    if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-    if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-
-    $total = $q->count();
-    $data  = (clone $q)
-        ->latest('id')
-        ->skip(($page - 1) * $limit)
-        ->take($limit)
-        ->get();
-
-    return response()->json([
-        'data'       => $data,
-        'total'      => $total,
-        'page'       => $page,
-        'per_page'   => $limit,
-        'last_page'  => (int) ceil($total / max($limit,1)),
-    ]);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  ALERTES RÉCENTES
-// ═══════════════════════════════════════════════════════════
-
-Route::get('/alertes/recent', function (Request $request) {
-    $limit = (int) ($request->input('limit', 20));
-
-    $alertes = DB::table('alertes')
-        ->latest('id')
-        ->take($limit)
-        ->get();
-
-    $stats = [
-        'total'     => DB::table('alertes')->count(),
-        'critiques' => DB::table('alertes')->where('niveau', 'CRITIQUE')->count(),
-        'non_resolu'=> DB::table('alertes')->where('resolu', 0)->count(),
-        'aujourd_hui'=> DB::table('alertes')->whereDate('created_at', today())->count(),
-    ];
-
-    return response()->json(['alertes' => $alertes, 'stats' => $stats]);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  RÉSOUDRE UNE ALERTE
-// ═══════════════════════════════════════════════════════════
-
-Route::post('/alertes/{id}/resoudre', function ($id) {
-    DB::table('alertes')->where('id', $id)->update(['resolu' => 1, 'updated_at' => now()]);
-    return response()->json(['success' => true]);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  STATS POUR LES GRAPHIQUES
-// ═══════════════════════════════════════════════════════════
-
-Route::get('/stats/graphiques', function (Request $request) {
-    $heures = (int) ($request->input('heures', 1));
-
-    $mesures = DB::table('mesures')
-        ->where('created_at', '>=', now()->subHours($heures))
-        ->orderBy('id')
-        ->get(['created_at','temperature','humidite','gaz','courant','puissance']);
-
-    return response()->json($mesures);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  SMS LOG
-// ═══════════════════════════════════════════════════════════
-
-Route::get('/sms/log', function (Request $request) {
-    $sms = DB::table('sms_gsm')
-        ->latest('id')
-        ->take(100)
-        ->get()
-        ->map(function ($s) {
-            return [
-                'id'          => $s->id,
-                'destinataire'=> $s->destinataire ?? ($s->numero ?? '—'),
-                'numero'      => $s->numero ?? '—',
-                'message'     => $s->message ?? '',
-                'etat'        => $s->etat ?? '',
-                'statut'      => isset($s->statut) ? $s->statut : (
-                    (strtoupper($s->etat ?? '') === 'ENVOYÉ' || strtoupper($s->etat ?? '') === 'ENVOYE') ? 'envoye' :
-                    (strtoupper($s->etat ?? '') === 'ECHEC'  ? 'echec'  : 'en_attente')
-                ),
-                'type'        => $s->type ?? 'manuel',
-                'created_at'  => $s->created_at ?? null,
-            ];
-        });
-    return response()->json($sms);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  MARQUER SMS COMME ENVOYÉ (Arduino confirm)
-// ═══════════════════════════════════════════════════════════
-
-Route::post('/sms/confirmer', function (Request $request) {
-    $ids = $request->input('ids', []);
-    DB::table('sms_gsm')->whereIn('id', $ids)->update(['etat' => 'ENVOYÉ', 'updated_at' => now()]);
-    return response()->json(['success' => true]);
-});
-
-// ═══════════════════════════════════════════════════════════
-//  ENVOI SMS MANUEL (depuis l'interface)
-// ═══════════════════════════════════════════════════════════
-
-Route::post('/sms/send', function (Request $request) {
-    $numero  = trim($request->input('numero', ''));
-    $message = trim($request->input('message', ''));
-
-    if (!$numero || !$message) {
-        return response()->json(['success' => false, 'message' => 'Numéro et message requis.'], 422);
-    }
-    if (strlen($message) > 160) {
-        return response()->json(['success' => false, 'message' => 'Message trop long (max 160 caractères).'], 422);
-    }
-
-    $id = DB::table('sms_gsm')->insertGetId([
-        'numero'     => $numero,
-        'message'    => $message,
-        'etat'       => 'EN_ATTENTE',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+    sauvegarderEtatAlertes($newState);
 
     return response()->json([
         'success' => true,
-        'message' => 'SMS enregistré. Il sera envoyé par le module Arduino.',
-        'id'      => $id,
+        'alertes' => $nbAlertes,
+        'seuils'  => getSeuilsValeurs(),
     ]);
 });
 
-// ═══════════════════════════════════════════════════════════
-//  STATUT GSM (depuis la base de données)
-// ═══════════════════════════════════════════════════════════
 
-Route::get('/gsm/status', function () {
-    $dernier = DB::table('sms_gsm')->latest('id')->first();
-    $total   = DB::table('sms_gsm')->count();
-    $envoyes = DB::table('sms_gsm')->where('etat', 'ENVOYÉ')->count();
+// ── GET /api/live-data ────────────────────────────────────
+Route::get('/live-data', function () {
+    $file      = '/tmp/latest_sensor.json';
+    $seuilAge  = 30; // secondes — au-delà : Arduino considéré déconnecté
+
+    // Fichier live récent (Arduino connecté via relay)
+    if (file_exists($file) && (time() - filemtime($file)) <= $seuilAge) {
+        $data = json_decode(file_get_contents($file), true) ?? [];
+        $data['pir']    = (bool)($data['pir'] ?? false);
+        $data['source'] = 'live';
+        return response()->json($data);
+    }
+
+    // Fallback DB : vérifier si la dernière mesure est récente
+    $mesure = DB::table('mesures')->latest()->first();
+    if (!$mesure) {
+        return response()->json(['error' => 'no_data'], 204);
+    }
+    $age = time() - strtotime($mesure->created_at);
+    if ($age > $seuilAge) {
+        return response()->json(['error' => 'no_data'], 204);
+    }
 
     return response()->json([
-        'statut'    => 'connecte',
-        'modele'    => 'SIM900',
-        'signal'    => '-65',
-        'operateur' => 'MTN/Orange',
-        'total_sms' => $total,
-        'envoyes'   => $envoyes,
-        'dernier'   => $dernier ? $dernier->created_at : null,
+        'temperature' => (float)$mesure->temperature,
+        'humidite'    => (float)$mesure->humidite,
+        'gaz'         => (int)$mesure->gaz,
+        'courant'     => (float)$mesure->courant,
+        'puissance'   => (float)$mesure->puissance,
+        'pir'         => (bool)($mesure->pir_detecte ?? false),
+        'ts'          => $mesure->created_at,
+        'source'      => 'db',
     ]);
 });
 
-// ═══════════════════════════════════════════════════════════
-//  STATISTIQUES AGRÉGÉES
-// ═══════════════════════════════════════════════════════════
 
-Route::get('/stats/resume', function () {
-    try {
-        $mesures   = DB::table('mesures');
-        $last24h   = DB::table('mesures')->where('created_at', '>=', now()->subHours(24));
-        $alertes   = DB::table('alertes');
+// ── GET /api/alertes-mails ────────────────────────────────
+Route::get('/alertes-mails', function (Request $request) {
+    $niveau  = $request->niveau ?? '';
+    $debut   = $request->debut  ?? '';
+    $fin     = $request->fin    ?? '';
+    $page    = max(1, (int)($request->page    ?? 1));
+    $parPage = min(100, (int)($request->par_page ?? 20));
 
-        $avg = $mesures->selectRaw('AVG(temperature) as t, AVG(humidite) as h, AVG(gaz) as g, AVG(courant) as c, AVG(puissance) as p')->first();
-        $mx  = $mesures->selectRaw('MAX(temperature) as t, MAX(humidite) as h, MAX(gaz) as g, MAX(courant) as c, MAX(puissance) as p')->first();
+    $q = DB::table('alertes')->where('niveau', 'critique');
 
-        return response()->json([
-            'total_mesures'   => DB::table('mesures')->count(),
-            'total_alertes'   => DB::table('alertes')->count(),
-            'alertes_crit'    => DB::table('alertes')->where('niveau','CRITIQUE')->count(),
-            'alertes_today'   => DB::table('alertes')->whereDate('created_at',today())->count(),
-            'mesures_today'   => DB::table('mesures')->whereDate('created_at',today())->count(),
-            'avg_temp'        => round($avg->t ?? 0, 1),
-            'avg_hum'         => round($avg->h ?? 0, 1),
-            'avg_gaz'         => round($avg->g ?? 0),
-            'avg_courant'     => round($avg->c ?? 0, 2),
-            'avg_puissance'   => round($avg->p ?? 0),
-            'max_temp'        => round($mx->t ?? 0, 1),
-            'max_gaz'         => round($mx->g ?? 0),
-            'total_serveurs'  => DB::table('serveurs')->count(),
-            'serveurs_actifs' => DB::table('serveurs')->where('statut','actif')->count(),
-            'total_salles'    => DB::table('salles')->count(),
-            'total_sms'       => DB::table('sms_gsm')->count(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
-
-// ═══════════════════════════════════════════════════════════
-//  ANOMALIES (alertes critiques non résolues)
-// ═══════════════════════════════════════════════════════════
-
-Route::get('/anomalies', function (Request $request) {
-    $limit = min((int) $request->input('limit', 50), 200);
-    $page  = max(1, (int) $request->input('page', 1));
-    $niv   = $request->input('niveau', '');
-    $debut = $request->input('debut', '');
-    $fin   = $request->input('fin', '');
-
-    $q = DB::table('alertes');
-    if ($niv)   $q->where('niveau', strtoupper($niv));
-    if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-    if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
+    if ($niveau) $q->where('niveau', $niveau);
+    if ($debut)  $q->where('created_at', '>=', $debut . ' 00:00:00');
+    if ($fin)    $q->where('created_at', '<=', $fin   . ' 23:59:59');
 
     $total = $q->count();
-    $data  = (clone $q)->latest('id')->skip(($page-1)*$limit)->take($limit)->get();
+    $rows  = (clone $q)->orderByDesc('created_at')->skip(($page - 1) * $parPage)->take($parPage)->get();
 
+    $today    = date('Y-m-d');
+    $stats = [
+        'total'    => DB::table('alertes')->where('niveau', 'critique')->count(),
+        'critique' => DB::table('alertes')->where('niveau', 'critique')->count(),
+        'warning'  => DB::table('alertes')->where('niveau', 'warning')->count(),
+        'today'    => DB::table('alertes')->where('niveau', 'critique')->whereDate('created_at', $today)->count(),
+    ];
+
+    return response()->json(['data' => $rows, 'total' => $total, 'stats' => $stats]);
+});
+
+// ── GET /api/mesures-recentes ─────────────────────────────
+// Dernières N mesures pour le graphique historique
+Route::get('/mesures-recentes', function (Request $request) {
+    $n = min((int)($request->n ?? 30), 100);
+    $mesures = DB::table('mesures')->latest()->limit($n)->get()->reverse()->values();
+    return response()->json($mesures->map(function($m) {
+        return [
+            'temperature' => (float)$m->temperature,
+            'humidite'    => (float)$m->humidite,
+            'gaz'         => (int)$m->gaz,
+            'courant'     => (float)$m->courant,
+            'puissance'   => (float)$m->puissance,
+            'pir'         => (bool)($m->pir_detecte ?? false),
+            'ts'          => $m->created_at,
+        ];
+    }));
+});
+
+
+// ── GET /api/dashboard-data ───────────────────────────────
+Route::get('/dashboard-data', function () {
+    $mesure = DB::table('mesures')->latest()->first();
+    if (!$mesure) {
+        return response()->json([
+            'temperature' => 0, 'humidite' => 0, 'gaz' => 0,
+            'courant' => 0, 'puissance' => 0, 'tension' => 0, 'pir' => false,
+        ]);
+    }
+    $data = (array) $mesure;
+    $data['pir'] = (bool) ($mesure->pir_detecte ?? false);
+    return response()->json($data);
+});
+
+
+// ── GET /api/stats ────────────────────────────────────────
+Route::get('/stats', function () {
     return response()->json([
-        'data'      => $data,
-        'total'     => $total,
-        'page'      => $page,
-        'last_page' => (int) ceil($total / max($limit,1)),
-        'stats'     => [
-            'total'     => DB::table('alertes')->count(),
-            'critiques' => DB::table('alertes')->where('niveau','CRITIQUE')->count(),
-            'non_resolu'=> DB::table('alertes')->where('resolu',0)->count(),
-            'today'     => DB::table('alertes')->whereDate('created_at',today())->count(),
-        ],
+        'totalMesures'      => DB::table('mesures')->count(),
+        'alertesCritiques'  => DB::table('alertes')->where('niveau', 'critique')->count(),
+        'alertesWarning'    => DB::table('alertes')->where('niveau', 'warning')->count(),
+        'alertesNonLues'    => DB::table('alertes')->where('resolu', 0)->count(),
+        'totalUtilisateurs' => DB::table('users')->where('validation_status', 'valide')->count(),
+        'derniereMesure'    => DB::table('mesures')->latest()->value('created_at'),
     ]);
 });
 
-// ═══════════════════════════════════════════════════════════
-//  DONNÉES RAPPORT (prévisualisation unifiée par type)
-// ═══════════════════════════════════════════════════════════
 
-Route::get('/report-data', function (Request $request) {
-    $type   = $request->input('type', 'capteurs');
-    $limit  = min((int) $request->input('limit', 50), 500);
-    $page   = max(1, (int) $request->input('page', 1));
-    $debut  = $request->input('debut');
-    $fin    = $request->input('fin');
-    $niveau = $request->input('niveau');
-    $salle  = (int) $request->input('salle', 0);
+// ── GET /api/seuils — seuils actifs ───────────────────────
+Route::get('/seuils', function () {
+    return response()->json(getSeuilsValeurs());
+});
+
+
+// ── GET /api/historique-data ──────────────────────────────
+Route::get('/historique-data', function (Request $request) {
+    $type    = $request->type    ?? 'mesures';
+    $debut   = $request->debut   ?? now()->subDays(7)->toDateString();
+    $fin     = $request->fin     ?? now()->toDateString();
+    $limit   = min((int) ($request->limit ?? 100), 2000);
+    $niveau  = $request->niveau  ?? '';
+    $salleId = $request->salle_id ?? '';
+    $tMin    = $request->temp_min  !== null && $request->temp_min  !== '' ? (float)$request->temp_min  : null;
+    $tMax    = $request->temp_max  !== null && $request->temp_max  !== '' ? (float)$request->temp_max  : null;
+    $hMin    = $request->hum_min   !== null && $request->hum_min   !== '' ? (float)$request->hum_min   : null;
+    $hMax    = $request->hum_max   !== null && $request->hum_max   !== '' ? (float)$request->hum_max   : null;
+    $gMin    = $request->gaz_min   !== null && $request->gaz_min   !== '' ? (float)$request->gaz_min   : null;
+    $gMax    = $request->gaz_max   !== null && $request->gaz_max   !== '' ? (float)$request->gaz_max   : null;
+    $cMin    = $request->courant_min !== null && $request->courant_min !== '' ? (float)$request->courant_min : null;
+    $cMax    = $request->courant_max !== null && $request->courant_max !== '' ? (float)$request->courant_max : null;
+    $pMin    = $request->pwr_min   !== null && $request->pwr_min   !== '' ? (float)$request->pwr_min   : null;
+    $pMax    = $request->pwr_max   !== null && $request->pwr_max   !== '' ? (float)$request->pwr_max   : null;
 
     try {
-        if ($type === 'utilisateurs') {
-            $q = DB::table('users')
-                ->select('id','nom','prenom','email','role','validation_status','telephone','organisation','created_at');
-        } elseif ($type === 'salles') {
-            $q = DB::table('salles');
-        } elseif ($type === 'serveurs') {
-            $q = DB::table('serveurs');
-        } elseif ($type === 'incidents') {
-            $q = DB::table('alertes')->where('niveau', 'CRITIQUE');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-        } elseif ($type === 'securite') {
-            $q = DB::table('alertes')->where('type', 'intrusion');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-        } elseif (in_array($type, ['alertes', 'anomalies'])) {
-            $q = DB::table('alertes');
-            if ($debut)  $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)    $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            if ($niveau) $q->where('niveau', strtoupper($niveau));
-        } elseif ($type === 'energie') {
-            $q = DB::table('mesures')->select('id','created_at','courant','puissance','tension','temperature','humidite');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            if ($salle) $q->where('salle_id', $salle);
-        } elseif ($type === 'maintenance') {
-            $q = DB::table('historiques');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-        } else {
-            // capteurs, historique, default
-            $q = DB::table('mesures');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            if ($salle) $q->where('salle_id', $salle);
+        if ($type === 'alertes') {
+            $q = DB::table('alertes')
+                ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+                ->orderByDesc('created_at');
+            if ($niveau)  $q->where('niveau', $niveau);
+            if ($salleId) $q->where('salle_id', (int)$salleId);
+            return response()->json($q->limit($limit)->get());
         }
 
-        $total = $q->count();
-        $data  = (clone $q)->latest('id')->skip(($page - 1) * $limit)->take($limit)->get();
-
-        return response()->json([
-            'data'      => $data,
-            'total'     => $total,
-            'page'      => $page,
-            'last_page' => (int) ceil($total / max($limit, 1)),
-        ]);
+        $q = DB::table('mesures')
+            ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+            ->orderByDesc('created_at');
+        if ($salleId) $q->where('salle_id', (int)$salleId);
+        if ($tMin !== null) $q->where('temperature', '>=', $tMin);
+        if ($tMax !== null) $q->where('temperature', '<=', $tMax);
+        if ($hMin !== null) $q->where('humidite', '>=', $hMin);
+        if ($hMax !== null) $q->where('humidite', '<=', $hMax);
+        if ($gMin !== null) $q->where('gaz', '>=', $gMin);
+        if ($gMax !== null) $q->where('gaz', '<=', $gMax);
+        if ($cMin !== null) $q->where('courant', '>=', $cMin);
+        if ($cMax !== null) $q->where('courant', '<=', $cMax);
+        if ($pMin !== null) $q->where('puissance', '>=', $pMin);
+        if ($pMax !== null) $q->where('puissance', '<=', $pMax);
+        return response()->json($q->limit($limit)->get());
     } catch (\Exception $e) {
-        return response()->json(['data' => [], 'total' => 0]);
+        return response()->json([]);
     }
+});
+
+
+// ── GET /api/mesures-horaires — moyennes horaires du jour ──
+Route::get('/mesures-horaires', function () {
+    try {
+        $today = now()->toDateString();
+        $rows = DB::table('mesures')
+            ->selectRaw('HOUR(created_at) as heure,
+                         ROUND(AVG(temperature),1) as temperature,
+                         ROUND(AVG(humidite),1)    as humidite,
+                         ROUND(AVG(gaz),1)          as gaz,
+                         COUNT(*) as nb')
+            ->whereDate('created_at', $today)
+            ->groupByRaw('HOUR(created_at)')
+            ->orderBy('heure')
+            ->get();
+        return response()->json($rows);
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
+});
+
+
+// ── GET /api/alertes-recentes ─────────────────────────────
+Route::get('/alertes-recentes', function (Request $request) {
+    $limit = min((int) ($request->limit ?? 30), 500);
+    try {
+        return response()->json(DB::table('alertes')->latest()->limit($limit)->get());
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
+});
+
+
+// ── POST /api/alertes/lire ────────────────────────────────
+Route::post('/alertes/lire', function (Request $request) {
+    $id = $request->id;
+    if ($id === 'all') {
+        DB::table('alertes')->update(['resolu' => 1]);
+    } else {
+        DB::table('alertes')->where('id', $id)->update(['resolu' => 1]);
+    }
+    return response()->json(['success' => true]);
+});
+
+
+// ── GET /api/salles-list — liste légère pour dropdowns ────
+Route::get('/salles-list', function () {
+    try {
+        return response()->json(DB::table('salles')->select('id','nom')->orderBy('nom')->get());
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
+});
+
+
+// ── GET /api/filter — filtrage avancé multi-paramètres ────
+Route::get('/filter', function (Request $request) {
+    $allowed = ['mesures','alertes','salles','serveurs'];
+    $type    = in_array($request->type, $allowed) ? $request->type : 'mesures';
+    $debut   = $request->debut    ?? now()->subDays(7)->toDateString();
+    $fin     = $request->fin      ?? now()->toDateString();
+    $limit   = min((int)($request->limit ?? 500), 10000);
+    $niveau  = $request->niveau   ?? '';
+    $salleId = $request->salle_id ?? '';
+    $tMin    = $request->temp_min    !== null && $request->temp_min    !== '' ? (float)$request->temp_min    : null;
+    $tMax    = $request->temp_max    !== null && $request->temp_max    !== '' ? (float)$request->temp_max    : null;
+    $hMin    = $request->hum_min     !== null && $request->hum_min     !== '' ? (float)$request->hum_min     : null;
+    $hMax    = $request->hum_max     !== null && $request->hum_max     !== '' ? (float)$request->hum_max     : null;
+    $gMin    = $request->gaz_min     !== null && $request->gaz_min     !== '' ? (float)$request->gaz_min     : null;
+    $gMax    = $request->gaz_max     !== null && $request->gaz_max     !== '' ? (float)$request->gaz_max     : null;
+    $cMin    = $request->courant_min !== null && $request->courant_min !== '' ? (float)$request->courant_min : null;
+    $cMax    = $request->courant_max !== null && $request->courant_max !== '' ? (float)$request->courant_max : null;
+    $pMin    = $request->pwr_min     !== null && $request->pwr_min     !== '' ? (float)$request->pwr_min     : null;
+    $pMax    = $request->pwr_max     !== null && $request->pwr_max     !== '' ? (float)$request->pwr_max     : null;
+
+    try {
+        if ($type === 'salles') {
+            $data = DB::table('salles')->get();
+            return response()->json(['data' => $data, 'total' => $data->count()]);
+        }
+        if ($type === 'serveurs') {
+            $data = DB::table('serveurs')->get();
+            return response()->json(['data' => $data, 'total' => $data->count()]);
+        }
+        if ($type === 'alertes') {
+            $q = DB::table('alertes')
+                ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+                ->orderByDesc('created_at');
+            if ($niveau)  $q->where('niveau', $niveau);
+            if ($salleId) $q->where('salle_id', (int)$salleId);
+            $total = $q->count();
+            $data  = $q->limit($limit)->get();
+            return response()->json(['data' => $data, 'total' => $total]);
+        }
+        // mesures
+        $q = DB::table('mesures')
+            ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+            ->orderByDesc('created_at');
+        if ($salleId) $q->where('salle_id', (int)$salleId);
+        if ($tMin !== null) $q->where('temperature', '>=', $tMin);
+        if ($tMax !== null) $q->where('temperature', '<=', $tMax);
+        if ($hMin !== null) $q->where('humidite', '>=', $hMin);
+        if ($hMax !== null) $q->where('humidite', '<=', $hMax);
+        if ($gMin !== null) $q->where('gaz', '>=', $gMin);
+        if ($gMax !== null) $q->where('gaz', '<=', $gMax);
+        if ($cMin !== null) $q->where('courant', '>=', $cMin);
+        if ($cMax !== null) $q->where('courant', '<=', $cMax);
+        if ($pMin !== null) $q->where('puissance', '>=', $pMin);
+        if ($pMax !== null) $q->where('puissance', '<=', $pMax);
+        $total = $q->count();
+        $data  = $q->limit($limit)->get();
+        return response()->json(['data' => $data, 'total' => $total]);
+    } catch (\Exception $e) {
+        return response()->json(['data' => [], 'total' => 0, 'error' => $e->getMessage()]);
+    }
+});
+
+
+// ── GET /api/seuils-arduino — format CSV pour Arduino ─────
+// Retourne: tw,tc,hw,hc,gw,gc,cw,cc,pw,pc,pir
+// ex: 35,40,75,85,300,500,10,15,3000,5000,1
+Route::get('/seuils-arduino', function () {
+    $s = getSeuilsValeurs();
+    $csv = implode(',', [
+        (int) ($s['temperature']['warning']  ?? 35),
+        (int) ($s['temperature']['critique'] ?? 40),
+        (int) ($s['humidite']['warning']     ?? 75),
+        (int) ($s['humidite']['critique']    ?? 85),
+        (int) ($s['gaz']['warning']          ?? 300),
+        (int) ($s['gaz']['critique']         ?? 500),
+        (int) ($s['courant']['warning']      ?? 10),
+        (int) ($s['courant']['critique']     ?? 15),
+        (int) ($s['puissance']['warning']    ?? 3000),
+        (int) ($s['puissance']['critique']   ?? 5000),
+        ($s['pir']['actif'] ?? 1) ? 1 : 0,
+    ]);
+    return response($csv, 200)->header('Content-Type', 'text/plain');
+});
+
+
+// ── GET /api/phones — numéros téléphone pour Arduino ──────
+// Retourne: +237692543407,+237699001122,...
+Route::get('/phones', function () {
+    $phones = [];
+    try {
+        $users = DB::table('users')
+            ->where('validation_status', 'valide')
+            ->whereNotNull('telephone')
+            ->where('telephone', '!=', '')
+            ->get();
+        foreach ($users as $u) {
+            $tel = trim($u->telephone ?? '');
+            if ($tel === '') continue;
+            if (!str_starts_with($tel, '+')) {
+                $ind = trim($u->indicatif_tel ?? '');
+                $tel = $ind . preg_replace('/\D/', '', $tel);
+            }
+            if (strlen(preg_replace('/\D/', '', $tel)) >= 7) {
+                $phones[] = $tel;
+            }
+        }
+    } catch (\Exception $e) {}
+
+    // Admin principal toujours inclus
+    if (!in_array('+237692543407', $phones)) {
+        $phones[] = '+237692543407';
+    }
+
+    return response(implode(',', array_unique($phones)), 200)
+        ->header('Content-Type', 'text/plain');
+});
+
+
+// ── DELETE /api/alerte/{id} ───────────────────────────────
+Route::delete('/alerte/{id}', function (int $id) {
+    DB::table('alertes')->where('id', $id)->delete();
+    return response()->json(['success' => true]);
 });

@@ -23,7 +23,7 @@ def ouvrir_port(port: str):
     s = serial.Serial()
     s.port     = port
     s.baudrate = BAUD_RATE
-    s.timeout  = 5
+    s.timeout  = 0.5
     s.dtr      = False
     s.rts      = False
     s.open()
@@ -148,12 +148,32 @@ def run():
     print(f"[RELAY] {time.strftime('%H:%M:%S')}  {port}  ->  {API_URL}", flush=True)
     print(f"[RELAY] DTR=False (pas de reset à l'ouverture)", flush=True)
 
+    UPLOAD_SIGNAL = "/tmp/arduino_upload"
+
     while True:
+        # Pause propre pendant un upload Arduino
+        if os.path.exists(UPLOAD_SIGNAL):
+            print("[RELAY] Upload détecté, port libéré.", flush=True)
+            while os.path.exists(UPLOAD_SIGNAL):
+                time.sleep(0.5)
+            print("[RELAY] Upload terminé, reprise.", flush=True)
+            time.sleep(2)
+            continue
+
         try:
             ser = ouvrir_port(port)
             print(f"[RELAY] Port ouvert. En attente de données...", flush=True)
             buf = b""
             while True:
+                # Céder le port si un upload commence
+                if os.path.exists(UPLOAD_SIGNAL):
+                    try:
+                        ser.reset_input_buffer()
+                    except Exception:
+                        pass
+                    ser.close()
+                    break
+
                 try:
                     byte = ser.read(1)
                 except serial.SerialException:

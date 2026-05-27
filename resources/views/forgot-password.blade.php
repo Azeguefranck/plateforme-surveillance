@@ -154,6 +154,18 @@ h1 {
 }
 .info-box i {color:#33b5ff;margin-top:2px;flex-shrink:0}
 
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+input,select,textarea{max-width:100%!important;width:100%!important}
+[class*="card"],[class*="box"],[class*="form"],[class*="container"]{max-width:100%!important}
+}
+@media(max-width:400px){
+h1,h2{font-size:clamp(15px,5vw,24px)!important}
+}
+
 </style>
 </head>
 <body>

@@ -3,235 +3,219 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="mobile-web-app-capable" content="no">
-<meta name="apple-mobile-web-app-capable" content="no">
-<title>Connexion — Plateforme Surveillance</title>
-<link rel="stylesheet" href="/css/noselect.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<title>Connexion — Plateforme de Surveillance</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
-/* Scrollbar fine thémée */
-::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#1e3050;border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:#2fa84f;}
-html{scrollbar-width:thin;scrollbar-color:#1e3050 transparent;}
 
-body{
-  background:#060c1a;
-  color:#d4dced;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:#020c1a;
   min-height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-
-/* ─── NAVBAR ─── */
-.navbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 32px;
-  background:rgba(8,15,30,0.97);
-  border-bottom:1px solid #182640;
-  position:sticky;
-  top:0;
-  z-index:100;
-  flex-wrap:wrap;
-  gap:10px;
-}
-.logo{font-size:19px;font-weight:bold;color:#2fa84f;letter-spacing:2px;text-decoration:none;}
-
-.btn-nav{
-  padding:8px 20px;
-  border:1.5px solid #2fa84f;
-  background:transparent;
-  color:#2fa84f;
-  border-radius:8px;
-  font-size:13px;
-  font-weight:bold;
-  text-decoration:none;
-  transition:.2s;
-}
-.btn-nav:hover{background:#2fa84f;color:#060c1a;}
-
-/* ─── PAGE CENTER ─── */
-.page-center{
-  flex:1;
   display:flex;
   justify-content:center;
   align-items:center;
-  padding:30px 16px;
+  font-family:'Segoe UI', Arial, sans-serif;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
 }
 
-/* ─── CARD ─── */
-.card{
-  width:100%;
-  max-width:440px;
-  background:#0d1a2e;
-  padding:36px 32px;
-  border-radius:16px;
-  border:1px solid #182640;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+/* Background grid */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,255,136,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,.03) 1px, transparent 1px);
+  background-size:45px 45px;
+  pointer-events:none;
 }
 
-.card-title{
-  color:#2fa84f;
+/* Radial glow */
+body::after {
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(0,255,136,.05) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.box {
+  position:relative;z-index:1;
+  width:100%;max-width:440px;
+  background:linear-gradient(135deg,#0e1a38,#0a1225);
+  padding:40px 38px;
+  border-radius:20px;
+  border:1px solid #1e2f5a;
+  box-shadow:0 0 60px rgba(0,0,0,.6), 0 0 30px rgba(0,255,136,.05);
+  animation:fadeUp .5s ease;
+}
+
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Top bar */
+.box-top {
   text-align:center;
-  margin-bottom:5px;
-  font-size:26px;
-  font-weight:bold;
+  margin-bottom:28px;
 }
-.card-sub{text-align:center;color:#6b7fa0;font-size:13px;margin-bottom:26px;}
-
-/* ─── ALERTES ─── */
-.alert{padding:11px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;font-weight:bold;}
-.alert-error{background:#3a0a0a;border:1px solid #c0392b;color:#f1948a;}
-.alert-success{background:#062010;border:1px solid #27ae60;color:#82e0aa;}
-
-/* ─── CHAMPS ─── */
-.field{margin-bottom:14px;}
-.field label{
-  display:block;font-size:12px;color:#8090b0;
-  font-weight:bold;margin-bottom:5px;
+.box-brand {
+  font-size:13px;letter-spacing:5px;color:#33ff88;
+  text-transform:uppercase;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:10px;
 }
-
-.input-wrap{position:relative;}
-.input-wrap input{
-  width:100%;
-  padding:11px 44px 11px 14px;
-  background:#0a1525;
-  border:1.5px solid #1e3050;
-  border-radius:9px;
-  font-size:14px;
-  color:#d4dced;
-  outline:none;
-  transition:border-color .2s;
+.brand-line {
+  width:28px;height:1px;
+  background:linear-gradient(90deg,transparent,#33ff88);
 }
-.input-wrap input:focus{border-color:#2fa84f;}
-.input-wrap input::placeholder{color:#3d5070;}
+.brand-line.r{transform:scaleX(-1)}
 
-.eye-btn{
-  position:absolute;
-  right:12px;top:50%;
-  transform:translateY(-50%);
-  background:none;border:none;
-  color:#6b7fa0;cursor:pointer;
-  font-size:15px;
-  padding:2px;
-  transition:color .2s;
+h1 {
+  font-size:26px;font-weight:800;color:#fff;
+  letter-spacing:1px;margin:0;
 }
-.eye-btn:hover{color:#2fa84f;}
+h1 span{color:#33ff88}
 
-/* ─── BOUTONS ─── */
-.btn-submit{
-  width:100%;
-  padding:13px;
-  background:#2fa84f;
-  color:#060c1a;
-  border:none;
-  border-radius:9px;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:6px;
-  transition:.2s;
+/* Alert boxes */
+.alert-box {
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;border-radius:10px;
+  margin-bottom:16px;font-size:13px;font-weight:600;line-height:1.4;
+  animation:fadeUp .3s ease;
 }
-.btn-submit:hover{background:#249040;}
+.alert-error  {background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff7755}
+.alert-success{background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:#33ff88}
+.alert-warn   {background:rgba(255,214,51,.1);border:1px solid rgba(255,214,51,.3);color:#ffd633}
 
-.forgot-link{
+/* Form */
+.field {
+  margin-bottom:16px;
+}
+.field label {
   display:block;
-  text-align:center;
-  color:#5a7090;
-  text-decoration:none;
-  font-size:12px;
-  margin-top:10px;
-  transition:color .2s;
+  font-size:11px;font-weight:700;letter-spacing:.8px;
+  color:#5a6a99;text-transform:uppercase;margin-bottom:6px;
 }
-.forgot-link:hover{color:#2fa84f;}
-
-.divider{display:flex;align-items:center;gap:10px;margin:16px 0 10px;}
-.divider-line{flex:1;height:1px;background:#182640;}
-.divider-text{font-size:11px;color:#3d5070;}
-
-.links-bar{display:flex;flex-direction:column;gap:8px;}
-
-.btn-link-outline{
-  display:block;text-align:center;
-  padding:11px;
-  border:1.5px solid #182640;
-  border-radius:9px;
-  color:#d4dced;
-  text-decoration:none;
-  font-size:13px;font-weight:bold;
-  transition:.2s;background:transparent;
+.field input {
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,.04);
+  border:1px solid #1e2f5a;border-radius:9px;
+  color:#e0e8ff;font-size:15px;outline:none;
+  transition:.25s;font-family:inherit;
 }
-.btn-link-outline:hover{border-color:#2fa84f;color:#2fa84f;background:rgba(47,168,79,0.06);}
-
-/* ─── RESPONSIVE ─── */
-@media(max-width:480px){
-  .navbar{padding:12px 18px;}
-  .card{padding:24px 18px;}
-  .card-title{font-size:22px;}
+.field input:focus {
+  border-color:#33ff88;
+  box-shadow:0 0 0 3px rgba(51,255,136,.08);
 }
+.field input::placeholder{color:#3a4a6a}
+
+/* Password wrapper */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:44px}
+.pw-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#5a6a99;cursor:pointer;
+  font-size:16px;transition:.2s;padding:0;
+}
+.pw-eye:hover{color:#33ff88}
+
+/* Submit */
+.btn-submit {
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,rgba(51,255,136,.15),rgba(51,255,136,.08));
+  border:1px solid rgba(51,255,136,.35);border-radius:9px;
+  color:#33ff88;font-size:15px;font-weight:800;
+  letter-spacing:1.5px;cursor:pointer;transition:.25s;
+  text-transform:uppercase;margin-top:4px;
+}
+.btn-submit:hover {
+  background:linear-gradient(135deg,rgba(51,255,136,.22),rgba(51,255,136,.12));
+  box-shadow:0 0 24px rgba(51,255,136,.3);
+  transform:translateY(-1px);
+}
+
+/* Links */
+.links {
+  margin-top:22px;
+  display:flex;flex-direction:column;gap:10px;align-items:center;
+}
+.links a {
+  color:#5a6a99;text-decoration:none;font-size:13px;transition:.2s;
+}
+.links a:hover{color:#33ff88}
+
+.sep {
+  height:1px;margin:20px 0;
+  background:linear-gradient(90deg,transparent,#1e2f5a,transparent);
+}
+
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+input,select,textarea{max-width:100%!important;width:100%!important}
+[class*="card"],[class*="box"],[class*="form"],[class*="container"]{max-width:100%!important}
+}
+@media(max-width:400px){
+h1,h2{font-size:clamp(15px,5vw,24px)!important}
+}
+
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-  <a class="logo" href="/accueil">SURVEILLANCE</a>
-  <a href="/accueil" class="btn-nav">Accueil</a>
-</nav>
+<div class="box">
 
-<!-- CENTRE -->
-<div class="page-center">
-  <div class="card">
-
-    <div class="card-title">Connexion</div>
-    <div class="card-sub">Accédez à la plateforme de surveillance</div>
-
-    @if(session('error'))
-      <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
-    @endif
-    @if(session('success'))
-      <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
-    @endif
-
-    <form method="POST" action="/login-user">
-      @csrf
-
-      <div class="field">
-        <label><i class="fa-solid fa-lock"></i> Mot de passe</label>
-        <div class="input-wrap">
-          <input type="password" name="password" id="pwd" placeholder="Entrez le mot de passe" required autocomplete="current-password" autofocus>
-          <button type="button" class="eye-btn" onclick="togglePwd('pwd','eye1')" title="Afficher/masquer">
-            <i class="fa-solid fa-eye" id="eye1"></i>
-          </button>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-submit">
-        <i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER
-      </button>
-    </form>
-
+  <div class="box-top">
+    <h1><span>Connexion</span></h1>
   </div>
-</div>
 
-<script>
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();});
-function togglePwd(id, iconId){
-  const inp=document.getElementById(id);
-  const ico=document.getElementById(iconId);
-  if(inp.type==='password'){
-    inp.type='text';
-    ico.classList.replace('fa-eye','fa-eye-slash');
-  } else {
-    inp.type='password';
-    ico.classList.replace('fa-eye-slash','fa-eye');
-  }
-}
-</script>
+  {{-- Messages de statut --}}
+  @if(session('error'))
+    @php
+      $err = session('error');
+      $cls = str_contains($err, 'attente') ? 'alert-warn' : (str_contains($err, 'refusé') ? 'alert-error' : 'alert-error');
+      $ico = str_contains($err, 'attente') ? '⏳' : (str_contains($err, 'refusé') ? '❌' : '⚠️');
+    @endphp
+    <div class="alert-box {{ $cls }}">
+      <span>{{ $ico }}</span>
+      <span>{{ $err }}</span>
+    </div>
+  @endif
+
+  @if(session('success'))
+    <div class="alert-box alert-success">
+      <span>✅</span>
+      <span>{{ session('success') }}</span>
+    </div>
+  @endif
+
+  <form method="POST" action="/login-user">
+    @csrf
+
+    <div class="field">
+      <label>Mot de passe</label>
+      <div class="pw-wrap">
+        <input type="password" name="mot_de_passe" id="pw-input" placeholder="••••••••" required>
+        <button type="button" class="pw-eye" onclick="this.previousElementSibling.type==='password'?(this.previousElementSibling.type='text',this.textContent='🙈'):(this.previousElementSibling.type='password',this.textContent='👁')">👁</button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit">⊙ Se connecter</button>
+
+  </form>
+
+  <div class="sep"></div>
+
+  <div class="links">
+    <a href="/accueil">← Retour à l'accueil</a>
+  </div>
+
+</div>
 
 </body>
 </html>

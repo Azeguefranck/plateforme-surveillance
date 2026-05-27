@@ -128,7 +128,7 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
     <div class="type-card" data-type="salles" onclick="selectType(this,'salles')">
         <div class="type-icon">&#127970;</div>
-        <div class="type-name">Salles &amp; Serveurs</div>
+        <div class="type-name">Salles &amp; Équipements</div>
         <div class="type-desc">Inventaire des équipements</div>
     </div>
 </div>
@@ -332,7 +332,7 @@ function selectType(el, type) {
     document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     currentType = type;
-    const labels = {mesures:'Mesures capteurs', alertes:'Alertes', salles:'Salles & Serveurs'};
+    const labels = {mesures:'Mesures capteurs', alertes:'Alertes', salles:'Salles & Équipements'};
     document.getElementById('chartTitle').textContent = labels[type];
     // Show/hide mesures-specific filters
     document.getElementById('extraFilters').style.display = type === 'mesures' ? 'flex' : 'none';

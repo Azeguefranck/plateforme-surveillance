@@ -12,21 +12,22 @@ class ServeursController extends Controller
         $user = session('user');
         if (!$user) return redirect('/login');
 
-        $serveurs = $salles = collect();
-        $stats    = ['total' => 0, 'en_ligne' => 0, 'hors_ligne' => 0, 'maintenance' => 0];
+        $equipements = $salles = collect();
+        $stats = ['total'=>0,'actif'=>0,'maintenance'=>0,'panne'=>0,'critique'=>0];
 
         try {
-            $serveurs = DB::table('serveurs')->orderByDesc('created_at')->get();
-            $salles   = DB::table('salles')->get();
+            $equipements = DB::table('serveurs')->orderByDesc('created_at')->get();
+            $salles      = DB::table('salles')->get();
             $stats = [
                 'total'       => DB::table('serveurs')->count(),
-                'en_ligne'    => DB::table('serveurs')->where('statut', 'en_ligne')->count(),
-                'hors_ligne'  => DB::table('serveurs')->where('statut', 'hors_ligne')->count(),
-                'maintenance' => DB::table('serveurs')->where('statut', 'maintenance')->count(),
+                'actif'       => DB::table('serveurs')->where('statut','actif')->count(),
+                'maintenance' => DB::table('serveurs')->where('statut','maintenance')->count(),
+                'panne'       => DB::table('serveurs')->whereIn('statut',['en_panne','critique'])->count(),
+                'hors_ligne'  => DB::table('serveurs')->whereIn('statut',['hors_ligne','deconnecte','inactif'])->count(),
             ];
         } catch (\Exception $e) {}
 
-        return view('serveurs', compact('user', 'serveurs', 'salles', 'stats'));
+        return view('serveurs', compact('user','equipements','salles','stats'));
     }
 
     public function store(Request $request)
@@ -34,31 +35,14 @@ class ServeursController extends Controller
         $user = session('user');
         if (!$user) return redirect('/login');
 
-        $request->validate([
-            'nom'  => 'required|string|max:150',
-            'type' => 'required|string',
+        $request->validate(['nom'=>'required|string|max:150','type'=>'required|string']);
+
+        DB::table('serveurs')->insert($this->fields($request) + [
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        DB::table('serveurs')->insert([
-            'nom'               => $request->nom,
-            'type'              => $request->type,
-            'adresse_ip'        => $request->adresse_ip,
-            'nom_domaine'       => $request->nom_domaine,
-            'localisation'      => $request->localisation,
-            'salle_id'          => $request->salle_id ?: null,
-            'responsable'       => $request->responsable,
-            'os'                => $request->os,
-            'ram'               => $request->ram,
-            'cpu'               => $request->cpu,
-            'stockage'          => $request->stockage,
-            'statut'            => $request->statut ?? 'en_ligne',
-            'date_installation' => $request->date_installation ?: null,
-            'notes'             => $request->notes,
-            'created_at'        => now(),
-            'updated_at'        => now(),
-        ]);
-
-        return back()->with('success_srv', 'Serveur ajouté avec succès.');
+        return back()->with('success_srv', 'Équipement ajouté avec succès.');
     }
 
     public function destroy($id)
@@ -67,7 +51,7 @@ class ServeursController extends Controller
         if (!$user) return redirect('/login');
 
         DB::table('serveurs')->where('id', $id)->delete();
-        return back()->with('success_srv', 'Serveur supprimé.');
+        return back()->with('success_srv', 'Équipement supprimé.');
     }
 
     public function update(Request $request, $id)
@@ -75,24 +59,55 @@ class ServeursController extends Controller
         $user = session('user');
         if (!$user) return redirect('/login');
 
-        DB::table('serveurs')->where('id', $id)->update([
-            'nom'               => $request->nom,
-            'type'              => $request->type,
-            'adresse_ip'        => $request->adresse_ip,
-            'nom_domaine'       => $request->nom_domaine,
-            'localisation'      => $request->localisation,
-            'salle_id'          => $request->salle_id ?: null,
-            'responsable'       => $request->responsable,
-            'os'                => $request->os,
-            'ram'               => $request->ram,
-            'cpu'               => $request->cpu,
-            'stockage'          => $request->stockage,
-            'statut'            => $request->statut ?? 'en_ligne',
-            'date_installation' => $request->date_installation ?: null,
-            'notes'             => $request->notes,
-            'updated_at'        => now(),
+        DB::table('serveurs')->where('id', $id)->update($this->fields($request) + [
+            'updated_at' => now(),
         ]);
 
-        return back()->with('success_srv', 'Serveur mis à jour.');
+        return back()->with('success_srv', 'Équipement mis à jour.');
+    }
+
+    private function fields(Request $r): array
+    {
+        return [
+            'nom'                    => $r->nom,
+            'categorie'              => $r->categorie,
+            'type'                   => $r->type,
+            'marque'                 => $r->marque,
+            'modele'                 => $r->modele,
+            'numero_serie'           => $r->numero_serie,
+            'code_inventaire'        => $r->code_inventaire,
+            'adresse_ip'             => $r->adresse_ip,
+            'adresse_mac'            => $r->adresse_mac,
+            'masque_reseau'          => $r->masque_reseau,
+            'passerelle'             => $r->passerelle,
+            'vlan'                   => $r->vlan,
+            'port_reseau'            => $r->port_reseau,
+            'salle_id'               => $r->salle_id ?: null,
+            'numero_rack'            => $r->numero_rack,
+            'rack'                   => $r->rack,
+            'position_rack'          => $r->position_rack,
+            'localisation_physique'  => $r->localisation_physique,
+            'statut'                 => $r->statut ?? 'actif',
+            'criticite'              => $r->criticite ?? 'normale',
+            'systeme_exploitation'   => $r->systeme_exploitation,
+            'version_os'             => $r->version_os,
+            'version_firmware'       => $r->version_firmware,
+            'consommation_energetique'=> $r->consommation_energetique,
+            'tension_alimentation'   => $r->tension_alimentation,
+            'stockage'               => $r->stockage,
+            'ram'                    => $r->ram,
+            'cpu'                    => $r->cpu,
+            'nombre_ports'           => $r->nombre_ports ?: null,
+            'debit_reseau'           => $r->debit_reseau,
+            'autonomie_batterie'     => $r->autonomie_batterie,
+            'date_installation'      => $r->date_installation ?: null,
+            'derniere_maintenance'   => $r->derniere_maintenance ?: null,
+            'prochaine_maintenance'  => $r->prochaine_maintenance ?: null,
+            'garantie'               => $r->garantie,
+            'fournisseur'            => $r->fournisseur,
+            'responsable'            => $r->responsable,
+            'technicien_responsable' => $r->technicien_responsable,
+            'description'            => $r->description,
+        ];
     }
 }

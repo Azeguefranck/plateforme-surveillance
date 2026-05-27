@@ -8,15 +8,11 @@ $def = [
     'temperature' => ['warning'=>35,   'critique'=>40,   'unite'=>'°C',  'max'=>100,  'ico'=>'🌡', 'label'=>'Température',   'color'=>'#ff5733', 'desc'=>'Surchauffe des serveurs'],
     'humidite'    => ['warning'=>75,   'critique'=>85,   'unite'=>'%',   'max'=>100,  'ico'=>'💧', 'label'=>'Humidité',       'color'=>'#33b5ff', 'desc'=>'Condensation et corrosion'],
     'gaz'         => ['warning'=>300,  'critique'=>500,  'unite'=>'ppm', 'max'=>1000, 'ico'=>'💨', 'label'=>'Gaz / Air',      'color'=>'#ffd633', 'desc'=>'Fuite dangereuse, risque incendie'],
-    'courant'     => ['warning'=>10,   'critique'=>15,   'unite'=>'A',   'max'=>30,   'ico'=>'⚡', 'label'=>'Courant',        'color'=>'#33ff88', 'desc'=>'Surcharge électrique'],
-    'puissance'   => ['warning'=>3000, 'critique'=>5000, 'unite'=>'W',   'max'=>8000, 'ico'=>'🔋', 'label'=>'Puissance',      'color'=>'#bb66ff', 'desc'=>'Surconsommation critique'],
 ];
 $fieldMap = [
     'temperature' => ['w'=>'temp_warning',  'c'=>'temp_critique'],
     'humidite'    => ['w'=>'hum_warning',   'c'=>'hum_critique'],
     'gaz'         => ['w'=>'gaz_warning',   'c'=>'gaz_critique'],
-    'courant'     => ['w'=>'cour_warning',  'c'=>'cour_critique'],
-    'puissance'   => ['w'=>'puis_warning',  'c'=>'puis_critique'],
 ];
 @endphp
 
@@ -330,8 +326,8 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     <div class="cfg-item">
       <div class="cfg-ico">📱</div>
       <div>
-        <div class="cfg-key">Numéro SMS (SIM900)</div>
-        <div class="cfg-val">+237 687 988 340</div>
+        <div class="cfg-key">Email administrateur</div>
+        <div class="cfg-val">franckazegue0007@gmail.com</div>
       </div>
     </div>
     <div class="cfg-item">

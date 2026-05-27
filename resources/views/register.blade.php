@@ -190,6 +190,19 @@ select.finp option{background:#0c1c34;color:#fff;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 @keyframes fadeUp  {from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none}}
 @keyframes fadeIn  {from{opacity:0;transform:scale(.98)}       to{opacity:1;transform:none}}
+
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+input,select,textarea{max-width:100%!important;width:100%!important}
+[class*="card"],[class*="box"],[class*="form"],[class*="step"],[class*="wrap"]{max-width:100%!important}
+.steps-row{flex-wrap:wrap!important;gap:6px!important}
+}
+@media(max-width:400px){
+h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
+}
 </style>
 </head>
 <body>

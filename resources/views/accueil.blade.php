@@ -326,6 +326,14 @@ html, body {
   .brand { font-size:9px; letter-spacing:3px; }
 }
 
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden}
+[class*="card"],[class*="box"],[class*="container"],[class*="panel"]{max-width:100%!important}
+}
+
 </style>
 </head>
 <body>
@@ -348,7 +356,7 @@ html, body {
 <div class="page">
 
   <!-- Title -->
-  <h1 class="main-title">SURVEILLANCE DES<br><em>SALLES SERVEURS</em></h1>
+  <h1 class="main-title">SURVEILLANCE DES PARAMÈTRES DES ÉQUIPEMENTS<br><em>D'UNE SALLE SERVEURS</em></h1>
   <div class="title-rule"></div>
 
   <!-- Server room visual -->

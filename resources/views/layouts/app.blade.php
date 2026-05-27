@@ -3,325 +3,363 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="mobile-web-app-capable" content="no">
-<meta name="apple-mobile-web-app-capable" content="no">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 <title>Surveillance</title>
-<link rel="stylesheet" href="/css/noselect.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
 <style>
 
-/* ─── RESET ─── */
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
-/* user-select géré par /css/noselect.css */
-
-/* ─── SCROLLBAR VERTICAL (fine, thème sombre) ─── */
-::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#1e3050;border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:#2fa84f;}
-::-webkit-scrollbar-corner{background:transparent;}
-html{scrollbar-width:thin;scrollbar-color:#1e3050 transparent;}
-/* Sidebar : pas de scrollbar visible */
-.sidebar::-webkit-scrollbar{width:0;height:0;}
-.sidebar{scrollbar-width:none;}
-
-:root{
-  --accent:#2fa84f;
-  --accent-h:#249040;
-  --accent-dim:rgba(47,168,79,0.12);
-  --bg:#060c1a;
-  --sidebar:#080f1e;
-  --card:#0d1a2e;
-  --border:#182640;
-  --text:#d4dced;
-  --muted:#6b7fa0;
-  --danger:#c0392b;
-  --info:#2e86c1;
-  --sidebar-w:230px;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, Helvetica, sans-serif;
+user-select:none;
+-webkit-user-select:none;
+-moz-user-select:none;
+overflow-wrap:break-word;
+word-break:break-word;
+}
+input,textarea,select,[contenteditable]{
+user-select:text;
+-webkit-user-select:text;
+-moz-user-select:text;
+cursor:auto;
 }
 
-html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);}
-
-/* ─── OVERLAY MOBILE ─── */
-.sb-overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.65);
-  z-index:199;
+body{
+background:#f4f6f9;
+color:#1a2340;
+overflow-x:hidden;
 }
-.sb-overlay.open{display:block;}
 
-/* ─── SIDEBAR ─── */
+.wrapper{
+display:flex;
+width:100%;
+min-height:100vh;
+}
+
 .sidebar{
-  width:var(--sidebar-w);
-  background:var(--sidebar);
-  padding:16px 12px;
-  position:fixed;
-  top:0;left:0;bottom:0;
-  overflow-y:auto;
-  z-index:200;
-  transition:transform .28s ease;
-  border-right:1px solid var(--border);
+width:240px;
+background:#1e2d4a;
+padding:16px 12px;
+position:fixed;
+top:0;
+left:0;
+bottom:0;
+overflow-y:auto;
+overflow-x:hidden;
+z-index:999;
+transition:left .28s cubic-bezier(.4,0,.2,1);
+scrollbar-width:thin;
+scrollbar-color:#2d4068 #172038;
+box-shadow:2px 0 16px rgba(0,0,0,.12);
 }
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:#172038}
+.sidebar::-webkit-scrollbar-thumb{background:#2d4068;border-radius:2px}
 
 .logo{
-  font-size:20px;
-  font-weight:bold;
-  color:var(--accent);
-  margin-bottom:20px;
-  padding:4px 6px;
-  letter-spacing:1px;
-  white-space:nowrap;
+font-size:14px;
+font-weight:900;
+color:#fff;
+margin-bottom:18px;
+letter-spacing:1px;
+line-height:1.35;
+display:flex;
+align-items:center;
+gap:8px;
+padding:6px 4px;
 }
 
 .sidebar a{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:9px 11px;
-  margin-bottom:5px;
-  background:#0c1828;
-  border-radius:9px;
-  text-decoration:none;
-  color:var(--text);
-  font-weight:bold;
-  font-size:13px;
-  transition:.2s;
-  border:1px solid transparent;
+display:flex;
+align-items:center;
+gap:10px;
+padding:11px 12px;
+margin-bottom:4px;
+background:transparent;
+border-radius:10px;
+text-decoration:none;
+color:#a8bbd8;
+font-weight:600;
+font-size:13px;
+transition:.2s;
+border:1px solid transparent;
+white-space:nowrap;
+overflow:hidden;
 }
-
-.sidebar a:hover,
-.sidebar a.active{
-  background:#122035;
-  border-color:var(--accent);
-  color:var(--accent);
-}
-
 .sidebar a i{
-  width:16px;
-  text-align:center;
-  font-size:13px;
-  color:var(--accent);
-  flex-shrink:0;
-  opacity:.8;
+width:16px;
+text-align:center;
+font-size:14px;
+color:#60a5fa;
+flex-shrink:0;
 }
-
-.sidebar a:hover i,
-.sidebar a.active i{opacity:1;}
-
-/* ─── MAIN ─── */
-.wrapper{display:flex;width:100%;height:100vh;overflow:hidden;}
+.sidebar a:hover{
+background:rgba(255,255,255,.08);
+border-color:rgba(255,255,255,.1);
+color:#fff;
+}
+.sidebar a.active{
+background:rgba(96,165,250,.15);
+border-color:rgba(96,165,250,.35);
+color:#60a5fa;
+}
 
 .main{
-  margin-left:var(--sidebar-w);
-  width:calc(100% - var(--sidebar-w));
-  padding:16px 20px;
-  height:100vh;
-  overflow-y:auto;
-  overflow-x:hidden;
+margin-left:240px;
+width:calc(100% - 240px);
+padding:20px;
+min-width:0;
 }
 
-/* ─── TOPBAR ─── */
 .topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:var(--card);
-  padding:11px 16px;
-  border-radius:10px;
-  margin-bottom:16px;
-  border:1px solid var(--border);
-  flex-wrap:wrap;
-  gap:8px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#fff;
+padding:12px 16px;
+border-radius:12px;
+margin-bottom:20px;
+flex-wrap:wrap;
+gap:10px;
+border:1px solid #e2e8f0;
+box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
 
 .topbar-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
+display:flex;
+align-items:center;
+gap:12px;
 }
-
-.hamburger{
-  display:none;
-  background:none;
-  border:none;
-  color:var(--text);
-  font-size:20px;
-  cursor:pointer;
-  padding:4px 7px;
-  border-radius:6px;
-  transition:.2s;
-}
-.hamburger:hover{color:var(--accent);}
 
 .datetime{
-  font-size:14px;
-  font-weight:bold;
-  color:#4a9fc4;
+font-size:16px;
+font-weight:bold;
+color:#1e2d4a;
 }
 
 .logout{
-  background:var(--danger);
-  padding:8px 14px;
-  border:none;
-  border-radius:8px;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  font-size:13px;
-  transition:.2s;
+background:#f1f5f9;
+border:1.5px solid #e2e8f0;
+padding:10px 16px;
+border-radius:10px;
+color:#64748b;
+font-weight:600;
+cursor:pointer;
+font-size:13px;
+display:flex;
+align-items:center;
+gap:7px;
+transition:.2s;
 }
-.logout:hover{background:#a93226;color:white;}
+.logout:hover{
+background:#e2e8f0;
+border-color:#cbd5e1;
+color:#1e2d4a;
+}
 
-/* ─── RESPONSIVE ─── */
+/* ── Hamburger button ── */
+.menu-toggle{
+display:none;
+background:#f1f5f9;
+border:1px solid #e2e8f0;
+border-radius:8px;
+padding:8px 10px;
+color:#1e2d4a;
+font-size:16px;
+cursor:pointer;
+align-items:center;
+justify-content:center;
+transition:.2s;
+}
+.menu-toggle:hover{background:#e2e8f0}
+
+/* ── Sidebar overlay (mobile) ── */
+.sidebar-overlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.65);
+z-index:998;
+backdrop-filter:blur(3px);
+-webkit-backdrop-filter:blur(3px);
+}
+.sidebar-overlay.open{display:block}
+
+/* ── Sidebar close button (mobile) ── */
+.sidebar-close{
+display:none;
+background:none;
+border:none;
+color:#8899cc;
+font-size:18px;
+cursor:pointer;
+padding:2px 6px;
+}
+
+/* ── Global responsive ── */
+*{box-sizing:border-box}
+img{max-width:100%;height:auto}
+table{max-width:100%;width:100%}
+
+/* Elements that must never overflow their container */
+p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
+.alerte-msg,.alerte-time,.alerte-item,
+.stat-label,.stat-num,.gauge-label,.gauge-val,.gauge-unit,
+.detail-row,.detail-card,.scard,.table-card,
+.user-name,.user-date,.user-cell,
+.badge,.btn,.pg-title,.dash-title,.toolbar-title,
+.sensor-row,.sname,.sval,.sunit,
+.chart-title,.chart-meta,
+.filter-bar,.export-bar,.export-btns,
+.td-name,.td-ip,.td-actions{
+  max-width:100%;
+  overflow-wrap:break-word;
+  word-break:break-word;
+}
+
+/* ── Responsive breakpoints ── */
 @media(max-width:900px){
-  .sidebar{transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
-  .main{margin-left:0;width:100%;padding:12px 14px;height:100vh;}
-  .hamburger{display:block;}
+.sidebar{
+  left:-260px;
+  position:fixed;
+  width:240px;
+}
+.sidebar.open{left:0}
+.sidebar-close{display:block}
+.main{margin-left:0;width:100%;padding:12px}
+.wrapper{flex-direction:column}
+.menu-toggle{display:flex}
+/* Grids collapse to single column */
+.stats-grid,.charts-grid,.charts-row,.gauges,.form-grid,.detail-grid,.stats-row{
+  grid-template-columns:1fr!important;
+  flex-direction:column!important;
+}
 }
 
-@media(max-width:480px){
-  .topbar{padding:9px 12px;}
-  .datetime{font-size:12px;}
-  .logout{padding:7px 11px;font-size:12px;}
-  .logo{font-size:18px;}
+@media(max-width:640px){
+.topbar{padding:10px 12px;border-radius:8px}
+.datetime{font-size:13px}
+.logout{padding:8px 12px;font-size:12px}
+.logout span{display:none}
+/* Tables scroll horizontally */
+.table-wrap,.card-body,[class*="table"]{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* Cards full width */
+.stat-card,.gauge-card,.chart-card,.scard,.detail-card,.table-card,.alertes-card{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+}
+/* Toolbars wrap on small screens */
+.toolbar,.filter-bar,.export-bar,.export-btns,.table-toolbar{
+  flex-wrap:wrap!important;
+  gap:8px!important;
+}
+/* Buttons shrink gracefully */
+.btn,.btn-neon,.btn-blue,.btn-red,.btn-green,.btn-gray,.btn-warn{
+  font-size:12px!important;
+  padding:7px 10px!important;
+}
+/* Badges & values don't overflow */
+.badge{max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Forms full width */
+.form-group,.form-grid{width:100%!important;grid-template-columns:1fr!important}
+.form-actions{flex-wrap:wrap!important;gap:8px!important}
 }
 
-/* ─── TABLEAUX RESPONSIVE (scroll horizontal sur petits écrans) ─── */
-.table-wrap{overflow-x:auto !important;}
-.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.tbl{min-width:500px;}
-
-/* ─── RESPONSIVE LARGEUR (<600px) ─── */
-@media(max-width:600px){
-  .main{padding:10px;}
-  .topbar{padding:8px 10px;gap:6px;}
-  .logout{padding:6px 10px;font-size:11px;gap:5px;}
-  .datetime{font-size:11px;}
-}
-/* ─── RESPONSIVE LARGEUR (<380px) ─── */
-@media(max-width:380px){
-  .main{padding:8px;}
-  .logout i~*{display:none;}
-  .datetime{font-size:10px;}
+@media(max-width:400px){
+.main{padding:8px}
+.logo{font-size:16px}
+.pg-title,.dash-title{font-size:15px!important}
+.stat-num,.gauge-val{font-size:20px!important}
+.datetime{font-size:11px}
 }
 
-/* ─── RESPONSIVE HAUTEUR ─── */
-@media(max-height:600px){
-  .sidebar{padding:10px 8px;}
-  .sidebar a{padding:7px 9px;font-size:12px;margin-bottom:3px;}
-  .logo{font-size:17px;margin-bottom:12px;}
-  .topbar{padding:8px 14px;margin-bottom:10px;}
-}
-@media(max-height:480px){
-  .sidebar a{padding:5px 7px;margin-bottom:2px;}
-  .logo{margin-bottom:6px;font-size:15px;}
-  .topbar{margin-bottom:8px;}
-}
-
-/* ─── CYBERCONFIRM MODAL ─── */
-#cc-overlay{
-  display:none;position:fixed;inset:0;z-index:99999;
-  background:rgba(4,8,18,0.78);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  align-items:center;justify-content:center;
-}
-#cc-overlay.cc-open{display:flex;}
-#cc-modal{
-  background:rgba(10,20,38,0.97);
-  border:1px solid rgba(47,168,79,0.2);
-  border-radius:18px;padding:36px 30px 28px;
-  max-width:420px;width:90%;text-align:center;
-  box-shadow:0 0 60px rgba(0,0,0,.7),0 0 0 1px rgba(47,168,79,0.08),inset 0 1px 0 rgba(255,255,255,0.04);
-  animation:ccZoomIn .24s cubic-bezier(.34,1.28,.64,1) forwards;
-}
-#cc-icon-wrap{
-  width:70px;height:70px;border-radius:50%;margin:0 auto 20px;
-  display:flex;align-items:center;justify-content:center;font-size:28px;
-}
-#cc-icon-wrap.cc-danger{background:rgba(192,57,43,0.13);border:2px solid rgba(192,57,43,0.7);box-shadow:0 0 22px rgba(192,57,43,0.35);}
-#cc-icon-wrap.cc-warning{background:rgba(230,126,34,0.13);border:2px solid rgba(230,126,34,0.7);box-shadow:0 0 22px rgba(230,126,34,0.35);}
-#cc-icon-wrap.cc-success{background:rgba(47,168,79,0.13);border:2px solid rgba(47,168,79,0.7);box-shadow:0 0 22px rgba(47,168,79,0.35);}
-#cc-icon-wrap.cc-info{background:rgba(46,134,193,0.13);border:2px solid rgba(46,134,193,0.7);box-shadow:0 0 22px rgba(46,134,193,0.35);}
-#cc-icon-wrap.cc-danger #cc-icon{color:#e74c3c;}
-#cc-icon-wrap.cc-warning #cc-icon{color:#f39c12;}
-#cc-icon-wrap.cc-success #cc-icon{color:#2fa84f;}
-#cc-icon-wrap.cc-info #cc-icon{color:#3498db;}
-#cc-title{font-size:18px;font-weight:bold;color:#d4dced;margin-bottom:10px;line-height:1.3;}
-#cc-message{font-size:14px;color:#8090b0;margin-bottom:28px;line-height:1.6;}
-#cc-buttons{display:flex;gap:12px;justify-content:center;}
-#cc-cancel{
-  flex:1;padding:12px 16px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold;
-  background:rgba(20,40,72,0.5);border:1.5px solid #2e4a7a;color:#4a9fc4;transition:.2s;
-}
-#cc-cancel:hover{background:rgba(30,60,100,0.7);border-color:#4a9fc4;color:#7ec8e3;}
-#cc-confirm{
-  flex:1;padding:12px 16px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold;
-  border:none;color:#fff;transition:.2s;
-}
-#cc-confirm.cc-danger{background:linear-gradient(135deg,#c0392b,#a93226);box-shadow:0 0 16px rgba(192,57,43,0.45);}
-#cc-confirm.cc-danger:hover{background:linear-gradient(135deg,#e74c3c,#c0392b);box-shadow:0 0 28px rgba(192,57,43,0.65);}
-#cc-confirm.cc-warning{background:linear-gradient(135deg,#e67e22,#d35400);box-shadow:0 0 16px rgba(230,126,34,0.45);}
-#cc-confirm.cc-warning:hover{background:linear-gradient(135deg,#f39c12,#e67e22);box-shadow:0 0 28px rgba(230,126,34,0.65);}
-#cc-confirm.cc-success{background:linear-gradient(135deg,#2fa84f,#219a40);box-shadow:0 0 16px rgba(47,168,79,0.45);}
-#cc-confirm.cc-success:hover{background:linear-gradient(135deg,#3dbf5e,#2fa84f);box-shadow:0 0 28px rgba(47,168,79,0.65);}
-#cc-confirm.cc-info{background:linear-gradient(135deg,#2e86c1,#1a6fa5);box-shadow:0 0 16px rgba(46,134,193,0.45);}
-#cc-confirm.cc-info:hover{background:linear-gradient(135deg,#3498db,#2e86c1);box-shadow:0 0 28px rgba(46,134,193,0.65);}
-@keyframes ccZoomIn{from{opacity:0;transform:scale(.86);}to{opacity:1;transform:scale(1);}}
-@media(max-width:480px){
-  #cc-modal{padding:24px 16px 20px;}
-  #cc-buttons{flex-direction:column-reverse;}
-  #cc-icon-wrap{width:56px;height:56px;font-size:22px;}
-  #cc-title{font-size:16px;}
-}
+/* ── Global UI: toasts, spinners, confirm ─────── */
+@keyframes _spin{to{transform:rotate(360deg)}}
+@keyframes _tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+@keyframes _tOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(110%)}}
+#_toasts{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+._t{pointer-events:auto;min-width:230px;max-width:370px;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;backdrop-filter:blur(14px);box-shadow:0 4px 24px rgba(0,0,0,.55);animation:_tIn .28s cubic-bezier(.21,1.02,.73,1) forwards;cursor:pointer;line-height:1.4}
+._t.out{animation:_tOut .22s ease forwards}
+._t.s{background:rgba(6,20,14,.92);border:1px solid #33ff88;color:#33ff88}
+._t.e{background:rgba(22,6,6,.92);border:1px solid #ff5733;color:#ff5733}
+._t.w{background:rgba(22,18,6,.92);border:1px solid #ffd633;color:#ffd633}
+._t.i{background:rgba(6,14,22,.92);border:1px solid #33b5ff;color:#33b5ff}
+._spin-ico{width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block;animation:_spin .65s linear infinite;flex-shrink:0}
+@keyframes _dlgIn{from{opacity:0;transform:scale(.86) translateY(14px)}to{opacity:1;transform:none}}
+@keyframes _dlgBg{from{opacity:0}to{opacity:1}}
+@keyframes _icoFloat{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes _glowBar{0%,100%{opacity:.5}50%{opacity:1}}
+#_cdlg{display:none;position:fixed;inset:0;background:rgba(2,5,18,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:10000;align-items:center;justify-content:center;animation:_dlgBg .22s ease}
+#_cdlg.open{display:flex}
+._cbox{background:rgba(6,11,30,.98);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:0;text-align:center;max-width:420px;width:92%;box-shadow:0 0 0 1px rgba(255,255,255,.04),0 12px 80px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05);animation:_dlgIn .32s cubic-bezier(.21,1.02,.73,1) forwards;position:relative;overflow:hidden}
+._cbox::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,rgba(255,255,255,.03),transparent 60%);pointer-events:none}
+._cbox-top{height:3px;background:linear-gradient(90deg,transparent 0%,var(--dc,#ff5733) 30%,var(--dc,#ff5733) 70%,transparent 100%);box-shadow:0 0 20px var(--dc,#ff5733);animation:_glowBar 2.5s ease infinite}
+._cbox-head{padding:28px 28px 4px}
+._cico{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:30px;background:radial-gradient(circle,rgba(var(--dr,255,87,51),.16) 0%,transparent 70%);border:1.5px solid rgba(var(--dr,255,87,51),.3);box-shadow:0 0 18px rgba(var(--dr,255,87,51),.12);animation:_icoFloat 3.5s ease infinite}
+._ctitl{color:#fff;font-size:14px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;margin:0 0 10px}
+._cmsg{color:#8899bb;font-size:13px;margin:0;line-height:1.65;padding:0 2px}
+._cbox-body{padding:20px 28px 28px}
+._cdivider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:0 0 20px}
+._cbtns{display:flex;gap:12px}
+._cno{flex:1;background:rgba(18,30,68,.65);border:1px solid rgba(51,181,255,.2);color:#7788aa;padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.3px;transition:.2s}
+._cno:hover{background:rgba(51,181,255,.12);border-color:rgba(51,181,255,.55);color:#33b5ff;transform:translateY(-1px)}
+._cok{flex:1;background:rgba(var(--dr,255,87,51),.1);border:1px solid rgba(var(--dr,255,87,51),.35);color:var(--dc,#ff5733);padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.3px;transition:.2s}
+._cok:hover{background:var(--dc,#ff5733);color:#fff;box-shadow:0 0 24px rgba(var(--dr,255,87,51),.5);transform:translateY(-1px)}
+._cok:active,._cno:active{transform:scale(.95)!important;transition:transform .08s}
 
 </style>
+
 </head>
+
 <body>
 
-<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <div class="wrapper">
 
 <div class="sidebar" id="sidebar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px">
+    <div class="logo"><span>Système de<br>Surveillance</span></div>
+    <button class="sidebar-close" id="sidebarClose" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
+  </div>
 
-<div class="logo">SURVEILLANCE</div>
+  <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+  <a href="/accueil"><i class="fa-solid fa-house"></i> Accueil</a>
+  <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
+  <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
+  <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>
+  <a href="/mails"><i class="fa-solid fa-envelope"></i> Mails</a>
+  <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
 
-<a href="/accueil"><i class="fa-solid fa-house"></i>Accueil</a>
-<a href="/dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</a>
-<a href="/alertes"><i class="fa-solid fa-bell"></i>Alertes</a>
-<a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i>Historique</a>
-<a href="/statistiques"><i class="fa-solid fa-chart-line"></i>Statistiques</a>
-<a href="/sms"><i class="fa-solid fa-mobile-screen-button"></i>SMS/MAILS</a>
-<a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i>Anomalies</a>
-<a href="/salles"><i class="fa-solid fa-server"></i>Salles Serveurs</a>
-<a href="/serveurs"><i class="fa-solid fa-server"></i>Serveurs</a>
-<a href="/parametres"><i class="fa-solid fa-gear"></i>Paramètres</a>
-<a href="/rapports"><i class="fa-solid fa-file-lines"></i>Rapports</a>
-
+  <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
+  <a href="/equipements"><i class="fa-solid fa-server"></i> Équipements Salle Serveurs</a>
+  <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
+  <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
 </div>
 
 <div class="main">
 
 <div class="topbar">
+
   <div class="topbar-left">
-    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
-      <i class="fa-solid fa-bars"></i>
-    </button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu navigation"><i class="fa-solid fa-bars"></i></button>
     <div class="datetime">
-      <span id="date"></span> &nbsp;|&nbsp; <span id="heure"></span>
+      <i class="fa-regular fa-calendar" style="margin-right:4px;opacity:.6"></i><span id="date"></span>
+      <span style="opacity:.4;margin:0 6px">|</span>
+      <i class="fa-regular fa-clock" style="margin-right:4px;opacity:.6"></i><span id="heure"></span>
     </div>
   </div>
-  <a href="/logout" class="logout" onclick="event.preventDefault();CyberConfirm.show({title:'Déconnexion',message:'Voulez-vous vraiment vous déconnecter ?',icon:'fa-solid fa-arrow-right-from-bracket',confirmText:'Déconnecter',confirmColor:'warning'}).then(ok=>{if(ok)window.location.href='/logout';})">
-    <i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnecter
-  </a>
+
+  <button class="logout" onclick="doLogout()">
+    <i class="fa-solid fa-right-from-bracket"></i>
+    <span>Se Déconnecter</span>
+  </button>
+
 </div>
 
 @yield('content')
@@ -330,105 +368,156 @@ body{background:var(--bg);color:var(--text);}
 
 </div>
 
-<!-- CyberConfirm -->
-<div id="cc-overlay" role="dialog" aria-modal="true" aria-labelledby="cc-title">
-  <div id="cc-modal">
-    <div id="cc-icon-wrap"><i id="cc-icon"></i></div>
-    <div id="cc-title"></div>
-    <div id="cc-message"></div>
-    <div id="cc-buttons">
-      <button id="cc-cancel" type="button"></button>
-      <button id="cc-confirm" type="button"></button>
+<script>
+
+function updateDateTime(){
+
+const now = new Date();
+
+document.getElementById("heure").innerHTML =
+now.toLocaleTimeString();
+
+document.getElementById("date").innerHTML =
+now.toLocaleDateString('fr-FR');
+
+}
+
+setInterval(updateDateTime,1000);
+
+updateDateTime();
+
+</script>
+
+
+<!-- ── Global toasts ──────────────────────── -->
+<div id="_toasts"></div>
+
+<!-- ── Confirm dialog ────────────────────── -->
+<div id="_cdlg">
+  <div class="_cbox" id="_cboxEl">
+    <div class="_cbox-top"></div>
+    <div class="_cbox-head">
+      <div class="_cico" id="_cico">⚠️</div>
+      <div class="_ctitl" id="_ctitle">Confirmation requise</div>
+      <p class="_cmsg" id="_cmsg">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+    </div>
+    <div class="_cbox-body">
+      <div class="_cdivider"></div>
+      <div class="_cbtns">
+        <button class="_cno" id="_cno">Annuler</button>
+        <button class="_cok" id="_cok">Confirmer</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-function updateDateTime(){
-  const now=new Date();
-  document.getElementById('heure').textContent=now.toLocaleTimeString('fr-FR');
-  document.getElementById('date').textContent=now.toLocaleDateString('fr-FR');
+/* ── Notifications toast ── */
+function notify(msg, type, dur) {
+    type = type||'s'; dur = dur||3600;
+    var icons={s:'✓',e:'✗',w:'⚠',i:'ℹ'};
+    var t=document.createElement('div');
+    t.className='_t '+type;
+    t.innerHTML='<span>'+icons[type]+'</span><span style="flex:1">'+msg+'</span><span onclick="_dismiss(this.parentNode)" style="opacity:.45;font-size:17px;margin-left:4px;line-height:1">×</span>';
+    t.onclick=function(e){if(e.target!==t.lastElementChild)_dismiss(t)};
+    document.getElementById('_toasts').prepend(t);
+    setTimeout(function(){_dismiss(t);},dur);
+    return t;
 }
-setInterval(updateDateTime,1000);
-updateDateTime();
+function _dismiss(el){if(!el||el.classList.contains('out'))return;el.classList.add('out');setTimeout(function(){if(el.parentNode)el.remove();},230);}
 
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();});
-
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sb-overlay').classList.toggle('open');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sb-overlay').classList.remove('open');
+/* ── Button loader ── */
+function btnLoad(btn,on){
+    if(!btn)return;
+    if(on===false){if(btn._orig!==undefined){btn.innerHTML=btn._orig;btn.disabled=false;btn.style.opacity='';}return;}
+    btn._orig=btn.innerHTML;
+    btn.innerHTML='<span class="_spin-ico"></span> Chargement...';
+    btn.disabled=true; btn.style.opacity='.72';
 }
 
-// Lien actif dans la sidebar
+/* ── CSRF fetch ── */
+function csrfFetch(url,opts){
+    opts=opts||{};
+    var tok=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
+    var hdrs=Object.assign({'X-CSRF-TOKEN':tok,'Content-Type':'application/json','Accept':'application/json'},opts.headers||{});
+    return fetch(url,Object.assign({},opts,{headers:hdrs}));
+}
+
+/* ── Confirm dialog ── */
+var _cdlgBusy = false;
+function confirmDlg(title, msg, opts) {
+    return new Promise(function(res) {
+        if (_cdlgBusy) { res(false); return; }
+        _cdlgBusy = true;
+        opts = opts || {};
+        var type = opts.type || 'danger';
+        var icoMap = {danger:'🗑️',warning:'⚠️',success:'✅',info:'ℹ️',logout:'🔒',user:'👤',reset:'🔄',stop:'⏹️',valide:'✔️',refuse:'✗',bloque:'🚫'};
+        var clrMap = {danger:'#ff5733',warning:'#ffd633',success:'#33ff88',info:'#33b5ff',logout:'#ff9933',user:'#ff5733',reset:'#ffd633',stop:'#ff5733',valide:'#33ff88',refuse:'#ffd633',bloque:'#ff5733'};
+        var rgbMap = {danger:'255,87,51',warning:'255,214,51',success:'51,255,136',info:'51,181,255',logout:'255,153,51',user:'255,87,51',reset:'255,214,51',stop:'255,87,51',valide:'51,255,136',refuse:'255,214,51',bloque:'255,87,51'};
+        var icon = opts.icon  || icoMap[type] || '⚠️';
+        var clr  = clrMap[type] || clrMap.danger;
+        var rgb  = rgbMap[type] || rgbMap.danger;
+        var box  = document.getElementById('_cboxEl');
+        box.style.setProperty('--dc', clr);
+        box.style.setProperty('--dr', rgb);
+        document.getElementById('_cico').textContent   = icon;
+        document.getElementById('_ctitle').textContent = title || 'Confirmation requise';
+        document.getElementById('_cmsg').textContent   = msg   || 'Êtes-vous sûr de vouloir effectuer cette action ?';
+        document.getElementById('_cok').textContent    = opts.confirmText || 'Confirmer';
+        document.getElementById('_cno').textContent    = opts.cancelText  || 'Annuler';
+        var dlg = document.getElementById('_cdlg');
+        dlg.classList.add('open');
+        box.style.animation = 'none'; void box.offsetHeight; box.style.animation = '';
+        setTimeout(function(){ var n=document.getElementById('_cno'); if(n) n.focus(); }, 80);
+        var ok=document.getElementById('_cok'), no=document.getElementById('_cno');
+        function done(v) {
+            _cdlgBusy = false;
+            dlg.classList.remove('open');
+            ok.onclick = no.onclick = dlg.onclick = null;
+            document.removeEventListener('keydown', _dlgKey);
+            res(v);
+        }
+        function _dlgKey(e) {
+            if (e.key === 'Escape') { e.preventDefault(); done(false); }
+        }
+        ok.onclick   = function(){ done(true);  };
+        no.onclick   = function(){ done(false); };
+        dlg.onclick  = function(e){ if(e.target===dlg) done(false); };
+        document.addEventListener('keydown', _dlgKey);
+    });
+}
+
+/* ── Hamburger / sidebar toggle ── */
 (function(){
-  const p=window.location.pathname;
-  document.querySelectorAll('.sidebar a').forEach(a=>{
-    if(a.getAttribute('href')===p) a.classList.add('active');
+  var toggle=document.getElementById('menuToggle');
+  var close=document.getElementById('sidebarClose');
+  var overlay=document.getElementById('sidebarOverlay');
+  var sidebar=document.getElementById('sidebar');
+  function openSidebar(){sidebar.classList.add('open');overlay.classList.add('open');}
+  function closeSidebar(){sidebar.classList.remove('open');overlay.classList.remove('open');}
+  if(toggle) toggle.addEventListener('click',openSidebar);
+  if(close)  close.addEventListener('click',closeSidebar);
+  if(overlay) overlay.addEventListener('click',closeSidebar);
+  // Mark active link
+  var cur=window.location.pathname;
+  document.querySelectorAll('.sidebar a').forEach(function(a){
+    if(a.getAttribute('href')===cur) a.classList.add('active');
   });
 })();
 
-// ── Toast global ──
-window.showToast=function(msg,type='success',dur=3500){
-  let el=document.getElementById('global-toast');
-  if(!el){
-    el=document.createElement('div');
-    el.id='global-toast';
-    el.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9999;padding:13px 20px;border-radius:10px;font-size:14px;font-weight:bold;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:opacity .3s;pointer-events:none;';
-    document.body.appendChild(el);
-  }
-  el.textContent=msg;
-  const colors={success:{bg:'rgba(47,168,79,.15)',border:'#2fa84f',color:'#2fa84f'},error:{bg:'rgba(192,57,43,.15)',border:'#c0392b',color:'#c0392b'},info:{bg:'rgba(46,134,193,.15)',border:'#2e86c1',color:'#2e86c1'}};
-  const c=colors[type]||colors.info;
-  el.style.background=c.bg; el.style.border='1px solid '+c.border; el.style.color=c.color; el.style.opacity='1'; el.style.display='block';
-  clearTimeout(el._t);
-  el._t=setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.style.display='none',300);},dur);
-};
-
-// CSRF token pour les requêtes AJAX
-window.getCsrfToken=function(){
-  const m=document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-  return m?decodeURIComponent(m[1]):'';
-};
-
-// ── CyberConfirm ──
-window.CyberConfirm=(function(){
-  const ov=document.getElementById('cc-overlay');
-  const iconWrap=document.getElementById('cc-icon-wrap');
-  const iconEl=document.getElementById('cc-icon');
-  const titleEl=document.getElementById('cc-title');
-  const msgEl=document.getElementById('cc-message');
-  const btnCancel=document.getElementById('cc-cancel');
-  const btnConfirm=document.getElementById('cc-confirm');
-  let _res=null;
-  function hide(val){
-    ov.classList.remove('cc-open');
-    if(_res){_res(val);_res=null;}
-  }
-  ov.addEventListener('click',function(e){if(e.target===ov)hide(false);});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ov.classList.contains('cc-open'))hide(false);});
-  btnCancel.addEventListener('click',function(){hide(false);});
-  btnConfirm.addEventListener('click',function(){hide(true);});
-  return{
-    show:function(opts){
-      const color=opts.confirmColor||'danger';
-      iconWrap.className='cc-'+color;
-      iconEl.className=opts.icon||'fa-solid fa-circle-exclamation';
-      titleEl.textContent=opts.title||'Confirmation';
-      msgEl.textContent=opts.message||'';
-      btnCancel.innerHTML='<i class="fa-solid fa-xmark"></i> '+(opts.cancelText||'Annuler');
-      btnConfirm.innerHTML='<i class="fa-solid fa-check"></i> '+(opts.confirmText||'Confirmer');
-      btnConfirm.className='cc-'+color;
-      ov.classList.add('cc-open');
-      setTimeout(()=>btnConfirm.focus(),80);
-      return new Promise(function(resolve){_res=resolve;});
-    }
-  };
-})();
+/* ── Logout ── */
+function doLogout() {
+    confirmDlg(
+        'Se déconnecter ?',
+        'Vous allez quitter la plateforme de surveillance des salles serveurs. Votre session active sera fermée.',
+        {type:'logout', icon:'🔒', confirmText:'Se déconnecter', cancelText:'Rester connecté'}
+    ).then(function(ok) {
+        if (ok) {
+            notify('Déconnexion en cours…', 'w', 2000);
+            setTimeout(function(){ window.location.href='/login'; }, 700);
+        }
+    });
+}
 </script>
-
 </body>
 </html>

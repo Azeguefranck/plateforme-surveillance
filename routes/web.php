@@ -1,701 +1,470 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\ParametresController;
 use App\Http\Controllers\ServeursController;
 use App\Http\Controllers\SallesController;
+use App\Http\Controllers\GeoController;
 
-// ═══════════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════════
 
-// Vérifie si l'utilisateur est connecté
-function estConnecte(): bool {
-    return session()->has('user') && session('user') !== null;
-}
 
-// Retourne l'utilisateur de session toujours en stdClass (array ou objet)
-function getSessionUser(): ?\stdClass {
-    $raw = session('user');
-    if (!$raw) return null;
-    return (object)(array)$raw;
-}
+Route::view('/','accueil');
+Route::view('/accueil','accueil');
+Route::view('/dashboard','dashboard');
+Route::view('/login','login');
 
-// ═══════════════════════════════════════════════════════════
-//  PAGES PUBLIQUES
-//  Si déjà connecté → redirection automatique vers /dashboard
-// ═══════════════════════════════════════════════════════════
 
-Route::get('/', function () {
-    if (estConnecte()) return redirect('/dashboard');
-    return view('accueil');
-});
-
-Route::get('/accueil', function () {
-    return view('accueil');
-});
-
-Route::get('/login', function () {
-    if (estConnecte()) return redirect('/dashboard');
-    return view('login');
-});
-
-Route::get('/register', function () {
-    return redirect('/login');
-});
-
-// ═══════════════════════════════════════════════════════════
-//  ACTIONS D'AUTHENTIFICATION
-// ═══════════════════════════════════════════════════════════
-
-Route::post('/register-user', function () { return redirect('/login'); });
 Route::post('/login-user',    [AuthController::class, 'login']);
-Route::get('/logout',         [AuthController::class, 'logout']);
 
-// ═══════════════════════════════════════════════════════════
-//  PAGES PROTÉGÉES
-//  Si non connecté → redirection automatique vers /login
-// ═══════════════════════════════════════════════════════════
 
-Route::get('/dashboard', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('dashboard');
+
+
+
+
+Route::view('/alertes','alertes');
+Route::view('/historique','historique');
+Route::view('/statistiques','statistiques');
+Route::view('/mails','mails');
+Route::view('/anomalies','anomalies');
+// [NOUVEAU] Routes proxy GeoNames (username jamais exposé côté client)
+Route::get('/geo/pays',                        [GeoController::class, 'getPays']);
+Route::get('/geo/regions/{geonameId}',         [GeoController::class, 'getRegions']);
+Route::get('/geo/departements/{geonameId}',    [GeoController::class, 'getDepartements']);
+Route::get('/geo/arrondissements/{geonameId}', [GeoController::class, 'getArrondissements']);
+Route::get('/geo/villes/{geonameId}',          [GeoController::class, 'getVilles']);
+Route::get('/salles',          [SallesController::class, 'index']);
+Route::post('/salles',         [SallesController::class, 'store']);
+Route::delete('/salles/{id}',  [SallesController::class, 'destroy']);
+Route::post('/salles/{id}',    [SallesController::class, 'update']);
+
+Route::get('/equipements',        [ServeursController::class, 'index']);
+Route::post('/equipements',       [ServeursController::class, 'store']);
+Route::delete('/equipements/{id}',[ServeursController::class, 'destroy']);
+Route::post('/equipements/{id}',  [ServeursController::class, 'update']);
+
+Route::redirect('/serveurs',     '/equipements', 301);
+Route::redirect('/serveurs-web', '/equipements', 301);
+Route::redirect('/serveurs-bd',  '/equipements', 301);
+Route::get('/parametres',         [ParametresController::class, 'show']);
+Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
+Route::view('/rapports','rapports');
+
+
+// ── AJAX : supprimer utilisateur ───────────────────────────────────────────
+Route::delete('/user/{id}', function ($id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    $target = DB::table('users')->where('id', $id)->first();
+    if ($target && ($target->id == 1 || $target->role === 'superadmin'))
+        return response()->json(['error' => 'Impossible de supprimer le compte administrateur principal.'], 403);
+    DB::table('users')->where('id', $id)->delete();
+    return response()->json(['success' => true, 'message' => 'Utilisateur supprimé.']);
 });
 
-Route::get('/alertes', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('alertes');
+// ── AJAX : supprimer une alerte ────────────────────────────────────────────
+Route::delete('/alerte/{id}', function ($id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    DB::table('alertes')->where('id', $id)->delete();
+    return response()->json(['success' => true]);
 });
 
-Route::get('/historique', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('historique');
+// ── AJAX : vider toutes les alertes ───────────────────────────────────────
+Route::post('/alertes/vider', function () {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    $n = DB::table('alertes')->count();
+    DB::table('alertes')->truncate();
+    return response()->json(['success' => true, 'message' => "$n alertes supprimées."]);
 });
 
-Route::get('/statistiques', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('statistiques');
-});
+// ── AJAX : ping serveur ────────────────────────────────────────────────────
+Route::get('/serveur/{id}/ping', function ($id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
+    try {
+        $srv = DB::table('serveurs')->where('id', $id)->first();
+        if (!$srv) return response()->json(['reachable' => false, 'msg' => 'Serveur introuvable']);
+        $ip = $srv->adresse_ip;
+        if (!$ip) return response()->json(['reachable' => false, 'ip' => null, 'msg' => 'Aucune IP configurée']);
 
-Route::get('/sms', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('sms');
-});
+        $start = microtime(true);
+        $conn  = @fsockopen($ip, 80, $e, $es, 2);
+        $ms    = round((microtime(true) - $start) * 1000, 1);
+        if ($conn) { fclose($conn); return response()->json(['reachable'=>true,'ip'=>$ip,'time'=>$ms,'msg'=>"En ligne — {$ms}ms"]); }
 
-Route::get('/sms-gsm', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('sms-gsm');
-});
-
-Route::get('/anomalies', function () {
-    if (!estConnecte()) return redirect('/login');
-    return view('anomalies');
-});
-
-Route::get('/profil', function () {
-    if (!estConnecte()) return redirect('/login');
-
-    // Récupérer l'ID depuis la session (fonctionne que ce soit un objet ou un array)
-    $sessionUser = session('user');
-    $userId = is_array($sessionUser) ? ($sessionUser['id'] ?? null) : ($sessionUser->id ?? null);
-
-    if (!$userId) return redirect('/login');
-
-    // Données fraîches depuis la base — évite tout problème de désérialisation
-    $user = \Illuminate\Support\Facades\DB::table('users')->where('id', $userId)->first();
-    if (!$user) return redirect('/login');
-
-    // Rafraîchit la session avec l'objet propre
-    session(['user' => $user]);
-
-    $alertes = \Illuminate\Support\Facades\DB::table('alertes')
-        ->orderBy('created_at', 'desc')
-        ->take(6)
-        ->get();
-
-    return view('profil', compact('alertes', 'user'));
-});
-
-Route::post('/profil/update', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(ProfileController::class)->update(request());
-});
-
-Route::post('/profil/password', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(ProfileController::class)->changePassword(request());
-});
-
-Route::post('/profil/photo', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(ProfileController::class)->updatePhoto(request());
-});
-
-
-// Redirections legacy
-Route::get('/serveurs-web', function () { return redirect('/serveurs'); });
-Route::get('/serveurs-bd',  function () { return redirect('/serveurs'); });
-
-// ── Serveurs ──
-Route::get('/serveurs', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(ServeursController::class)->index();
-});
-Route::post('/serveurs/store', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(ServeursController::class)->store(request());
-});
-Route::post('/serveurs/update/{id}', function ($id) {
-    if (!estConnecte()) return redirect('/login');
-    return app(ServeursController::class)->update(request(), $id);
-});
-Route::post('/serveurs/delete/{id}', function ($id) {
-    if (!estConnecte()) return redirect('/login');
-    return app(ServeursController::class)->destroy($id);
-});
-
-// ── Salles ──
-Route::get('/salles', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(SallesController::class)->index();
-});
-Route::post('/salles/store', function () {
-    if (!estConnecte()) return redirect('/login');
-    return app(SallesController::class)->store(request());
-});
-Route::post('/salles/update/{id}', function ($id) {
-    if (!estConnecte()) return redirect('/login');
-    return app(SallesController::class)->update(request(), $id);
-});
-Route::post('/salles/delete/{id}', function ($id) {
-    if (!estConnecte()) return redirect('/login');
-    return app(SallesController::class)->destroy($id);
-});
-
-Route::get('/parametres', function () {
-    if (!estConnecte()) return redirect('/login');
-
-    \Illuminate\Support\Facades\DB::statement("CREATE TABLE IF NOT EXISTS `settings` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `cle` varchar(100) NOT NULL,
-        `valeur` varchar(255) NOT NULL,
-        `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`),
-        UNIQUE KEY `cle` (`cle`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
-    $defaults = [
-        'seuil_temp_warn' => 30,  'seuil_temp_crit' => 40,
-        'seuil_hum_min'   => 30,  'seuil_hum_max'   => 80,
-        'seuil_gaz_warn'  => 300, 'seuil_gaz_crit'  => 500,
-        'seuil_cur_warn'  => 10,  'seuil_cur_crit'  => 15,
-        'seuil_pwr_warn'  => 1500,'seuil_pwr_crit'  => 2000,
-    ];
-
-    $settings = [];
-    foreach ($defaults as $key => $def) {
-        $row = \Illuminate\Support\Facades\DB::table('settings')->where('cle', $key)->first();
-        $settings[$key] = $row ? $row->valeur : $def;
+        $out = []; $ret = 1;
+        exec('ping -c 1 -W 2 '.escapeshellarg($ip).' 2>&1', $out, $ret);
+        $t = null;
+        foreach ($out as $line) { if (preg_match('/time[<=](\d+\.?\d*)\s*ms/i',$line,$m)){$t=$m[1];break;} }
+        return response()->json(['reachable'=>$ret===0,'ip'=>$ip,'time'=>$t,'msg'=>$ret===0?"En ligne — {$t}ms":"Inaccessible ({$ip})"]);
+    } catch (\Exception $e) {
+        return response()->json(['reachable' => false, 'msg' => 'Erreur: '.$e->getMessage()]);
     }
-
-    return view('parametres', compact('settings'));
 });
 
-Route::post('/parametres/save', function () {
-    if (!estConnecte()) return redirect('/login');
-
-    $keys = [
-        'seuil_temp_warn','seuil_temp_crit',
-        'seuil_hum_min','seuil_hum_max',
-        'seuil_gaz_warn','seuil_gaz_crit',
-        'seuil_cur_warn','seuil_cur_crit',
-        'seuil_pwr_warn','seuil_pwr_crit',
-    ];
-
-    foreach ($keys as $key) {
-        if (request()->has($key)) {
-            \Illuminate\Support\Facades\DB::table('settings')->updateOrInsert(
-                ['cle' => $key],
-                ['valeur' => request()->input($key), 'updated_at' => now()]
-            );
-        }
-    }
-
-    return back()->with('success', 'Seuils sauvegardés avec succès.');
+// ── Ping caméra IP (fsockopen) ──────────────────────────────────────────────
+Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
+    if (!session('user')) return response()->json(['reachable' => false, 'msg' => 'Non autorisé']);
+    $ip   = $request->ip_addr ?? '';
+    $port = max(1, min(65535, (int)($request->port ?? 80)));
+    if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP))
+        return response()->json(['reachable' => false, 'msg' => 'Adresse IP invalide']);
+    $start = microtime(true);
+    $conn  = @fsockopen($ip, $port, $errno, $errstr, 2);
+    $ms    = round((microtime(true) - $start) * 1000, 1);
+    if ($conn) { fclose($conn); return response()->json(['reachable' => true, 'time' => $ms]); }
+    return response()->json(['reachable' => false, 'time' => $ms, 'msg' => "Inaccessible ({$ip}:{$port})"]);
 });
 
-Route::get('/rapports', function () {
-    if (!estConnecte()) return redirect('/login');
-    $salles = [];
-    try { $salles = \Illuminate\Support\Facades\DB::table('salles')->orderBy('nom')->get(); } catch(\Exception $e){}
-    return view('rapports', compact('salles'));
+// ── Impression / PDF ───────────────────────────────────────────────────────
+Route::get('/rapports/print', function (\Illuminate\Http\Request $request) {
+    if (!session('user')) return redirect('/login');
+    $type  = $request->type  ?? 'mesures';
+    $debut = $request->debut ?? now()->subDays(7)->toDateString();
+    $fin   = $request->fin   ?? now()->toDateString();
+    try {
+        $rows = DB::table($type)->whereBetween('created_at',[$debut.' 00:00:00',$fin.' 23:59:59'])
+                    ->orderByDesc('created_at')->limit(2000)->get();
+    } catch (\Exception $e) { $rows = collect(); }
+    $data  = $rows->map(fn($r) => (array) $r)->toArray();
+    $label = ['mesures'=>'Mesures capteurs','alertes'=>'Alertes','salles'=>'Salles','serveurs'=>'Serveurs'][$type] ?? $type;
+    $title = $label.' — du '.$debut.' au '.$fin;
+    return view('print_rapport', compact('data','title','type','debut','fin'));
 });
 
-Route::get('/rapports/export/csv', function () {
-    if (!estConnecte()) return redirect('/login');
-    $debut = request('debut');
-    $fin   = request('fin');
-    $q = \Illuminate\Support\Facades\DB::table('mesures')->orderBy('created_at', 'desc');
-    if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-    if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-    $mesures = $q->take(5000)->get();
+Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
+    if (!session('user')) return redirect('/login');
 
-    $headers = ['ID','Date','Temp_C','Humidite_pct','Gaz_ppm','Courant_A','Puissance_W','Tension_V','PIR'];
-    $rows    = $mesures->map(fn($m) => implode(',', [
-        $m->id,
-        '"' . ($m->created_at ?? '') . '"',
-        $m->temperature ?? '',
-        $m->humidite    ?? '',
-        $m->gaz         ?? '',
-        $m->courant     ?? '',
-        $m->puissance   ?? '',
-        $m->tension     ?? 220,
-        ($m->pir_detecte ?? false) ? 'OUI' : 'NON',
-    ]));
-
-    $csv      = implode("\n", array_merge([implode(',', $headers)], $rows->toArray()));
-    $filename = 'mesures_' . date('Y-m-d') . '.csv';
-
-    return response($csv, 200, [
-        'Content-Type'        => 'text/csv; charset=utf-8',
-        'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-    ]);
-});
-
-Route::get('/rapports/export/json', function () {
-    if (!estConnecte()) return redirect('/login');
-    $debut = request('debut');
-    $fin   = request('fin');
-    $q = \Illuminate\Support\Facades\DB::table('mesures')->orderBy('created_at','desc');
-    if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-    if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-    $mesures  = $q->take(5000)->get();
-    $filename = 'mesures_' . date('Y-m-d') . '.json';
-    return response(json_encode($mesures, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 200, [
-        'Content-Type'        => 'application/json',
-        'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-    ]);
-});
-
-Route::get('/rapports/export/alertes', function () {
-    if (!estConnecte()) return redirect('/login');
-    $alertes  = \Illuminate\Support\Facades\DB::table('alertes')->orderBy('created_at','desc')->take(2000)->get();
-    $headers  = ['ID','Date','Type','Niveau','Valeur','Message','Resolu','SMS'];
-    $rows     = $alertes->map(fn($a) => implode(',', [
-        $a->id,
-        '"' . ($a->created_at ?? '') . '"',
-        '"' . ($a->type    ?? '') . '"',
-        $a->niveau  ?? '',
-        '"' . ($a->valeur  ?? '') . '"',
-        '"' . str_replace('"','""', $a->message ?? '') . '"',
-        ($a->resolu ?? 0) ? 'OUI' : 'NON',
-        ($a->envoi_sms ?? 0) ? 'OUI' : 'NON',
-    ]));
-    $csv = implode("\n", array_merge([implode(',', $headers)], $rows->toArray()));
-    return response($csv, 200, [
-        'Content-Type'        => 'text/csv; charset=utf-8',
-        'Content-Disposition' => 'attachment; filename="alertes_' . date('Y-m-d') . '.csv"',
-    ]);
-});
-
-// ── Génération de rapport (tous types, tous formats) ──
-Route::get('/rapports/generer', function () {
-    if (!estConnecte()) return redirect('/login');
-
-    $type   = request('type',   'capteurs');
-    $format = strtolower(request('format', 'csv'));
-    $debut  = request('debut');
-    $fin    = request('fin');
-    $niveau = request('niveau');
-    $salle  = (int) request('salle', 0);
-    $limit  = min((int) request('limit', 5000), 10000);
-
-    $rows  = collect();
-    $table = 'mesures';
-    $DB    = \Illuminate\Support\Facades\DB::class;
+    $allowed = ['mesures','alertes','salles','serveurs'];
+    $type    = in_array($request->type, $allowed) ? $request->type : 'mesures';
+    $format  = $request->format ?? 'csv';
+    $debut   = $request->debut  ?? now()->subDays(7)->toDateString();
+    $fin     = $request->fin    ?? now()->toDateString();
+    $niveau  = $request->niveau ?? '';
+    $salle   = $request->salle_id ?? '';
+    $tempMin = $request->temp_min ?? null;
+    $tempMax = $request->temp_max ?? null;
+    $humMin  = $request->hum_min  ?? null;
+    $humMax  = $request->hum_max  ?? null;
+    $limit   = min((int)($request->limit ?? 5000), 50000);
 
     try {
-        if ($type === 'utilisateurs') {
-            $rows  = \Illuminate\Support\Facades\DB::table('users')
-                ->select('id','nom','prenom','email','role','validation_status','telephone','organisation','adresse','created_at')
-                ->latest('id')->take($limit)->get();
-            $table = 'users';
-        } elseif ($type === 'salles') {
-            $rows  = \Illuminate\Support\Facades\DB::table('salles')->latest('id')->take($limit)->get();
-            $table = 'salles';
-        } elseif ($type === 'serveurs') {
-            $rows  = \Illuminate\Support\Facades\DB::table('serveurs')->latest('id')->take($limit)->get();
-            $table = 'serveurs';
-        } elseif ($type === 'incidents') {
-            $q = \Illuminate\Support\Facades\DB::table('alertes')->where('niveau', 'CRITIQUE');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            $rows = $q->latest('id')->take($limit)->get();
-            $table = 'alertes';
-        } elseif ($type === 'securite') {
-            $q = \Illuminate\Support\Facades\DB::table('alertes')->where('type', 'intrusion');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            $rows = $q->latest('id')->take($limit)->get();
-            $table = 'alertes';
-        } elseif (in_array($type, ['alertes', 'anomalies'])) {
-            $q = \Illuminate\Support\Facades\DB::table('alertes');
-            if ($debut)  $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)    $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            if ($niveau) $q->where('niveau', strtoupper($niveau));
-            $rows = $q->latest('id')->take($limit)->get();
-            $table = 'alertes';
-        } elseif ($type === 'energie') {
-            $q = \Illuminate\Support\Facades\DB::table('mesures')
-                ->select('id','created_at','courant','puissance','tension','temperature','humidite');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            if ($salle) $q->where('salle_id', $salle);
-            $rows = $q->latest('id')->take($limit)->get();
-        } elseif ($type === 'maintenance') {
-            $q = \Illuminate\Support\Facades\DB::table('historiques');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            $rows = $q->latest('id')->take($limit)->get();
-            $table = 'historiques';
-        } else {
-            // capteurs, historique, default
-            $q = \Illuminate\Support\Facades\DB::table('mesures');
-            if ($debut) $q->where('created_at', '>=', $debut . ' 00:00:00');
-            if ($fin)   $q->where('created_at', '<=', $fin   . ' 23:59:59');
-            if ($salle) $q->where('salle_id', $salle);
-            $rows = $q->latest('id')->take($limit)->get();
+        $q = DB::table($type)
+            ->whereBetween('created_at', [$debut.' 00:00:00', $fin.' 23:59:59'])
+            ->orderByDesc('created_at')->limit($limit);
+        if ($niveau && $type === 'alertes') $q->where('niveau', $niveau);
+        if ($salle)   $q->where('salle_id', $salle);
+        if ($type === 'mesures') {
+            if ($tempMin !== null) $q->where('temperature', '>=', (float)$tempMin);
+            if ($tempMax !== null) $q->where('temperature', '<=', (float)$tempMax);
+            if ($humMin  !== null) $q->where('humidite',    '>=', (float)$humMin);
+            if ($humMax  !== null) $q->where('humidite',    '<=', (float)$humMax);
         }
-    } catch (\Exception $e) {
-        $rows = collect();
-    }
+        $rows = $q->get();
+    } catch (\Exception $e) { $rows = collect(); }
 
-    $date     = date('Y-m-d');
-    $filename = "rapport_{$type}_{$date}";
-    $rowsArr  = $rows->map(fn($r) => (array) $r)->toArray();
+    $data = $rows->map(fn($r) => (array)$r)->toArray();
+    $fn   = $type.'_'.$debut.'_'.$fin;
 
-    // CSV
-    if ($format === 'csv') {
-        $lines = [];
-        if (!empty($rowsArr)) {
-            $lines[] = implode(',', array_keys($rowsArr[0]));
-            foreach ($rowsArr as $r) {
-                $lines[] = implode(',', array_map(
-                    fn($v) => '"' . str_replace('"', '""', (string)($v ?? '')) . '"',
-                    array_values($r)
-                ));
-            }
-        }
-        return response("\xEF\xBB\xBF" . implode("\n", $lines), 200, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.csv\"",
-        ]);
-    }
+    // Column-letter helper (A, B, …, Z, AA, AB …)
+    $xlCol = function(int $n): string {
+        $s = ''; $n++;
+        while ($n > 0) { $n--; $s = chr(65 + ($n % 26)).$s; $n = intdiv($n, 26); }
+        return $s;
+    };
+    $xlEsc = fn($v) => htmlspecialchars((string)$v, ENT_XML1|ENT_SUBSTITUTE, 'UTF-8');
 
-    // JSON
+    // ── JSON ──────────────────────────────────────────────────────────────
     if ($format === 'json') {
-        return response(json_encode([
-            'type'      => $type,
-            'generated' => date('Y-m-d H:i:s'),
-            'total'     => count($rowsArr),
-            'data'      => $rowsArr,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 200, [
-            'Content-Type'        => 'application/json',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.json\"",
-        ]);
+        return response()->json($data)
+            ->header('Content-Disposition', "attachment; filename=\"{$fn}.json\"");
     }
 
-    // XML
+    // ── XML ───────────────────────────────────────────────────────────────
     if ($format === 'xml') {
-        $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        $xml .= "<rapport type=\"{$type}\" generated=\"" . date('Y-m-d H:i:s') . "\" total=\"" . count($rowsArr) . "\">\n";
-        foreach ($rowsArr as $row) {
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<export type=\"{$type}\" debut=\"{$debut}\" fin=\"{$fin}\" total=\"".count($data)."\">\n";
+        foreach ($data as $row) {
             $xml .= "  <item>\n";
             foreach ($row as $k => $v) {
-                $tag  = preg_replace('/[^a-zA-Z0-9_]/', '_', $k);
-                $xml .= "    <{$tag}>" . htmlspecialchars((string)($v ?? ''), ENT_XML1, 'UTF-8') . "</{$tag}>\n";
+                $tag  = preg_replace('/[^a-z0-9_]/i','_',$k);
+                $xml .= "    <{$tag}>".$xlEsc($v)."</{$tag}>\n";
             }
             $xml .= "  </item>\n";
         }
-        $xml .= "</rapport>";
-        return response($xml, 200, [
-            'Content-Type'        => 'application/xml; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.xml\"",
-        ]);
+        $xml .= "</export>";
+        return response($xml, 200, ['Content-Type'=>'application/xml','Content-Disposition'=>"attachment; filename=\"{$fn}.xml\""]);
     }
 
-    // TXT
-    if ($format === 'txt') {
-        $txt  = str_repeat('═', 50) . "\n";
-        $txt .= "  RAPPORT " . strtoupper($type) . "\n";
-        $txt .= "  Généré le " . date('d/m/Y à H:i:s') . "\n";
-        $txt .= "  Total : " . count($rowsArr) . " enregistrement(s)\n";
-        $txt .= str_repeat('═', 50) . "\n\n";
-        foreach ($rowsArr as $i => $row) {
-            $txt .= "── Enregistrement " . ($i + 1) . " ──\n";
-            foreach ($row as $k => $v) {
-                $txt .= sprintf("  %-26s: %s\n", $k, (string)($v ?? '—'));
+    // ── XLS (Excel 97-2003 TSV) ───────────────────────────────────────────
+    if ($format === 'xls') {
+        $out = "\xEF\xBB\xBF";
+        if (!empty($data)) {
+            $out .= implode("\t", array_keys($data[0]))."\r\n";
+            foreach ($data as $row)
+                $out .= implode("\t", array_map(fn($v)=>str_replace(["\t","\r","\n"],'',(string)$v),$row))."\r\n";
+        }
+        return response($out,200,['Content-Type'=>'application/vnd.ms-excel','Content-Disposition'=>"attachment; filename=\"{$fn}.xls\""]);
+    }
+
+    // ── XLSX (Office Open XML) ────────────────────────────────────────────
+    if ($format === 'xlsx') {
+        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+
+        $zip->addFromString('[Content_Types].xml',
+            '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            .'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            .'<Default Extension="xml" ContentType="application/xml"/>'
+            .'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            .'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            .'</Types>');
+        $zip->addFromString('_rels/.rels',
+            '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            .'</Relationships>');
+        $zip->addFromString('xl/workbook.xml',
+            '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            .'<sheets><sheet name="'.htmlspecialchars($type).'" sheetId="1" r:id="rId1"/></sheets></workbook>');
+        $zip->addFromString('xl/_rels/workbook.xml.rels',
+            '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            .'</Relationships>');
+
+        $sd = '';
+        if (!empty($data)) {
+            $cols = array_keys($data[0]);
+            $sd  .= '<row r="1">';
+            foreach ($cols as $ci=>$col)
+                $sd .= '<c r="'.$xlCol($ci).'1" t="inlineStr"><is><t>'.$xlEsc($col).'</t></is></c>';
+            $sd .= '</row>';
+            foreach ($data as $ri=>$row) {
+                $rn  = $ri + 2;
+                $sd .= '<row r="'.$rn.'">';
+                foreach (array_values($row) as $ci=>$val)
+                    $sd .= '<c r="'.$xlCol($ci).$rn.'" t="inlineStr"><is><t>'.$xlEsc((string)$val).'</t></is></c>';
+                $sd .= '</row>';
             }
-            $txt .= "\n";
         }
-        return response($txt, 200, [
-            'Content-Type'        => 'text/plain; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.txt\"",
-        ]);
-    }
-
-    // Excel (XLS via HTML table)
-    if ($format === 'excel' || $format === 'xls') {
-        $html  = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">';
-        $html .= '<head><meta charset="UTF-8"><style>th{background:#2fa84f;color:#fff;padding:6px 10px;font-size:12px;}td{padding:5px 10px;border:1px solid #ccc;font-size:12px;}</style></head>';
-        $html .= '<body><table border="1" cellspacing="0">';
-        if (!empty($rowsArr)) {
-            $html .= '<tr>' . implode('', array_map(fn($h) => '<th>' . htmlspecialchars($h) . '</th>', array_keys($rowsArr[0]))) . '</tr>';
-            foreach ($rowsArr as $row) {
-                $html .= '<tr>' . implode('', array_map(fn($v) => '<td>' . htmlspecialchars((string)($v ?? '')) . '</td>', array_values($row))) . '</tr>';
-            }
-        }
-        $html .= '</table></body></html>';
-        return response($html, 200, [
-            'Content-Type'        => 'application/vnd.ms-excel',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.xls\"",
-        ]);
-    }
-
-    // SQL
-    if ($format === 'sql') {
-        $sql  = "-- Rapport {$type} — généré le " . date('Y-m-d H:i:s') . "\n";
-        $sql .= "-- Total : " . count($rowsArr) . " enregistrements\n\n";
-        foreach ($rowsArr as $row) {
-            $cols = implode(', ', array_map(fn($c) => "`{$c}`", array_keys($row)));
-            $vals = implode(', ', array_map(fn($v) => $v === null ? 'NULL' : "'" . addslashes((string)$v) . "'", array_values($row)));
-            $sql .= "INSERT INTO `{$table}` ({$cols}) VALUES ({$vals});\n";
-        }
-        return response($sql, 200, [
-            'Content-Type'        => 'application/sql; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.sql\"",
-        ]);
-    }
-
-    // ── PDF (DomPDF) ──
-    if ($format === 'pdf') {
-        $typeLabel = [
-            'capteurs'=>'Capteurs','anomalies'=>'Anomalies','securite'=>'Sécurité',
-            'utilisateurs'=>'Utilisateurs','salles'=>'Salles','serveurs'=>'Serveurs',
-            'energie'=>'Énergie','historique'=>'Historique','alertes'=>'Alertes',
-            'incidents'=>'Incidents','maintenance'=>'Maintenance',
-        ][$type] ?? ucfirst($type);
-
-        $colKeys    = !empty($rowsArr) ? array_keys($rowsArr[0]) : [];
-        $colHeaders = array_map(fn($k) => ucwords(str_replace('_', ' ', $k)), $colKeys);
-        $xh         = fn($v) => htmlspecialchars((string)($v ?? ''), ENT_QUOTES, 'UTF-8');
-
-        $thHtml = implode('', array_map(fn($h) => '<th>' . $xh($h) . '</th>', $colHeaders));
-        $trHtml = '';
-        foreach ($rowsArr as $i => $row) {
-            $bg     = ($i % 2 === 0) ? '#ffffff' : '#f2f6fb';
-            $cells  = '';
-            foreach (array_values($row) as $v) {
-                $txt    = strlen((string)($v ?? '')) > 80 ? mb_substr((string)$v, 0, 80, 'UTF-8') . '…' : (string)($v ?? '');
-                $cells .= '<td style="background:' . $bg . '">' . $xh($txt) . '</td>';
-            }
-            $trHtml .= '<tr>' . $cells . '</tr>';
-        }
-
-        $exportDate = date('d/m/Y à H:i:s');
-        $total      = count($rowsArr);
-        $periode    = ($debut || $fin) ? ('Période : ' . ($debut ?: '…') . ' → ' . ($fin ?: '…')) : '';
-
-        $pdfHtml  = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">';
-        $pdfHtml .= '<style>';
-        $pdfHtml .= '* { font-family: DejaVu Sans, Arial, sans-serif; margin:0; padding:0; box-sizing:border-box; }';
-        $pdfHtml .= 'body { background:#fff; color:#1a2740; font-size:9px; padding:8px; }';
-        $pdfHtml .= '.hdr { background:#1a3a5c; color:#fff; padding:10px 14px; border-radius:5px; margin-bottom:10px; }';
-        $pdfHtml .= '.hdr h1 { font-size:14px; margin-bottom:2px; }';
-        $pdfHtml .= '.hdr p  { font-size:8px; opacity:.85; }';
-        $pdfHtml .= 'table { width:100%; border-collapse:collapse; font-size:8px; }';
-        $pdfHtml .= 'th { background:#1a3a5c; color:#fff; padding:5px 6px; text-align:left; font-weight:bold; white-space:nowrap; }';
-        $pdfHtml .= 'td { padding:4px 6px; border-bottom:1px solid #dce6f0; color:#2a3a5a; word-break:break-word; }';
-        $pdfHtml .= '.foot { text-align:center; color:#9aa5b4; font-size:7px; margin-top:10px; border-top:1px solid #dce6f0; padding-top:5px; }';
-        $pdfHtml .= '</style></head><body>';
-        $pdfHtml .= '<div class="hdr"><h1>Rapport ' . $xh($typeLabel) . '</h1>';
-        $pdfHtml .= '<p>Généré le ' . $xh($exportDate) . ' &nbsp;|&nbsp; ' . $total . ' enregistrement(s)';
-        if ($periode) $pdfHtml .= ' &nbsp;|&nbsp; ' . $xh($periode);
-        $pdfHtml .= '</p></div>';
-
-        if (!empty($rowsArr)) {
-            $pdfHtml .= '<table><thead><tr>' . $thHtml . '</tr></thead><tbody>' . $trHtml . '</tbody></table>';
-        } else {
-            $pdfHtml .= '<p style="color:#888;padding:20px 0;text-align:center">Aucune donnée disponible.</p>';
-        }
-        $pdfHtml .= '<div class="foot">Plateforme Surveillance IoT — Rapport généré automatiquement</div>';
-        $pdfHtml .= '</body></html>';
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($pdfHtml)->setPaper('a4', 'landscape');
-        return $pdf->download($filename . '.pdf');
-    }
-
-    // ── Word (.docx via ZipArchive + OOXML) ──
-    if ($format === 'word' || $format === 'docx') {
-        $typeLabel = [
-            'capteurs'=>'Capteurs','anomalies'=>'Anomalies','securite'=>'Sécurité',
-            'utilisateurs'=>'Utilisateurs','salles'=>'Salles','serveurs'=>'Serveurs',
-            'energie'=>'Énergie','historique'=>'Historique','alertes'=>'Alertes',
-            'incidents'=>'Incidents','maintenance'=>'Maintenance',
-        ][$type] ?? ucfirst($type);
-
-        $colKeys    = !empty($rowsArr) ? array_keys($rowsArr[0]) : [];
-        $colHeaders = array_map(fn($k) => ucwords(str_replace('_', ' ', $k)), $colKeys);
-        $exportDate = date('d/m/Y à H:i:s');
-        $total      = count($rowsArr);
-        $xe         = fn($v) => htmlspecialchars((string)($v ?? ''), ENT_XML1, 'UTF-8');
-
-        // ── Table header row ──
-        $headCells = '';
-        foreach ($colHeaders as $h) {
-            $headCells .= '<w:tc>'
-                . '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="1B3A5C"/></w:tcPr>'
-                . '<w:p><w:r>'
-                . '<w:rPr><w:color w:val="FFFFFF"/><w:b/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
-                . '<w:t xml:space="preserve">' . $xe($h) . '</w:t>'
-                . '</w:r></w:p></w:tc>';
-        }
-        $headerRow = '<w:tr><w:trPr><w:tblHeader/><w:trHeight w:val="450"/></w:trPr>' . $headCells . '</w:tr>';
-
-        // ── Data rows ──
-        $dataRows = '';
-        foreach ($rowsArr as $i => $row) {
-            $fill  = ($i % 2 === 0) ? 'FFFFFF' : 'EDF2FB';
-            $cells = '';
-            foreach ($row as $v) {
-                $txt    = mb_substr((string)($v ?? ''), 0, 200, 'UTF-8');
-                $cells .= '<w:tc>'
-                    . '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' . $fill . '"/></w:tcPr>'
-                    . '<w:p><w:r>'
-                    . '<w:rPr><w:color w:val="2A3A5A"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>'
-                    . '<w:t xml:space="preserve">' . $xe($txt) . '</w:t>'
-                    . '</w:r></w:p></w:tc>';
-            }
-            $dataRows .= '<w:tr><w:trPr><w:trHeight w:val="350"/></w:trPr>' . $cells . '</w:tr>';
-        }
-
-        $ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
-
-        // ── document.xml ──
-        $docXml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-        $docXml .= '<w:document ' . $ns . '><w:body>';
-
-        // Title
-        $docXml .= '<w:p><w:r>'
-            . '<w:rPr><w:b/><w:color w:val="1B3A5C"/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr>'
-            . '<w:t>Rapport ' . $xe($typeLabel) . '</w:t>'
-            . '</w:r></w:p>';
-
-        // Metadata
-        $metaTxt = 'Généré le ' . $xe($exportDate) . '   |   ' . $total . ' enregistrement(s)';
-        if ($debut || $fin) $metaTxt .= '   |   Période : ' . $xe($debut ?: '…') . ' → ' . $xe($fin ?: '…');
-        $docXml .= '<w:p><w:r>'
-            . '<w:rPr><w:color w:val="6B7FA0"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
-            . '<w:t xml:space="preserve">' . $metaTxt . '</w:t>'
-            . '</w:r></w:p>';
-
-        // Blank line
-        $docXml .= '<w:p><w:r><w:t></w:t></w:r></w:p>';
-
-        // Table
-        if (!empty($rowsArr)) {
-            $docXml .= '<w:tbl>'
-                . '<w:tblPr>'
-                .   '<w:tblStyle w:val="TableGrid"/>'
-                .   '<w:tblW w:w="9638" w:type="dxa"/>'
-                .   '<w:tblBorders>'
-                .     '<w:top    w:val="single" w:sz="6" w:space="0" w:color="1B3A5C"/>'
-                .     '<w:left   w:val="single" w:sz="6" w:space="0" w:color="1B3A5C"/>'
-                .     '<w:bottom w:val="single" w:sz="6" w:space="0" w:color="1B3A5C"/>'
-                .     '<w:right  w:val="single" w:sz="6" w:space="0" w:color="1B3A5C"/>'
-                .     '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="C8D8EA"/>'
-                .     '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="C8D8EA"/>'
-                .   '</w:tblBorders>'
-                . '</w:tblPr>'
-                . $headerRow
-                . $dataRows
-                . '</w:tbl>';
-        } else {
-            $docXml .= '<w:p><w:r>'
-                . '<w:rPr><w:color w:val="999999"/></w:rPr>'
-                . '<w:t>Aucune donnée disponible.</w:t>'
-                . '</w:r></w:p>';
-        }
-
-        // Footer + section (landscape A4)
-        $docXml .= '<w:p><w:r>'
-            . '<w:rPr><w:color w:val="9AA5B4"/><w:sz w:val="14"/><w:szCs w:val="14"/></w:rPr>'
-            . '<w:t>Plateforme Surveillance IoT — Rapport généré automatiquement</w:t>'
-            . '</w:r></w:p>';
-        $docXml .= '<w:sectPr>'
-            . '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>'
-            . '<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720"/>'
-            . '</w:sectPr>';
-        $docXml .= '</w:body></w:document>';
-
-        // ── ZIP assembly ──
-        $contentTypes  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            . '<Default Extension="xml"  ContentType="application/xml"/>'
-            . '<Override PartName="/word/document.xml"'
-            .   ' ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-            . '</Types>';
-
-        $pkgRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            . '<Relationship Id="rId1"'
-            .   ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"'
-            .   ' Target="word/document.xml"/>'
-            . '</Relationships>';
-
-        $docRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
-
-        $tmpFile = tempnam(sys_get_temp_dir(), 'rpt_docx_');
-        $zip     = new \ZipArchive();
-        if ($zip->open($tmpFile, \ZipArchive::OVERWRITE) !== true) {
-            return redirect('/rapports')->with('error', 'Erreur création fichier Word.');
-        }
-        $zip->addFromString('[Content_Types].xml',       $contentTypes);
-        $zip->addFromString('_rels/.rels',               $pkgRels);
-        $zip->addFromString('word/_rels/document.xml.rels', $docRels);
-        $zip->addFromString('word/document.xml',         $docXml);
+        $zip->addFromString('xl/worksheets/sheet1.xml',
+            '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            .'<sheetData>'.$sd.'</sheetData></worksheet>');
         $zip->close();
 
-        $content = file_get_contents($tmpFile);
-        @unlink($tmpFile);
-
+        $content = file_get_contents($tmp); @unlink($tmp);
         return response($content, 200, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'Content-Disposition' => "attachment; filename=\"{$filename}.docx\"",
-            'Content-Length'      => strlen($content),
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"{$fn}.xlsx\"",
         ]);
     }
 
-    return redirect('/rapports')->with('error', 'Format non supporté.');
+    // ── TXT ───────────────────────────────────────────────────────────────
+    if ($format === 'txt') {
+        $out  = "=== Plateforme de Surveillance — Export : {$type} ===\n";
+        $out .= "Période  : {$debut} au {$fin}\n";
+        $out .= "Généré   : ".date('d/m/Y H:i:s')."\n";
+        $out .= "Total    : ".count($data)." enregistrements\n";
+        $out .= str_repeat('─', 70)."\n\n";
+        if (!empty($data)) {
+            $cols = array_keys($data[0]);
+            $w = array_fill(0, count($cols), 4);
+            foreach ($cols as $i=>$c)  $w[$i] = max($w[$i], mb_strlen($c));
+            foreach ($data  as $row)   foreach (array_values($row) as $i=>$v) $w[$i] = max($w[$i], mb_strlen((string)$v));
+            foreach ($cols  as $i=>$c) $out .= str_pad($c, $w[$i]+2);
+            $out .= "\n".str_repeat('─', array_sum($w)+count($w)*2)."\n";
+            foreach ($data  as $row) {
+                foreach (array_values($row) as $i=>$v) $out .= str_pad((string)$v, $w[$i]+2);
+                $out .= "\n";
+            }
+        }
+        $out .= "\n".str_repeat('─', 70)."\nPlateforme de Surveillance\n";
+        return response($out,200,['Content-Type'=>'text/plain; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.txt\""]);
+    }
+
+    // ── SQL ───────────────────────────────────────────────────────────────
+    if ($format === 'sql') {
+        $out  = "-- Plateforme de Surveillance — SQL Export\n-- Table   : {$type}\n";
+        $out .= "-- Période : {$debut} au {$fin}\n-- Généré  : ".date('Y-m-d H:i:s')."\n-- Total   : ".count($data)." lignes\n\n";
+        $out .= "SET NAMES 'utf8mb4';\nSET FOREIGN_KEY_CHECKS=0;\n\n";
+        foreach ($data as $row) {
+            $keys = implode(', ', array_map(fn($k)=>"`{$k}`",   array_keys($row)));
+            $vals = implode(', ', array_map(fn($v)=>is_null($v)?'NULL':"'".addslashes((string)$v)."'", array_values($row)));
+            $out .= "INSERT INTO `{$type}` ({$keys}) VALUES ({$vals});\n";
+        }
+        $out .= "\nSET FOREIGN_KEY_CHECKS=1;\n";
+        return response($out,200,['Content-Type'=>'application/sql','Content-Disposition'=>"attachment; filename=\"{$fn}.sql\""]);
+    }
+
+    // ── DOCX (Word Open XML) ──────────────────────────────────────────────
+    if ($format === 'docx') {
+        $rows500 = array_slice($data, 0, 500);
+        $tbl = '';
+        if (!empty($rows500)) {
+            $tbl .= '<w:tbl><w:tblPr><w:tblW w:w="9000" w:type="dxa"/><w:tblBorders>'
+                 .  '<w:top w:val="single" w:sz="4" w:color="1e2f5a"/><w:left w:val="single" w:sz="4" w:color="1e2f5a"/>'
+                 .  '<w:bottom w:val="single" w:sz="4" w:color="1e2f5a"/><w:right w:val="single" w:sz="4" w:color="1e2f5a"/>'
+                 .  '<w:insideH w:val="single" w:sz="4" w:color="1e2f5a"/><w:insideV w:val="single" w:sz="4" w:color="1e2f5a"/>'
+                 .  '</w:tblBorders></w:tblPr>';
+            $tbl .= '<w:tr>';
+            foreach (array_keys($rows500[0]) as $col)
+                $tbl .= '<w:tc><w:tcPr><w:shd w:val="clear" w:fill="0e1a38"/></w:tcPr>'
+                     .  '<w:p><w:r><w:rPr><w:b/><w:color w:val="33FF88"/><w:sz w:val="16"/></w:rPr>'
+                     .  '<w:t>'.htmlspecialchars($col).'</w:t></w:r></w:p></w:tc>';
+            $tbl .= '</w:tr>';
+            foreach ($rows500 as $row) {
+                $tbl .= '<w:tr>';
+                foreach ($row as $v)
+                    $tbl .= '<w:tc><w:p><w:r><w:rPr><w:sz w:val="16"/></w:rPr>'
+                         .  '<w:t xml:space="preserve">'.htmlspecialchars((string)$v).'</w:t></w:r></w:p></w:tc>';
+                $tbl .= '</w:tr>';
+            }
+            $tbl .= '</w:tbl>';
+        }
+        $doc = '<?xml version="1.0" encoding="UTF-8"?>'
+             . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+             . '<w:body>'
+             . '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
+             . '<w:r><w:rPr><w:b/><w:color w:val="33FF88"/><w:sz w:val="32"/></w:rPr>'
+             . '<w:t>Rapport — '.htmlspecialchars($type).'</w:t></w:r></w:p>'
+             . '<w:p><w:r><w:rPr><w:color w:val="888888"/><w:sz w:val="18"/></w:rPr>'
+             . '<w:t>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' | Total : '.count($data).' | Généré : '.date('d/m/Y H:i').'</w:t></w:r></w:p>'
+             . '<w:p/>'.$tbl.'<w:p/>'
+             . '<w:p><w:r><w:rPr><w:color w:val="555555"/><w:sz w:val="14"/></w:rPr>'
+             . '<w:t>Plateforme de Surveillance</w:t></w:r></w:p>'
+             . '</w:body></w:document>';
+
+        $tmp = tempnam(sys_get_temp_dir(), 'docx_');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml',
+            '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            .'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            .'<Default Extension="xml" ContentType="application/xml"/>'
+            .'<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+            .'</Types>');
+        $zip->addFromString('_rels/.rels',
+            '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+            .'</Relationships>');
+        $zip->addFromString('word/document.xml', $doc);
+        $zip->addFromString('word/_rels/document.xml.rels',
+            '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>');
+        $zip->close();
+
+        $content = file_get_contents($tmp); @unlink($tmp);
+        return response($content, 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => "attachment; filename=\"{$fn}.docx\"",
+        ]);
+    }
+
+    // ── HTML (downloadable styled report) ────────────────────────────────
+    if ($format === 'html') {
+        $hdr  = !empty($data) ? '<tr>'.implode('',array_map(fn($k)=>'<th>'.htmlspecialchars($k).'</th>',array_keys($data[0]))).'</tr>' : '';
+        $body = implode('',array_map(fn($row)=>'<tr>'.implode('',array_map(fn($v)=>'<td>'.htmlspecialchars((string)$v).'</td>',$row)).'</tr>',$data));
+        $html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport '.htmlspecialchars($type).'</title>'
+              . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#060d1f;color:#fff;padding:20px}'
+              . '.hd{background:#0e1a38;border:1px solid #1e2f5a;border-radius:12px;padding:18px 20px;margin-bottom:18px}'
+              . '.hd h1{color:#33ff88;font-size:18px}.hd p{color:#888;font-size:11px;margin-top:5px}'
+              . 'table{width:100%;border-collapse:collapse}thead th{background:#0e1a38;border:1px solid #1e2f5a;padding:8px 10px;text-align:left;font-size:10px;color:#aaa;text-transform:uppercase}'
+              . 'tbody td{padding:7px 10px;border:1px solid #1e2f5a;font-size:11px}tbody tr:nth-child(even) td{background:rgba(30,47,90,.25)}'
+              . '.ft{margin-top:14px;text-align:center;color:#555;font-size:10px}</style></head><body>'
+              . '<div class="hd"><h1>&#128202; Rapport — '.htmlspecialchars($type).'</h1>'
+              . '<p>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' &nbsp;·&nbsp; '.count($data).' enregistrements &nbsp;·&nbsp; Généré le '.date('d/m/Y H:i').'</p></div>'
+              . (!empty($data) ? '<table><thead>'.$hdr.'</thead><tbody>'.$body.'</tbody></table>' : '<p style="text-align:center;padding:40px;color:#555">Aucune donnée.</p>')
+              . '<div class="ft">Plateforme de Surveillance &nbsp;·&nbsp; '.date('d/m/Y H:i').'</div></body></html>';
+        return response($html,200,['Content-Type'=>'text/html;charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.html\""]);
+    }
+
+    // ── ZIP (bundle: CSV + JSON + HTML + README) ──────────────────────────
+    if ($format === 'zip') {
+        $csv = !empty($data) ? implode(',',array_keys($data[0]))."\n" : '';
+        foreach ($data as $row)
+            $csv .= implode(',',array_map(fn($v)=>'"'.str_replace('"','""',(string)$v).'"',$row))."\n";
+
+        $hdr2  = !empty($data) ? '<tr>'.implode('',array_map(fn($k)=>'<th>'.htmlspecialchars($k).'</th>',array_keys($data[0]))).'</tr>' : '';
+        $body2 = implode('',array_map(fn($r)=>'<tr>'.implode('',array_map(fn($v)=>'<td>'.htmlspecialchars((string)$v).'</td>',$r)).'</tr>',$data));
+        $html2 = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;background:#060d1f;color:#fff;padding:16px}table{width:100%;border-collapse:collapse}th{background:#0e1a38;border:1px solid #1e2f5a;padding:7px;font-size:10px;color:#33ff88}td{border:1px solid #1e2f5a;padding:6px;font-size:10px}</style></head>'
+               . '<body><h2 style="color:#33ff88">'.htmlspecialchars($type).' — '.$debut.' au '.$fin.'</h2>'
+               . '<table><thead>'.$hdr2.'</thead><tbody>'.$body2.'</tbody></table></body></html>';
+
+        $tmp = tempnam(sys_get_temp_dir(), 'zip_');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        $zip->addFromString("{$fn}.csv",  $csv);
+        $zip->addFromString("{$fn}.json", json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+        $zip->addFromString("{$fn}.html", $html2);
+        $zip->addFromString('README.txt', "Plateforme de Surveillance — Bundle Export\nType: {$type}\nPeriode: {$debut} - {$fin}\nTotal: ".count($data)." records\nGenerated: ".date('Y-m-d H:i:s')."\n");
+        $zip->close();
+
+        $content = file_get_contents($tmp); @unlink($tmp);
+        return response($content,200,['Content-Type'=>'application/zip','Content-Disposition'=>"attachment; filename=\"{$fn}_bundle.zip\""]);
+    }
+
+    // ── CSV (default) ─────────────────────────────────────────────────────
+    $csv = '';
+    if (!empty($data)) {
+        $csv .= implode(',', array_keys($data[0]))."\n";
+        foreach ($data as $row)
+            $csv .= implode(',', array_map(fn($v)=>'"'.str_replace('"','""',(string)$v).'"',$row))."\n";
+    }
+    return response($csv,200,['Content-Type'=>'text/csv','Content-Disposition'=>"attachment; filename=\"{$fn}.csv\""]);
 });
 
-// Validation admin supprimée — toutes les routes redirigent vers le dashboard
-Route::get('/admin/utilisateurs',                function () { return redirect('/dashboard'); });
-Route::post('/admin/valider/{id}',               function ()  { return redirect('/dashboard'); });
-Route::post('/admin/refuser/{id}',               function ()  { return redirect('/dashboard'); });
-Route::post('/admin/attente/{id}',               function ()  { return redirect('/dashboard'); });
-Route::get('/admin/valider-mail/{id}/{token}',   function ()  { return redirect('/dashboard'); });
-Route::get('/admin/refuser-mail/{id}/{token}',   function ()  { return redirect('/dashboard'); });
-Route::get('/admin/attente-mail/{id}/{token}',   function ()  { return redirect('/dashboard'); });
+// ── Backup complet ZIP ─────────────────────────────────────────────────────
+Route::get('/rapports/backup', function () {
+    if (!session('user')) return redirect('/login');
 
-// ═══════════════════════════════════════════════════════════
-//  RÉINITIALISATION MOT DE PASSE (accessible sans connexion)
-// ═══════════════════════════════════════════════════════════
+    $tmp = tempnam(sys_get_temp_dir(), 'bkp_');
+    $zip = new \ZipArchive();
+    $zip->open($tmp, \ZipArchive::OVERWRITE);
 
-Route::get('/forgot-password', [AuthController::class, 'forgotPasswordForm']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPasswordPost']);
-Route::get('/reset-password/{token}', [AuthController::class, 'resetPasswordForm']);
-Route::post('/reset-password', [AuthController::class, 'resetPasswordPost']);
+    $tables = ['mesures', 'alertes', 'salles', 'serveurs'];
+    $today  = date('Y-m-d');
+    $summary = "=== Plateforme de Surveillance — Backup complet ===\nDate: ".date('Y-m-d H:i:s')."\n\n";
+
+    foreach ($tables as $tbl) {
+        try {
+            $rows = DB::table($tbl)->orderByDesc('created_at')->limit(20000)->get();
+            $data = $rows->map(fn($r)=>(array)$r)->toArray();
+            $summary .= ucfirst($tbl).": ".count($data)." enregistrements\n";
+
+            $csv = !empty($data) ? implode(',',array_keys($data[0]))."\n" : '';
+            foreach ($data as $row)
+                $csv .= implode(',',array_map(fn($v)=>'"'.str_replace('"','""',(string)$v).'"',$row))."\n";
+            $zip->addFromString("{$tbl}.csv", $csv);
+            $zip->addFromString("{$tbl}.json", json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+
+            $sql = "-- Table: {$tbl} | ".count($data)." rows\nSET NAMES 'utf8mb4';\n";
+            foreach ($data as $row) {
+                $k = implode(',',array_map(fn($k)=>"`{$k}`",array_keys($row)));
+                $v = implode(',',array_map(fn($v)=>is_null($v)?'NULL':"'".addslashes((string)$v)."'",array_values($row)));
+                $sql .= "INSERT INTO `{$tbl}` ({$k}) VALUES ({$v});\n";
+            }
+            $zip->addFromString("{$tbl}.sql", $sql);
+        } catch (\Exception $e) {
+            $zip->addFromString("{$tbl}_error.txt", "Erreur: ".$e->getMessage());
+            $summary .= ucfirst($tbl).": erreur — ".$e->getMessage()."\n";
+        }
+    }
+
+    try {
+        $users = DB::table('users')->select('id','prenom','nom','email','telephone','role','validation_status','pays','region','profession','created_at')->get();
+        $ud = $users->map(fn($r)=>(array)$r)->toArray();
+        $summary .= "Utilisateurs: ".count($ud)." (sans mots de passe)\n";
+        $csv = !empty($ud) ? implode(',',array_keys($ud[0]))."\n" : '';
+        foreach ($ud as $row)
+            $csv .= implode(',',array_map(fn($v)=>'"'.str_replace('"','""',(string)$v).'"',$row))."\n";
+        $zip->addFromString('utilisateurs.csv', $csv);
+    } catch (\Exception $e) {}
+
+    $zip->addFromString('BACKUP_INFO.txt', $summary);
+    $zip->close();
+
+    $content = file_get_contents($tmp); @unlink($tmp);
+    return response($content, 200, [
+        'Content-Type'        => 'application/zip',
+        'Content-Disposition' => "attachment; filename=\"supserver_backup_{$today}.zip\"",
+    ]);
+});

@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>scenarios</title>
 
 <style>
@@ -52,6 +53,19 @@ background:#111827;
 padding:30px;
 border-radius:20px;
 margin-bottom:20px;
+}
+
+/* ── Responsive anti-overflow ── */
+*{overflow-wrap:break-word;word-break:break-word}
+img,video,iframe{max-width:100%;height:auto}
+@media(max-width:640px){
+body{overflow-x:hidden;padding:12px!important}
+.box{padding:16px!important;border-radius:12px!important}
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+input,select,textarea{max-width:100%!important;width:100%!important}
+}
+@media(max-width:400px){
+h1,h2,h3{font-size:clamp(15px,5vw,22px)!important}
 }
 
 </style>
