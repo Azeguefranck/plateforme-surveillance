@@ -105,7 +105,7 @@ body{background:#f4f6f9;color:#1a2340;font-family:'Segoe UI',Arial,sans-serif}
 
 
   <div class="gauge-card ok" id="card-pir" style="display:flex;flex-direction:column;justify-content:center;align-items:center">
-    <div class="gauge-label">Détecteur PIR</div>
+    <div class="gauge-label">Mouvement</div>
     <div style="font-size:48px;margin:14px 0">🚶</div>
     <div class="pir-badge pir-ok" id="pir-badge">AUCUN MOUVEMENT</div>
   </div>
