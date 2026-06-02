@@ -1,0 +1,17 @@
+[Unit]
+Description=Arduino Serial Relay
+After=network.target
+
+[Service]
+Type=simple
+User=ahj
+Group=dialout
+WorkingDirectory=/opt/lampp/htdocs/plateforme_de_surveillance_des_salles_serveurs
+ExecStart=/usr/bin/python3 /opt/lampp/htdocs/plateforme_de_surveillance_des_salles_serveurs/serial_relay.py
+StandardOutput=journal
+StandardError=journal
+Restart=on-failure
+RestartSec=8
+
+[Install]
+WantedBy=multi-user.target
