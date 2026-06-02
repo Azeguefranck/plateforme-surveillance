@@ -118,7 +118,7 @@ Système intelligent de supervision des salles serveurs en temps réel.
 <div class="card">
 <h2>Surveillance Temps Réel</h2>
 <p>
-Contrôle des températures, humidité, gaz, courant et puissance.
+Contrôle des températures, humidité et qualité de l'air.
 </p>
 </div>
 

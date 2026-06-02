@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Caméras IP — Surveillance</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;user-select:none;-webkit-user-select:none}
 input,select,textarea{user-select:text;-webkit-user-select:text;cursor:auto}

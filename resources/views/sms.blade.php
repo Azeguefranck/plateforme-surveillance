@@ -188,20 +188,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
             </div>
             <label class="toggle-switch"><input type="checkbox" checked onchange="toggleAlerte('pir',this.checked)"><span class="slider"></span></label>
         </div>
-        <div class="toggle-item active" id="tgl_courant">
-            <div class="toggle-info">
-                <div class="toggle-name">&#9889; Courant électrique</div>
-                <div class="toggle-desc">SMS si surintensité</div>
-            </div>
-            <label class="toggle-switch"><input type="checkbox" checked onchange="toggleAlerte('courant',this.checked)"><span class="slider"></span></label>
-        </div>
-        <div class="toggle-item active" id="tgl_puissance">
-            <div class="toggle-info">
-                <div class="toggle-name">&#128161; Puissance</div>
-                <div class="toggle-desc">SMS si surpuissance</div>
-            </div>
-            <label class="toggle-switch"><input type="checkbox" checked onchange="toggleAlerte('puissance',this.checked)"><span class="slider"></span></label>
-        </div>
     </div>
 </div>
 
@@ -229,7 +215,7 @@ tr:hover td{background:rgba(51,181,255,.03)}
 
 <script>
 const SMSprefs = JSON.parse(localStorage.getItem('sms_prefs') || '{}');
-const defaults = {temperature:true, humidite:true, gaz:true, pir:true, courant:true, puissance:true};
+const defaults = {temperature:true, humidite:true, gaz:true, pir:true};
 Object.keys(defaults).forEach(k => {
     const v = SMSprefs[k] !== undefined ? SMSprefs[k] : defaults[k];
     const el = document.querySelector(`#tgl_${k} input`);
@@ -256,7 +242,7 @@ function sendSms() {
     const to  = document.getElementById('smsTo').value.trim();
     const msg = document.getElementById('smsMsg').value.trim();
     if (!to || !msg) { flash('Numéro et message requis.', 'error'); return; }
-    flash('&#8987; Envoi en cours via Arduino/SIM900...', 'success');
+    flash('&#8987; Envoi en cours via Arduino...', 'success');
     // In production, the Arduino handles SMS via AT commands — this logs the intent.
     setTimeout(() => {
         flash('&#10003; Commande SMS envoyée. Vérifiez le port série Arduino pour confirmation.', 'success');
@@ -276,7 +262,7 @@ function loadHistory() {
             if (!alertes.length) { tbody.innerHTML = '<tr><td colspan="5" class="no-data">Aucune alerte enregistrée.</td></tr>'; return; }
             tbody.innerHTML = alertes.map(a => {
                 const d = new Date(a.created_at).toLocaleString('fr-FR');
-                const capteur = a.message.match(/(température|humidité|gaz|courant|puissance|pir|mouvement)/i)?.[0] || 'Capteur';
+                const capteur = a.message.match(/(température|humidité|gaz|pir|mouvement)/i)?.[0] || 'Capteur';
                 return `<tr>
                     <td style="color:#555;font-size:11px">${d}</td>
                     <td style="color:var(--blue)">${capteur}</td>

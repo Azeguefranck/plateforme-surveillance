@@ -386,6 +386,14 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
   .stats-row{grid-template-columns:1fr 1fr}
   .filter-bar{padding:12px}
 }
+/* ── Capteurs live par équipement ── */
+.live-sensors{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.ls-dot{display:inline-flex;align-items:center;gap:2px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;
+        background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.25);color:#00e676}
+.ls-dot.warn{background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.3);color:#ffc400}
+.ls-dot.crit{background:rgba(255,61,87,.1);border-color:rgba(255,61,87,.3);color:#ff3d57}
+.ls-dot.pir {background:rgba(255,61,87,.12);border-color:#ff3d57;color:#ff3d57;animation:pf .8s infinite}
+@keyframes pf{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 
 @if(session('success_srv'))
@@ -395,8 +403,18 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 {{-- ══ EN-TÊTE ══ --}}
 <div class="hdr">
   <div class="hdr-left">
-<div class="hdr-title">Équipements <em>Salle Serveurs</em></div>
+    @if(isset($salleActive) && $salleActive)
+    <div class="hdr-eyebrow">
+      <a href="/salles" style="color:var(--neon);text-decoration:none;font-size:11px">
+        <i class="fa-solid fa-arrow-left"></i> Retour aux Salles Serveurs
+      </a>
+    </div>
+    <div class="hdr-title">Équipements — <em>{{ $salleActive->nom }}</em></div>
+    <div class="hdr-sub">{{ $equipements->count() }} équipement(s) dans cette salle</div>
+    @else
+    <div class="hdr-title">Équipements <em>Salle Serveurs</em></div>
     <div class="hdr-sub">Inventaire complet &amp; supervision des équipements réseau et serveurs</div>
+    @endif
   </div>
   <div class="hdr-right">
     <div class="clock-card">
@@ -455,7 +473,7 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
   <select class="flt-sel" id="f-salle" onchange="filtrer()">
     <option value="">Toutes les salles</option>
     @foreach($salles as $salle)
-    <option value="{{ $salle->id }}">{{ $salle->nom }}</option>
+    <option value="{{ $salle->id }}" {{ (isset($salleActive) && $salleActive && $salleActive->id == $salle->id) ? 'selected' : '' }}>{{ $salle->nom }}</option>
     @endforeach
   </select>
 </div>
@@ -506,6 +524,14 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
         <td class="col-place">
           @php $salle = $salles->firstWhere('id', $e->salle_id) @endphp
           <div class="sal">{{ $salle ? $salle->nom : '—' }}</div>
+          @if($e->salle_id)
+          <div class="live-sensors" id="ls-{{ $e->id }}" data-salle="{{ $e->salle_id }}" style="display:none">
+            <span class="ls-dot" id="ls-t-{{ $e->id }}">—°C</span>
+            <span class="ls-dot" id="ls-h-{{ $e->id }}">—%</span>
+            <span class="ls-dot" id="ls-g-{{ $e->id }}">—ppm</span>
+            <span class="ls-dot" id="ls-p-{{ $e->id }}"></span>
+          </div>
+          @endif
           @if($e->rack || $e->position_rack)<div class="rck"><i class="fa-solid fa-server" style="font-size:9px"></i> {{ $e->rack }}{{ $e->position_rack ? ' · U'.$e->position_rack : '' }}</div>@endif
         </td>
         <td>
@@ -634,10 +660,10 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
     <div class="tab-panel" data-modal="add" data-idx="3">
       <div class="form-grid">
         <div class="form-group"><label>Salle</label>
-          <select name="salle_id">
+          <select name="salle_id" id="add_salle_id">
             <option value="">-- Aucune --</option>
             @foreach($salles as $salle)
-            <option value="{{ $salle->id }}">{{ $salle->nom }}</option>
+            <option value="{{ $salle->id }}" {{ (isset($salleActive) && $salleActive && $salleActive->id == $salle->id) ? 'selected' : '' }}>{{ $salle->nom }}</option>
             @endforeach
           </select>
         </div>
@@ -944,5 +970,37 @@ function confirmDel(id) {
     document.getElementById('del-'+id).submit();
   }
 }
+
+/* ── Capteurs live par équipement ─────────────── */
+const LS_S = { temperature:{warn:35,crit:40}, humidite:{warn:75,crit:85}, gaz:{warn:300,crit:500} };
+function lsClass(cap, v) { return v >= LS_S[cap].crit ? 'crit' : v >= LS_S[cap].warn ? 'warn' : ''; }
+
+function pollEquipLive() {
+  fetch('/api/mesures-live')
+    .then(r => r.ok ? r.json() : {})
+    .then(data => {
+      document.querySelectorAll('.live-sensors').forEach(div => {
+        const sid  = div.dataset.salle;
+        const eid  = div.id.replace('ls-', '');
+        const d    = data[sid];
+        if (!d) { div.style.display = 'none'; return; }
+        div.style.display = '';
+        const t = parseFloat(d.temperature)||0, h = parseFloat(d.humidite)||0, g = parseInt(d.gaz)||0;
+        const pir = d.pir == 1 || d.pir === true;
+        const set = (id, txt, cls) => {
+          const el = document.getElementById(id);
+          if (el) { el.textContent = txt; el.className = 'ls-dot' + (cls ? ' ' + cls : ''); }
+        };
+        set('ls-t-' + eid, t + '°C',   lsClass('temperature', t));
+        set('ls-h-' + eid, h + '%',    lsClass('humidite',    h));
+        set('ls-g-' + eid, g + 'ppm',  lsClass('gaz',         g));
+        set('ls-p-' + eid, pir ? '🚶 MVT' : '', pir ? 'pir' : '');
+      });
+    })
+    .catch(() => {});
+}
+
+pollEquipLive();
+setInterval(pollEquipLive, 2000);
 </script>
 @endsection

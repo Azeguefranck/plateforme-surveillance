@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\ParametresController;

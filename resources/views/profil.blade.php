@@ -694,10 +694,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         <label class="toggle"><input type="checkbox" id="notif-gaz" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">⚡</span> Alertes puissance / courant</div>
-        <label class="toggle"><input type="checkbox" id="notif-power" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="switch-row">
         <div class="switch-label"><span class="switch-ico">🚶</span> Alertes mouvement PIR</div>
         <label class="toggle"><input type="checkbox" id="notif-pir" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>

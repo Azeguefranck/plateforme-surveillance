@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inscription — Plateforme de Surveillance</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="/vendor/tom-select/css/tom-select.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -519,7 +519,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="/vendor/tom-select/js/tom-select.complete.min.js"></script>
 <script>
 /* ── Cameroun uniquement ─────────────────────────── */
 var currentCountry = {iso:'CM', fr:'Cameroun', en:'Cameroon', dial:'+237'};

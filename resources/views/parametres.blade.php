@@ -362,7 +362,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="cfg-ico">📡</div>
       <div>
         <div class="cfg-key">Capteurs actifs</div>
-        <div class="cfg-val">DHT22, MQ135, PIR, ACS712</div>
+        <div class="cfg-val">DHT22, MQ135, PIR</div>
       </div>
     </div>
     <div class="cfg-item">

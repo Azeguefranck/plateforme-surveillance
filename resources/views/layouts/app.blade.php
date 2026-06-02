@@ -6,7 +6,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <title>Surveillance</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 
 <style>
 
@@ -114,6 +114,20 @@ width:calc(100% - 240px);
 padding:20px;
 min-width:0;
 }
+
+/* ── Barre de progression PJAX ── */
+#_pbar{
+  position:fixed;top:0;left:0;height:3px;width:0%;z-index:99999;
+  background:linear-gradient(90deg,#3b82f6,#60efff);
+  transition:width .25s ease,opacity .3s ease;
+  opacity:0;box-shadow:0 0 8px rgba(59,130,246,.6);
+}
+/* ── Loader page ── */
+#_ploader{
+  display:none;position:fixed;inset:0;z-index:99998;
+  pointer-events:none;background:rgba(244,246,249,.35);
+}
+#_ploader.on{display:block}
 
 .topbar{
 display:flex;
@@ -320,6 +334,9 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+<div id="_pbar"></div>
+<div id="_ploader"></div>
+
 <div class="wrapper">
 
 <div class="sidebar" id="sidebar">
@@ -337,7 +354,6 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
 
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
-  <a href="/equipements"><i class="fa-solid fa-server"></i> Équipements Salle Serveurs</a>
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
 </div>
@@ -362,7 +378,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
 
 </div>
 
-@yield('content')
+<div id="pjax-content">@yield('content')</div>
 
 </div>
 
@@ -518,6 +534,241 @@ function doLogout() {
         }
     });
 }
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   PJAX INSTANTANÉ
+   • Préchargement au survol (hover prefetch)
+   • Cache mémoire 60 s — swap immédiat si déjà en cache
+   • setInterval des pages stoppés proprement
+   • Styles par page injectés dans <head> sans accumulation
+═══════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  var CACHE_TTL = 60000; // 60 s de validité du cache
+  var _cache    = {};    // { url: { html, ts, finalUrl } }
+  var _inflight = {};    // promesses en cours (évite les doublons)
+
+  /* ── Intervals + fetch en cours des pages ── */
+  var _pi = [], _origSI = window.setInterval;
+  window.setInterval = function () {
+    var id = _origSI.apply(window, arguments);
+    _pi.push(id);
+    return id;
+  };
+  /* Abort controllers actifs (polls API temps réel) */
+  window.__pjaxAborts = window.__pjaxAborts || [];
+  var _origFetch = window.fetch;
+  window.fetch = function (url, opts) {
+    // Tracker les requêtes de polling (api/mesures-live, api/live-data)
+    if (typeof url === 'string' && (url.indexOf('mesures-live') !== -1 || url.indexOf('live-data') !== -1)) {
+      var ctrl = new AbortController();
+      window.__pjaxAborts.push(ctrl);
+      opts = Object.assign({}, opts || {}, { signal: ctrl.signal });
+    }
+    return _origFetch.apply(window, [url, opts]);
+  };
+  function _clearPI() {
+    _pi.forEach(clearInterval);
+    _pi = [];
+    // Annuler toutes les requêtes de polling en cours
+    (window.__pjaxAborts || []).forEach(function (c) { try { c.abort(); } catch(e){} });
+    window.__pjaxAborts = [];
+  }
+
+  /* ── Barre de progression ── */
+  var _bar    = document.getElementById('_pbar');
+  var _loader = document.getElementById('_ploader');
+  function _showBar() {
+    if (_bar) {
+      _bar.style.transition = 'none';
+      _bar.style.width      = '0';
+      _bar.style.opacity    = '1';
+      void _bar.offsetWidth;
+      _bar.style.transition = 'width .25s ease';
+      _bar.style.width      = '60%';
+    }
+    if (_loader) _loader.classList.add('on');
+  }
+  function _hideBar() {
+    if (_bar) {
+      _bar.style.width = '100%';
+      setTimeout(function () { _bar.style.opacity = '0'; _bar.style.width = '0'; }, 250);
+    }
+    if (_loader) _loader.classList.remove('on');
+  }
+
+  /* ── Sidebar active ── */
+  function _active(path) {
+    document.querySelectorAll('.sidebar a').forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === path);
+    });
+  }
+
+  /* ── Styles de page → <head> (propre) ── */
+  function _applyStyles(box) {
+    document.querySelectorAll('style[data-pjax]').forEach(function (s) { s.remove(); });
+    box.querySelectorAll('style').forEach(function (old) {
+      var nw = document.createElement('style');
+      nw.setAttribute('data-pjax', '1');
+      nw.textContent = old.textContent;
+      document.head.appendChild(nw);
+      old.remove();
+    });
+  }
+
+  /* ── Ré-exécution des scripts ── */
+  function _exec(box) {
+    box.querySelectorAll('script').forEach(function (old) {
+      var nw = document.createElement('script');
+      Array.prototype.forEach.call(old.attributes, function (a) { nw.setAttribute(a.name, a.value); });
+      nw.textContent = old.textContent;
+      old.parentNode.replaceChild(nw, old);
+    });
+  }
+
+  /* ── Interne ? ── */
+  function _isInternal(href) {
+    if (!href || href === '#' || href.charAt(0) === '#') return false;
+    if (/^(https?:)?\/\//.test(href))                   return false;
+    if (/^(mailto:|tel:)/.test(href))                   return false;
+    return true;
+  }
+
+  /* ── Fetch + mise en cache ── */
+  function _fetch(url) {
+    var abs = new URL(url, location.origin).href;
+    var now = Date.now();
+
+    // Déjà en cache et frais
+    if (_cache[abs] && (now - _cache[abs].ts) < CACHE_TTL)
+      return Promise.resolve(_cache[abs]);
+
+    // Requête déjà en vol
+    if (_inflight[abs]) return _inflight[abs];
+
+    var p = fetch(abs, {
+      headers: { 'X-PJAX': '1', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin'
+    })
+    .then(function (r) {
+      var finalUrl = r.url || abs;
+      return r.text().then(function (html) {
+        var entry = { html: html, finalUrl: finalUrl, ts: Date.now() };
+        _cache[abs] = entry;
+        delete _inflight[abs];
+        return entry;
+      });
+    })
+    .catch(function (err) {
+      delete _inflight[abs];
+      return Promise.reject(err);
+    });
+
+    _inflight[abs] = p;
+    return p;
+  }
+
+  /* ── Swap du contenu ── */
+  function _swap(entry, push) {
+    var finalUrl = entry.finalUrl;
+
+    // Redirection vers login
+    if (finalUrl.indexOf('/login') !== -1) { location.href = '/login'; return; }
+
+    var doc    = new DOMParser().parseFromString(entry.html, 'text/html');
+    var newBox = doc.getElementById('pjax-content');
+    var curBox = document.getElementById('pjax-content');
+    if (!newBox || !curBox) { location.href = finalUrl; return; }
+
+    _applyStyles(newBox);
+    curBox.innerHTML = newBox.innerHTML;
+    _exec(curBox);
+
+    var path = new URL(finalUrl, location.origin).pathname;
+    if (push !== false) history.pushState({ pjax: finalUrl }, '', finalUrl);
+    _active(path);
+    window.scrollTo(0, 0);
+    var t = doc.querySelector('title');
+    if (t) document.title = t.textContent;
+  }
+
+  /* ── NAVIGATION ── */
+  function navigate(url, push) {
+    var abs = new URL(url, location.origin).href;
+    var now = Date.now();
+
+    _clearPI();
+
+    // Cache chaud → swap immédiat (< 1 ms, vraiment instantané)
+    if (_cache[abs] && (now - _cache[abs].ts) < CACHE_TTL) {
+      _swap(_cache[abs], push);
+      _hideBar();
+      return;
+    }
+
+    // Requête déjà en vol (préchargement en cours) → attendre sans relancer
+    if (_inflight[abs]) {
+      _showBar();
+      _inflight[abs].then(function (entry) { _swap(entry, push); _hideBar(); })
+                    .catch(function () { _hideBar(); location.href = url; });
+      return;
+    }
+
+    // Rien en cache → fetch + barre
+    _showBar();
+    _fetch(abs)
+      .then(function (entry) { _swap(entry, push); _hideBar(); })
+      .catch(function () { _hideBar(); location.href = url; });
+  }
+
+  /* ── PRÉCHARGEMENT AU SURVOL ── */
+  document.addEventListener('mouseover', function (e) {
+    var a = e.target.closest('a');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!_isInternal(href) || a.target === '_blank' || a.download || a.hasAttribute('data-no-pjax')) return;
+    _fetch(href); // commence le fetch sans attendre
+  }, true);
+
+  /* ── INTERCEPTION CLICS ── */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!_isInternal(href)) return;
+    if (a.target === '_blank' || a.download || a.hasAttribute('data-no-pjax')) return;
+    var dest = new URL(href, location.origin);
+    if (dest.pathname === location.pathname && dest.search === location.search) return;
+    e.preventDefault();
+    navigate(href);
+  }, true);
+
+  /* ── RETOUR / AVANT NAVIGATEUR ── */
+  window.addEventListener('popstate', function () {
+    navigate(location.href, false);
+  });
+
+  /* ── INVALIDATION DU CACHE après soumission de formulaire ── */
+  document.addEventListener('submit', function () {
+    _cache = {}; // vide tout le cache — les données ont changé
+  }, true);
+
+  /* ── Init ── */
+  history.replaceState({ pjax: location.href }, '', location.href);
+  _active(location.pathname);
+
+  /* ── Précharger toutes les pages du menu au démarrage ── */
+  setTimeout(function () {
+    document.querySelectorAll('.sidebar a').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (_isInternal(href)) _fetch(href);
+    });
+  }, 800); // 800 ms après chargement pour ne pas bloquer le rendu initial
+
+})();
 </script>
 </body>
 </html>

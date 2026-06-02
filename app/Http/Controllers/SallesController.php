@@ -17,6 +17,16 @@ class SallesController extends Controller
 
         try {
             $salles = DB::table('salles')->orderBy('nom')->get();
+
+            $counts = DB::table('serveurs')
+                ->whereIn('salle_id', $salles->pluck('id')->toArray())
+                ->selectRaw('salle_id, COUNT(*) as total')
+                ->groupBy('salle_id')
+                ->pluck('total', 'salle_id');
+            foreach ($salles as $salle) {
+                $salle->nb_equipements = $counts[$salle->id] ?? 0;
+            }
+
             $stats  = [
                 'total'       => DB::table('salles')->count(),
                 'actives'     => DB::table('salles')->where('statut', 'active')->count(),

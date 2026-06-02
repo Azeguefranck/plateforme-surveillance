@@ -2,15 +2,13 @@
 
 @section('content')
 <style>
-:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--card:#0e1a38;--border:#1e2f5a;}
+:root{--neon:#33ff88;--blue:#33b5ff;--warn:#ffd633;--danger:#ff5733;--card:#0e1a38;--border:#1e2f5a}
 .pg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
 .pg-title{font-size:22px;font-weight:700;color:var(--danger)}
 .btn{padding:8px 15px;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px;transition:.18s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn:active{transform:scale(.96)}
 .btn-neon{background:transparent;border:1px solid var(--neon);color:var(--neon)}
 .btn-neon:hover{background:var(--neon);color:#000}
-.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
-.btn-blue:hover{background:var(--blue);color:#000}
 .btn-red{background:transparent;border:1px solid var(--danger);color:var(--danger)}
 .btn-red:hover{background:var(--danger);color:#fff}
 .btn-gray{background:transparent;border:1px solid #2a3a5a;color:#666}
@@ -20,7 +18,7 @@
 .scard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
 .scard .v{font-size:24px;font-weight:800;margin-bottom:3px}
 .scard .l{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px}
-.scard.r .v{color:var(--danger)} .scard.w .v{color:var(--warn)} .scard.g .v{color:var(--neon)} .scard.b .v{color:var(--blue)}
+.scard.r .v{color:var(--danger)}.scard.w .v{color:var(--warn)}.scard.g .v{color:var(--neon)}.scard.b .v{color:var(--blue)}
 
 .anomalies-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:22px}
 .anomaly-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:.2s;position:relative;overflow:hidden}
@@ -50,10 +48,10 @@
 .sensor-row{background:#07102a;border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
 .sensor-row .sname{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
 .sensor-row .sval{font-size:18px;font-weight:800}
-.sensor-row .sval.ok{color:var(--neon)} .sensor-row .sval.warn{color:var(--warn)} .sensor-row .sval.crit{color:var(--danger)}
+.sensor-row .sval.ok{color:var(--neon)}.sensor-row .sval.warn{color:var(--warn)}.sensor-row .sval.crit{color:var(--danger)}
 .sensor-row .sunit{font-size:10px;color:#666}
 
-@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)};.anomalies-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}.anomalies-grid{grid-template-columns:1fr}}
 </style>
 
 <div class="pg-header">
@@ -66,7 +64,7 @@
     </div>
 </div>
 
-<!-- Stats -->
+<!-- Compteurs -->
 <div class="stats-row">
     <div class="scard r"><div class="v" id="stCrit">—</div><div class="l">Critiques</div></div>
     <div class="scard w"><div class="v" id="stWarn">—</div><div class="l">Warnings</div></div>
@@ -74,159 +72,213 @@
     <div class="scard b"><div class="v" id="stTotal">—</div><div class="l">Total</div></div>
 </div>
 
-<!-- Live sensor alerts -->
+<!-- Capteurs en état anormal (temps réel) -->
 <div class="sensors-alert" id="sensorAlerts" style="display:none">
     <h3>&#128308; Capteurs en état anormal (temps réel)</h3>
     <div class="sensor-rows" id="sensorRows"></div>
 </div>
 
-<!-- Anomalies grid -->
+<!-- Grille des anomalies -->
 <div id="anomaliesGrid" class="anomalies-grid">
-    <div style="grid-column:1/-1;text-align:center;padding:40px;color:#33b5ff">Chargement des anomalies...</div>
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:#33b5ff">
+        Chargement des anomalies...
+    </div>
 </div>
 
 <script>
-var SEUILS = {temperature:{warn:35,crit:40},humidite:{warn:75,crit:85},gaz:{warn:300,crit:500},courant:{warn:10,crit:15},puissance:{warn:3000,crit:5000}};
-
 var SOLUTIONS = {
     temperature: {
-        warning:  'Vérifier la ventilation. Surveiller la montée thermique.',
-        critique: 'URGENT: Activation du refroidissement d\'urgence. Réduire la charge des serveurs.'
+        warning:  'Verifier la ventilation et la climatisation. Surveiller la montee thermique.',
+        critique: 'URGENT : Refroidissement urgence. Reduire la charge des serveurs.'
     },
     humidite: {
-        warning:  'Vérifier le système de climatisation. Surveiller l\'hygrométrie.',
-        critique: 'URGENT: Risque de condensation. Activer la déshumidification d\'urgence.'
+        warning:  'Verifier le systeme de climatisation. Surveiller l\'hygrometre.',
+        critique: 'URGENT : Risque condensation. Activer deshumidification urgence.'
     },
     gaz: {
-        warning:  'Ventiler la salle. Vérifier les équipements.',
-        critique: 'URGENT: Évacuation possible. Vérifier les détecteurs CO2/fumée. Appeler les secours si nécessaire.'
+        warning:  'Ventiler la salle. Verifier les equipements suspects.',
+        critique: 'URGENT : Evacuation possible. Verifier les detecteurs CO2. Appeler secours.'
     },
-    courant: {
-        warning:  'Vérifier la charge électrique. Équilibrer les circuits.',
-        critique: 'URGENT: Risque de surcharge. Couper les équipements non essentiels.'
-    },
-    puissance: {
-        warning:  'Optimiser la consommation. Vérifier les équipements énergivores.',
-        critique: 'URGENT: Dépassement capacité électrique. Couper certains serveurs immédiatement.'
+    pir: {
+        warning:  'Verifier les acces physiques. Consulter les cameras. Consigner l\'incident.',
+        critique: 'URGENT : Intrusion possible. Prevenir la securite immediatement.'
     }
 };
-
-var ICONS = {temperature:'🌡️',humidite:'💧',gaz:'☁️',courant:'⚡',puissance:'💡'};
-var allAnomalies = [];
+var ICONS = { temperature:'🌡️', humidite:'💧', gaz:'☁️', pir:'🚨' };
 
 function loadAnomalies() {
-    fetch('/api/alertes-recentes?limit=100')
-        .then(function(r){return r.json();})
-        .then(function(alertes) {
-            allAnomalies = alertes;
-            var crit = alertes.filter(function(a){return a.niveau==='critique';}).length;
-            var warn = alertes.filter(function(a){return a.niveau==='warning';}).length;
-            var res  = alertes.filter(function(a){return a.lu;}).length;
-            document.getElementById('stCrit').textContent    = crit;
-            document.getElementById('stWarn').textContent    = warn;
-            document.getElementById('stResolved').textContent = res;
-            document.getElementById('stTotal').textContent   = alertes.length;
-            renderAnomalies(alertes);
-        }).catch(function(){});
+    var grid = document.getElementById('anomaliesGrid');
+    if (!grid) return;
 
-    fetch('/api/dashboard-data')
-        .then(function(r){return r.json();})
-        .then(function(d) {
-            var m = d.derniere_mesure || {};
-            var alerts = [];
-            var keys = ['temperature','humidite','gaz','courant','puissance'];
-            keys.forEach(function(k) {
-                if (m[k] == null) return;
-                var s = SEUILS[k]; if (!s) return;
-                var cls = m[k] >= s.crit ? 'crit' : (m[k] >= s.warn ? 'warn' : 'ok');
-                if (cls !== 'ok') {
-                    alerts.push({k:k, v:m[k], cls:cls});
-                }
-            });
-            var box = document.getElementById('sensorAlerts');
-            var rows = document.getElementById('sensorRows');
-            if (alerts.length) {
+    // Charger seuils + alertes en parallèle
+    var pSeuils  = fetch('/api/seuils').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; });
+    var pAlerts  = fetch('/api/alertes-recentes?limit=200').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; });
+    var pLive    = fetch('/api/dashboard-data').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; });
+
+    Promise.all([pSeuils, pAlerts, pLive]).then(function(results) {
+        var seuils  = results[0] || {};
+        var alertes = Array.isArray(results[1]) ? results[1] : [];
+        var live    = results[2] || {};
+
+        // Compteurs
+        var crit     = 0, warn = 0, resolved = 0;
+        for (var i = 0; i < alertes.length; i++) {
+            if (alertes[i].niveau === 'critique') crit++;
+            if (alertes[i].niveau === 'warning')  warn++;
+            if (alertes[i].resolu == 1)            resolved++;
+        }
+        var elCrit = document.getElementById('stCrit');
+        var elWarn = document.getElementById('stWarn');
+        var elRes  = document.getElementById('stResolved');
+        var elTot  = document.getElementById('stTotal');
+        if (elCrit) elCrit.textContent = crit;
+        if (elWarn) elWarn.textContent = warn;
+        if (elRes)  elRes.textContent  = resolved;
+        if (elTot)  elTot.textContent  = alertes.length;
+
+        // Capteurs en temps réel
+        var capteurNames = ['temperature','humidite','gaz'];
+        var liveAlerts = [];
+        for (var j = 0; j < capteurNames.length; j++) {
+            var k = capteurNames[j];
+            var val = parseFloat(live[k]);
+            if (isNaN(val)) continue;
+            var s = seuils[k];
+            if (!s) continue;
+            var cls = val >= s.critique ? 'crit' : (val >= s.warning ? 'warn' : 'ok');
+            if (cls !== 'ok') liveAlerts.push({ k:k, v:val, cls:cls });
+        }
+        if (live.pir || live.pir_detecte) liveAlerts.push({ k:'pir', v:'Detecte', cls:'crit' });
+        var box  = document.getElementById('sensorAlerts');
+        var rows = document.getElementById('sensorRows');
+        if (box && rows) {
+            if (liveAlerts.length) {
                 box.style.display = '';
-                rows.innerHTML = alerts.map(function(a) {
-                    return '<div class="sensor-row"><div class="sname">'+(ICONS[a.k]||'')+'&nbsp;'+a.k+'</div>'
-                        + '<div class="sval '+a.cls+'">'+a.v+'</div>'
-                        + '<div class="sunit">— '+a.cls.toUpperCase()+'</div></div>';
-                }).join('');
+                var liveHtml = '';
+                var liveLabels = {temperature:'Temperature',humidite:'Humidite',gaz:'Qualite air',pir:'Intrusion PIR'};
+                for (var m = 0; m < liveAlerts.length; m++) {
+                    var a = liveAlerts[m];
+                    liveHtml += '<div class="sensor-row">'
+                        + '<div class="sname">' + (ICONS[a.k]||'') + ' ' + (liveLabels[a.k]||a.k) + '</div>'
+                        + '<div class="sval ' + a.cls + '">' + a.v + '</div>'
+                        + '<div class="sunit">— ' + a.cls.toUpperCase() + '</div>'
+                        + '</div>';
+                }
+                rows.innerHTML = liveHtml;
             } else {
                 box.style.display = 'none';
             }
-        }).catch(function(){});
+        }
+
+        // Grille des anomalies
+        renderAnomalies(alertes);
+    }).catch(function(err) {
+        var grid = document.getElementById('anomaliesGrid');
+        if (grid) grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Erreur de chargement. Veuillez actualiser.</p></div>';
+    });
 }
 
 function renderAnomalies(alertes) {
     var grid = document.getElementById('anomaliesGrid');
-    if (!alertes.length) {
+    if (!grid) return;
+
+    if (!alertes || alertes.length === 0) {
         grid.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Aucune anomalie détectée.<br>Tous les systèmes sont opérationnels.</p></div>';
         return;
     }
-    grid.innerHTML = alertes.map(function(a) {
-        var d = new Date(a.created_at).toLocaleString('fr-FR');
-        var capteur = (a.message||'').match(/(température|humidité|gaz|courant|puissance|pir|mouvement|tension)/i);
-        capteur = capteur ? capteur[0].toLowerCase() : 'système';
-        var sKey = Object.keys(SOLUTIONS).find(function(k){return capteur.includes(k);}) || null;
-        var solution = sKey ? SOLUTIONS[sKey][a.niveau] : 'Analyser et résoudre l\'anomalie. Contacter l\'équipe technique si nécessaire.';
-        var icon = ICONS[sKey] || '⚠️';
 
-        return '<div class="anomaly-card '+(a.niveau||'warning')+' '+(a.lu?'resolved':'')+'" id="anom_'+a.id+'">'
+    var html = '';
+    for (var i = 0; i < alertes.length; i++) {
+        var a = alertes[i];
+        var d = '';
+        try { d = new Date(a.created_at).toLocaleString('fr-FR'); } catch(e) { d = a.created_at || ''; }
+
+        var type = String(a.type || '').toLowerCase();
+        var msg  = String(a.message || '');
+        var msgL = msg.toLowerCase();
+
+        var sKey = null;
+        if (type === 'pir' || msgL.indexOf('mouvement') >= 0 || msgL.indexOf('intrusion') >= 0) sKey = 'pir';
+        else if (type === 'temperature' || msgL.indexOf('temp') >= 0 || msgL.indexOf('surchauffe') >= 0) sKey = 'temperature';
+        else if (type === 'humidite' || msgL.indexOf('humid') >= 0) sKey = 'humidite';
+        else if (type === 'gaz' || msgL.indexOf('gaz') >= 0 || msgL.indexOf('air') >= 0) sKey = 'gaz';
+
+        var niveau = String(a.niveau || 'warning');
+        var solution = (sKey && SOLUTIONS[sKey] && SOLUTIONS[sKey][niveau])
+            ? SOLUTIONS[sKey][niveau]
+            : 'Analyser et résoudre l\'anomalie. Contacter l\'équipe technique si nécessaire.';
+        var icon = sKey ? (ICONS[sKey] || '⚠️') : '⚠️';
+        var isResolved = (a.resolu == 1);
+        var shortMsg = msg.length > 70 ? msg.substring(0, 70) + '...' : msg;
+
+        html += '<div class="anomaly-card ' + niveau + (isResolved ? ' resolved' : '') + '" id="anom_' + a.id + '">'
             + '<div class="a-header">'
-            +   '<div><div class="a-title">'+icon+' '+(a.message||'').substring(0,60)+'</div>'
-            +       '<span class="badge badge-'+(a.niveau||'warning')+'">'+(a.niveau||'warning')+'</span>'
-            +       (a.lu ? '&nbsp;<span class="badge badge-resolved">Résolu</span>' : '')
+            +   '<div>'
+            +     '<div class="a-title">' + icon + ' ' + shortMsg + '</div>'
+            +     '<span class="badge badge-' + niveau + '">' + niveau + '</span>'
+            +     (isResolved ? '&nbsp;<span class="badge badge-resolved">Résolu</span>' : '')
             +   '</div>'
-            +   '<div class="a-time">'+d+'</div>'
+            +   '<div class="a-time">' + d + '</div>'
             + '</div>'
             + '<div class="a-body">'
-            +   '<div class="a-msg">'+(a.message||'')+'</div>'
-            +   '<div class="a-solution"><strong>Solution :</strong> '+solution+'</div>'
+            +   '<div class="a-msg">' + msg + '</div>'
+            +   '<div class="a-solution"><strong>Solution :</strong> ' + solution + '</div>'
             + '</div>'
             + '<div class="a-footer">'
-            + (!a.lu ? '<button class="btn btn-neon" onclick="resoudre(this,'+a.id+')" style="font-size:11px;padding:6px 12px">&#10003; Résoudre</button>' : '')
-            + '<button class="btn btn-red" onclick="supprimerAnom(this,'+a.id+')" style="font-size:11px;padding:6px 12px">&#10005; Supprimer</button>'
+            + (!isResolved ? '<button class="btn btn-neon" onclick="resoudre(this,' + a.id + ')" style="font-size:11px;padding:6px 12px">&#10003; Résoudre</button>' : '')
+            + '<button class="btn btn-red" onclick="supprimerAnom(this,' + a.id + ')" style="font-size:11px;padding:6px 12px">&#10005; Supprimer</button>'
             + '</div>'
             + '</div>';
-    }).join('');
+    }
+    grid.innerHTML = html;
 }
 
 function resoudre(btn, id) {
     btnLoad(btn);
-    csrfFetch('/api/alertes/lire', {method:'POST', body:JSON.stringify({id:id})})
-        .then(function(r){return r.json();})
+    csrfFetch('/api/alertes/lire', { method:'POST', body:JSON.stringify({id:id}) })
+        .then(function(r){ return r.json(); })
         .then(function() {
             btnLoad(btn, false);
-            var card = document.getElementById('anom_'+id);
+            var card = document.getElementById('anom_' + id);
             if (card) card.classList.add('resolved');
-            notify('Anomalie marquée comme résolue.','s');
+            notify('Anomalie marquée comme résolue.', 's');
             loadAnomalies();
-        }).catch(function(){btnLoad(btn,false);notify('Erreur réseau.','e');});
+        })
+        .catch(function(){ btnLoad(btn, false); notify('Erreur réseau.', 'e'); });
 }
 
 function supprimerAnom(btn, id) {
-    confirmDlg('Supprimer cette anomalie ?','Cette anomalie sera définitivement retirée de l\'historique. Cette action est irréversible.',{type:'danger',icon:'🗑️',confirmText:'Supprimer'}).then(function(ok){
+    confirmDlg(
+        'Supprimer cette anomalie ?',
+        'Cette anomalie sera définitivement retirée de l\'historique.',
+        { type:'danger', icon:'🗑️', confirmText:'Supprimer' }
+    ).then(function(ok) {
         if (!ok) return;
         btnLoad(btn);
-        csrfFetch('/alerte/'+id, {method:'DELETE'})
-            .then(function(r){return r.json();})
-            .then(function(d){
+        csrfFetch('/alerte/' + id, { method:'DELETE' })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
                 if (d.success) {
-                    var card = document.getElementById('anom_'+id);
-                    if (card) { card.style.opacity='0'; card.style.transition='opacity .25s'; setTimeout(function(){card.remove();},260); }
-                    notify('Anomalie supprimée.','s');
-                } else { btnLoad(btn,false); notify('Erreur.','e'); }
-            }).catch(function(){btnLoad(btn,false);notify('Erreur réseau.','e');});
+                    var card = document.getElementById('anom_' + id);
+                    if (card) {
+                        card.style.opacity = '0';
+                        card.style.transition = 'opacity .25s';
+                        setTimeout(function(){ card.remove(); }, 260);
+                    }
+                    notify('Anomalie supprimée.', 's');
+                } else { btnLoad(btn, false); notify('Erreur.', 'e'); }
+            })
+            .catch(function(){ btnLoad(btn, false); notify('Erreur réseau.', 'e'); });
     });
 }
 
 function marquerTout() {
-    csrfFetch('/api/alertes/lire', {method:'POST', body:JSON.stringify({id:'all'})})
-        .then(function(){notify('Toutes les anomalies marquées comme résolues.','s'); loadAnomalies();})
-        .catch(function(){notify('Erreur.','e');});
+    csrfFetch('/api/alertes/lire', { method:'POST', body:JSON.stringify({id:'all'}) })
+        .then(function(){ notify('Toutes les anomalies marquées comme résolues.', 's'); loadAnomalies(); })
+        .catch(function(){ notify('Erreur.', 'e'); });
 }
 
+// Chargement initial + rafraîchissement automatique
 loadAnomalies();
 setInterval(loadAnomalies, 10000);
 </script>

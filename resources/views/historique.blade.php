@@ -90,9 +90,7 @@ table{display:block;overflow-x:auto}
     <div class="tab" data-tab="alertes" onclick="switchTab(this,'alertes')">Alertes</div>
     <div class="tab" data-tab="temperature" onclick="switchTab(this,'temperature')">Température</div>
     <div class="tab" data-tab="humidite"    onclick="switchTab(this,'humidite')">Humidité</div>
-    <div class="tab" data-tab="gaz"         onclick="switchTab(this,'gaz')">Gaz</div>
-    <div class="tab" data-tab="courant"     onclick="switchTab(this,'courant')">Courant</div>
-    <div class="tab" data-tab="puissance"   onclick="switchTab(this,'puissance')">Puissance</div>
+    <div class="tab" data-tab="gaz" onclick="switchTab(this,'gaz')">Gaz</div>
 </div>
 
 <!-- Filter bar -->
@@ -219,7 +217,7 @@ table{display:block;overflow-x:auto}
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="/vendor/chartjs/chart.umd.min.js"></script>
 <script>
 let currentTab = 'all';
 let allRows = [];
@@ -227,9 +225,9 @@ let currentPage = 1;
 const perPage = 25;
 let histChart = null;
 
-const tabStyles = {temperature:'temp',humidite:'hum',gaz:'gaz',courant:'cur',puissance:'pwr',alertes:'alrt'};
-const rangeLabels = {temperature:'Température (°C)',humidite:'Humidité (%)',gaz:'Gaz (ppm)',courant:'Courant (A)',puissance:'Puissance (W)'};
-const rangeSteps  = {temperature:0.1,humidite:0.1,gaz:1,courant:0.1,puissance:1};
+const tabStyles = {temperature:'temp', humidite:'hum', gaz:'gaz', alertes:'alrt'};
+const rangeLabels = {temperature:'Température (°C)', humidite:'Humidité (%)', gaz:'Gaz (ppm)'};
+const rangeSteps  = {temperature:0.1, humidite:0.1, gaz:1};
 
 function switchTab(el, tab) {
     document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
@@ -276,7 +274,7 @@ function loadHistory() {
     const type = currentTab === 'alertes' ? 'alertes' : 'mesures';
     let url = `/api/historique-data?type=${type}&debut=${debut}&fin=${fin}&niveau=${niveau}&limit=${limit}&salle_id=${salleId}`;
     // Append sensor range param for active tab
-    const rangeParamMap = {temperature:['temp_min','temp_max'],humidite:['hum_min','hum_max'],gaz:['gaz_min','gaz_max'],courant:['courant_min','courant_max'],puissance:['pwr_min','pwr_max']};
+    const rangeParamMap = {temperature:['temp_min','temp_max'], humidite:['hum_min','hum_max'], gaz:['gaz_min','gaz_max']};
     if (rangeParamMap[currentTab]) {
         const [minKey, maxKey] = rangeParamMap[currentTab];
         if (rMin !== '') url += `&${minKey}=${rMin}`;
@@ -298,7 +296,7 @@ function loadHistory() {
 }
 
 function getColForTab() {
-    const map = {temperature:'temperature',humidite:'humidite',gaz:'gaz',courant:'courant',puissance:'puissance'};
+    const map = {temperature:'temperature', humidite:'humidite', gaz:'gaz'};
     return map[currentTab] || null;
 }
 
@@ -340,7 +338,7 @@ function renderChart() {
     });
 
     let datasets = [];
-    const colorMap = {temperature:'#ff5733',humidite:'#33b5ff',gaz:'#ffd633',courant:'#ff9933',puissance:'#cc88ff'};
+    const colorMap = {temperature:'#ff5733', humidite:'#33b5ff', gaz:'#ffd633'};
 
     if (col) {
         datasets = [{ label: col, data: rows.map(r => r[col]), borderColor: colorMap[col]||'#33ff88', backgroundColor: 'rgba(51,255,136,.05)', tension:.4, pointRadius:0 }];
@@ -394,7 +392,7 @@ function renderTable() {
     if (currentTab === 'alertes') {
         html += '<th>Date</th><th>Message</th><th>Niveau</th><th>Valeur</th><th>Lu</th>';
     } else {
-        html += '<th>Date</th><th>Temp °C</th><th>Hum %</th><th>Gaz ppm</th><th>Courant A</th><th>Puissance W</th><th>Tension V</th><th>PIR</th>';
+        html += '<th>Date</th><th>Temp °C</th><th>Hum %</th><th>Gaz ppm</th><th>PIR</th>';
     }
     html += '</tr></thead><tbody>';
     page.forEach(r => {
@@ -407,7 +405,6 @@ function renderTable() {
                 <td style="color:${r.temperature>40?'var(--danger)':r.temperature>35?'var(--warn)':'var(--neon)'}">${r.temperature??'—'}</td>
                 <td style="color:${r.humidite>85?'var(--danger)':r.humidite>75?'var(--warn)':'var(--blue)'}">${r.humidite??'—'}</td>
                 <td style="color:${r.gaz>500?'var(--danger)':r.gaz>300?'var(--warn)':'#ccc'}">${r.gaz??'—'}</td>
-                <td>${r.courant??'—'}</td><td>${r.puissance??'—'}</td><td>${r.tension??'—'}</td>
                 <td style="color:${r.pir?'var(--danger)':'var(--neon)'}">${r.pir?'OUI':'NON'}</td>
             </tr>`;
         }

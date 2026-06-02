@@ -208,22 +208,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
                 <input type="number" id="fGazMax" placeholder="Max" onchange="loadReport()">
             </div>
         </div>
-        <div class="filter-group">
-            <label>&#9889; Courant (A)</label>
-            <div class="range-pair">
-                <input type="number" id="fCurMin" placeholder="Min" step="0.1" onchange="loadReport()">
-                <span class="range-sep">–</span>
-                <input type="number" id="fCurMax" placeholder="Max" step="0.1" onchange="loadReport()">
-            </div>
-        </div>
-        <div class="filter-group">
-            <label>&#128161; Puissance (W)</label>
-            <div class="range-pair">
-                <input type="number" id="fPwrMin" placeholder="Min" onchange="loadReport()">
-                <span class="range-sep">–</span>
-                <input type="number" id="fPwrMax" placeholder="Max" onchange="loadReport()">
-            </div>
-        </div>
         <button class="btn btn-gray" onclick="clearRanges()" style="font-size:11px;padding:7px 10px">&#10005; Réinitialiser</button>
     </div>
 </div>
@@ -323,7 +307,7 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="/vendor/chartjs/chart.umd.min.js"></script>
 <script>
 let currentType = 'mesures';
 let reportChart = null;
@@ -350,7 +334,7 @@ function applyPeriod(days) {
 }
 
 function clearRanges() {
-    ['fTempMin','fTempMax','fHumMin','fHumMax','fGazMin','fGazMax','fCurMin','fCurMax','fPwrMin','fPwrMax'].forEach(id => {
+    ['fTempMin','fTempMax','fHumMin','fHumMax','fGazMin','fGazMax'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     loadReport();
@@ -364,8 +348,8 @@ function buildParams() {
     const limit  = document.getElementById('filterLimit').value;
     let params   = `type=${currentType}&debut=${debut}&fin=${fin}&niveau=${niveau}&salle_id=${salle}&limit=${limit}`;
     if (currentType === 'mesures') {
-        const ids = ['fTempMin','fTempMax','fHumMin','fHumMax','fGazMin','fGazMax','fCurMin','fCurMax','fPwrMin','fPwrMax'];
-        const keys= ['temp_min','temp_max','hum_min','hum_max','gaz_min','gaz_max','courant_min','courant_max','pwr_min','pwr_max'];
+        const ids = ['fTempMin','fTempMax','fHumMin','fHumMax','fGazMin','fGazMax'];
+        const keys= ['temp_min','temp_max','hum_min','hum_max','gaz_min','gaz_max'];
         ids.forEach((id, i) => {
             const v = document.getElementById(id)?.value;
             if (v !== '' && v != null) params += `&${keys[i]}=${v}`;
@@ -417,7 +401,7 @@ function loadReport() {
 function renderMesuresTable(rows) {
     if (!rows.length) { document.getElementById('tableWrapper').innerHTML = '<div class="no-data">Aucune mesure sur cette période.</div>'; return; }
     let html = `<div style="overflow-x:auto"><table><thead><tr>
-        <th>Date</th><th>Temp (°C)</th><th>Hum (%)</th><th>Gaz (ppm)</th><th>Courant (A)</th><th>Puissance (W)</th><th>Tension (V)</th><th>PIR</th>
+        <th>Date</th><th>Temp (°C)</th><th>Hum (%)</th><th>Gaz (ppm)</th><th>PIR</th>
     </tr></thead><tbody>`;
     rows.forEach(r => {
         const t = new Date(r.created_at).toLocaleString('fr-FR');
@@ -426,7 +410,6 @@ function renderMesuresTable(rows) {
             <td style="color:${r.temperature>40?'var(--danger)':r.temperature>35?'var(--warn)':'var(--neon)'}">${r.temperature??'—'}</td>
             <td style="color:${r.humidite>85?'var(--danger)':r.humidite>75?'var(--warn)':'var(--blue)'}">${r.humidite??'—'}</td>
             <td style="color:${r.gaz>500?'var(--danger)':r.gaz>300?'var(--warn)':'#ccc'}">${r.gaz??'—'}</td>
-            <td>${r.courant??'—'}</td><td>${r.puissance??'—'}</td><td>${r.tension??'—'}</td>
             <td style="color:${r.pir?'var(--danger)':'var(--neon)'}">${r.pir?'OUI':'NON'}</td>
         </tr>`;
     });

@@ -72,6 +72,20 @@
 .modal-close{float:right;background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;margin-top:-4px}
 .modal-close:hover{color:#fff}
 
+/* ── Live capteurs sur carte salle ── */
+.room-live{
+  margin:10px 0;padding:10px 12px;border-radius:10px;
+  background:rgba(51,181,255,.05);border:1px solid rgba(51,181,255,.15);
+  display:none;
+}
+.room-live-title{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.room-live-gauges{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.rl-chip{display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:var(--neon)}
+.rl-chip.warn{background:rgba(255,214,51,.1);border-color:rgba(255,214,51,.3);color:var(--warn)}
+.rl-chip.crit{background:rgba(255,87,51,.1);border-color:rgba(255,87,51,.3);color:var(--danger)}
+.rl-chip.pir-on{background:rgba(255,87,51,.15);border-color:var(--danger);color:var(--danger);animation:pir-flash .8s infinite}
+@keyframes pir-flash{0%,100%{opacity:1}50%{opacity:.4}}
+
 @media(max-width:768px){
 .stats-row{grid-template-columns:repeat(2,1fr)}
 .form-grid{grid-template-columns:1fr}
@@ -149,17 +163,31 @@
         <div class="room-info-row"><span>Description</span><span>{{ Str::limit($salle->description, 60) }}</span></div>
         @endif
     </div>
+    <!-- Live capteurs (rempli par JS) -->
+    <div class="room-live" id="salle-live-{{ $salle->id }}">
+        <div class="room-live-title"><i class="fa-solid fa-circle" style="color:var(--neon);font-size:7px;vertical-align:middle;margin-right:4px"></i>Mesures en temps réel</div>
+        <div class="room-live-gauges">
+            <span class="rl-chip" id="rl-temp-{{ $salle->id }}">🌡 —°C</span>
+            <span class="rl-chip" id="rl-hum-{{ $salle->id }}">💧 —%</span>
+            <span class="rl-chip" id="rl-gaz-{{ $salle->id }}">💨 — ppm</span>
+            <span class="rl-chip" id="rl-pir-{{ $salle->id }}">🚶 —</span>
+        </div>
+    </div>
+
     <div class="room-capacity">
-        <span class="cap-label">Capacité</span>
-        <span class="cap-val">{{ $salle->capacite_serveurs }}</span>
-        <span class="cap-unit">serveurs max</span>
+        <span class="cap-label">Équipements</span>
+        <span class="cap-val">{{ $salle->nb_equipements ?? 0 }}</span>
+        <span class="cap-unit">/ {{ $salle->capacite_serveurs }} max</span>
     </div>
     <div class="room-actions">
-        <button class="btn btn-blue" onclick="openEdit({{ $salle->id }}, '{{ addslashes($salle->nom) }}', '{{ addslashes($salle->code ?? '') }}', '{{ addslashes($salle->localisation ?? '') }}', '{{ addslashes($salle->responsable ?? '') }}', {{ $salle->capacite_serveurs }}, '{{ $salle->statut }}', '{{ addslashes($salle->description ?? '') }}')"><i class="fa-solid fa-pen-to-square"></i> Modifier</button>
+        <a href="/equipements?salle_id={{ $salle->id }}" class="btn btn-neon" style="text-decoration:none">
+            <i class="fa-solid fa-server"></i> Équipements
+        </a>
+        <button class="btn btn-blue" onclick="openEdit({{ $salle->id }}, '{{ addslashes($salle->nom) }}', '{{ addslashes($salle->code ?? '') }}', '{{ addslashes($salle->localisation ?? '') }}', '{{ addslashes($salle->responsable ?? '') }}', {{ $salle->capacite_serveurs }}, '{{ $salle->statut }}', '{{ addslashes($salle->description ?? '') }}')"><i class="fa-solid fa-pen-to-square"></i></button>
         <form method="POST" action="/salles/{{ $salle->id }}" id="del-salle-{{ $salle->id }}" style="margin:0">
             @csrf
             @method('DELETE')
-            <button type="button" class="btn btn-danger" onclick="delSalle(this,{{ $salle->id }})"><i class="fa-solid fa-trash"></i> Supprimer</button>
+            <button type="button" class="btn btn-danger" onclick="delSalle(this,{{ $salle->id }})"><i class="fa-solid fa-trash"></i></button>
         </form>
     </div>
 </div>
@@ -284,5 +312,45 @@ function openEdit(id, nom, code, localisation, responsable, capacite, statut, de
     }
     document.getElementById('editModal').classList.add('open');
 }
+
+/* ── Temps réel : mini-jauges sur chaque carte salle ── */
+const S = { temperature:{warn:35,crit:40}, humidite:{warn:75,crit:85}, gaz:{warn:300,crit:500} };
+
+function niveauClass(capteur, val) {
+    if (val >= S[capteur].crit) return 'crit';
+    if (val >= S[capteur].warn) return 'warn';
+    return '';
+}
+
+function majChip(id, text, cls) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className   = 'rl-chip' + (cls ? ' ' + cls : '');
+}
+
+function pollSallesLive() {
+    fetch('/api/mesures-live')
+        .then(r => r.ok ? r.json() : {})
+        .then(data => {
+            Object.entries(data || {}).forEach(([sid, d]) => {
+                const div = document.getElementById('salle-live-' + sid);
+                if (!div) return;
+                div.style.display = '';
+                const t = parseFloat(d.temperature)||0;
+                const h = parseFloat(d.humidite)||0;
+                const g = parseInt(d.gaz)||0;
+                const pir = d.pir == 1 || d.pir === true;
+                majChip('rl-temp-' + sid, '🌡 ' + t + '°C',  niveauClass('temperature', t));
+                majChip('rl-hum-'  + sid, '💧 ' + h + '%',   niveauClass('humidite',    h));
+                majChip('rl-gaz-'  + sid, '💨 ' + g + ' ppm',niveauClass('gaz',         g));
+                majChip('rl-pir-'  + sid, pir ? '🚶 MOUVEMENT' : '🚶 RAS', pir ? 'pir-on' : '');
+            });
+        })
+        .catch(() => {});
+}
+
+pollSallesLive();
+setInterval(pollSallesLive, 2000);
 </script>
 @endsection

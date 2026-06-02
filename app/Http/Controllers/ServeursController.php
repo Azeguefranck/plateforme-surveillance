@@ -12,22 +12,32 @@ class ServeursController extends Controller
         $user = session('user');
         if (!$user) return redirect('/login');
 
+        $salleId     = request()->query('salle_id');
+        $salleActive = null;
         $equipements = $salles = collect();
-        $stats = ['total'=>0,'actif'=>0,'maintenance'=>0,'panne'=>0,'critique'=>0];
+        $stats = ['total'=>0,'actif'=>0,'maintenance'=>0,'panne'=>0,'hors_ligne'=>0];
 
         try {
-            $equipements = DB::table('serveurs')->orderByDesc('created_at')->get();
-            $salles      = DB::table('salles')->get();
+            $equipements = DB::table('serveurs')
+                ->when($salleId, fn($q) => $q->where('salle_id', (int)$salleId))
+                ->orderByDesc('created_at')->get();
+            $salles = DB::table('salles')->get();
+
+            if ($salleId) {
+                $salleActive = $salles->firstWhere('id', (int)$salleId);
+            }
+
+            $q = fn() => DB::table('serveurs')->when($salleId, fn($q) => $q->where('salle_id', (int)$salleId));
             $stats = [
-                'total'       => DB::table('serveurs')->count(),
-                'actif'       => DB::table('serveurs')->where('statut','actif')->count(),
-                'maintenance' => DB::table('serveurs')->where('statut','maintenance')->count(),
-                'panne'       => DB::table('serveurs')->whereIn('statut',['en_panne','critique'])->count(),
-                'hors_ligne'  => DB::table('serveurs')->whereIn('statut',['hors_ligne','deconnecte','inactif'])->count(),
+                'total'       => $q()->count(),
+                'actif'       => $q()->where('statut','actif')->count(),
+                'maintenance' => $q()->where('statut','maintenance')->count(),
+                'panne'       => $q()->whereIn('statut',['en_panne','critique'])->count(),
+                'hors_ligne'  => $q()->whereIn('statut',['hors_ligne','deconnecte','inactif'])->count(),
             ];
         } catch (\Exception $e) {}
 
-        return view('serveurs', compact('user','equipements','salles','stats'));
+        return view('serveurs', compact('user','equipements','salles','stats','salleActive'));
     }
 
     public function store(Request $request)

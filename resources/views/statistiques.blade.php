@@ -126,7 +126,7 @@ canvas{max-height:200px}
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="/vendor/chartjs/chart.umd.min.js"></script>
 <script>
 var chartTemperature = null, chartHumidite = null, chartGaz = null;
 
