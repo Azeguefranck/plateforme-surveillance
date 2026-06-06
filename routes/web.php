@@ -271,8 +271,164 @@ $genWordRapport = function (int $heures) {
     ])->deleteFileAfterSend(true);
 };
 
-Route::get('/rapports/rapport-24h/word', function () use ($genWordRapport) {
-    return $genWordRapport(24);
+Route::get('/rapports/rapport-24h/word', function () {
+    if (!session('user')) return redirect('/login');
+
+    $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
+    $fin    = $latest ? \Carbon\Carbon::parse($latest) : now();
+    $debut  = $fin->copy()->subHours(24);
+
+    $allRows = DB::table('mesures')
+        ->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at'])
+        ->whereBetween('created_at', [$debut, $fin])
+        ->orderBy('created_at')
+        ->get();
+
+    $totalAll  = $allRows->count();
+    $critiques = $allRows->filter(fn($r) => $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600)->count();
+    $warnings  = $allRows->filter(fn($r) =>
+        !($r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600) &&
+        ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300)
+    )->count();
+    $pirOui    = $allRows->filter(fn($r) => $r->pir_detecte)->count();
+
+    // Filtrer : seulement WARNING / CRITIQUE / PIR
+    $rows = $allRows->filter(fn($r) =>
+        $r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300 || $r->pir_detecte
+    )->values();
+
+    // Si encore trop de lignes, garder seulement CRITIQUE + PIR
+    $MAX_ROWS = 90;
+    $tronque  = false;
+    if ($rows->count() > $MAX_ROWS) {
+        $rows = $rows->filter(fn($r) =>
+            $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600 || $r->pir_detecte
+        )->values();
+    }
+    if ($rows->count() > $MAX_ROWS) {
+        $rows    = $rows->take($MAX_ROWS);
+        $tronque = true;
+    }
+
+    $Jc   = \PhpOffice\PhpWord\SimpleType\Jc::class;
+    $word = new \PhpOffice\PhpWord\PhpWord();
+    $word->setDefaultFontName('Times New Roman');
+    $word->setDefaultFontSize(10);
+    $word->addTitleStyle(1,
+        ['name'=>'Times New Roman','size'=>15,'bold'=>true,'color'=>'0D47A1'],
+        ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>140]);
+    $word->addTitleStyle(2,
+        ['name'=>'Times New Roman','size'=>11,'bold'=>true,'color'=>'1565C0'],
+        ['spaceAfter'=>80]);
+
+    $section = $word->addSection([
+        'marginTop'    => 850,
+        'marginBottom' => 850,
+        'marginLeft'   => 900,
+        'marginRight'  => 900,
+        'orientation'  => 'landscape',
+        'pageSizeW'    => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(29.7),
+        'pageSizeH'    => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(21),
+    ]);
+
+    $section->addTitle('Rapport 24h condensé — Alertes capteurs IoT', 1);
+
+    $pStyle   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>100];
+    $metaPara = $section->addTextRun($pStyle);
+    $metaPara->addText('Période : ',        ['name'=>'Times New Roman','size'=>10,'bold'=>true]);
+    $metaPara->addText($debut->format('d/m/Y H:i').' → '.$fin->format('d/m/Y H:i'),
+                                            ['name'=>'Times New Roman','size'=>10]);
+    $metaPara->addText('   |   Généré le : ', ['name'=>'Times New Roman','size'=>10,'bold'=>true]);
+    $metaPara->addText(now()->format('d/m/Y H:i'), ['name'=>'Times New Roman','size'=>10]);
+    $metaPara->addText('   |   '.$totalAll.' mesures totales', ['name'=>'Times New Roman','size'=>9,'color'=>'888888']);
+
+    $section->addTitle('Résumé de la période', 2);
+
+    $statTable = $section->addTable([
+        'borderSize'=>5,'borderColor'=>'1565C0',
+        'cellMarginLeft'=>50,'cellMarginRight'=>50,'cellMarginTop'=>50,'cellMarginBottom'=>50,
+    ]);
+    $statTable->addRow(480);
+    $lblFont  = ['name'=>'Times New Roman','size'=>9,'bold'=>true];
+    $valFont  = ['name'=>'Times New Roman','size'=>16,'bold'=>true];
+    $unitFont = ['name'=>'Times New Roman','size'=>8,'color'=>'666666'];
+    $hdrAlign = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
+    $statCols = [
+        ['Total mesures', $totalAll,  '0D47A1','BBDEFB','enreg.'],
+        ['Critiques',     $critiques, 'C62828','FFCDD2','mesures'],
+        ['Warnings',      $warnings,  'E65100','FFE0B2','mesures'],
+        ['PIR détecté',   $pirOui,    '1B5E20','C8E6C9','détections'],
+    ];
+    foreach ($statCols as $sc) {
+        $cell = $statTable->addCell(3600, ['bgColor'=>$sc[3],'vAlign'=>'center']);
+        $cell->addText($sc[0], array_merge($lblFont,['color'=>$sc[2]]), array_merge($hdrAlign,['spaceBefore'=>20]));
+        $cell->addText((string)$sc[1], array_merge($valFont,['color'=>$sc[2]]), $hdrAlign);
+        $cell->addText($sc[4], $unitFont, array_merge($hdrAlign,['spaceAfter'=>20]));
+    }
+
+    $section->addTextBreak(1);
+
+    // Note filtre appliqué
+    $noteStr = 'Affichage : lignes WARNING / CRITIQUE / PIR uniquement';
+    if ($tronque) $noteStr .= ' — limité à '.$MAX_ROWS.' lignes (données tronquées)';
+    $noteRun = $section->addTextRun(['spaceAfter'=>80]);
+    $noteRun->addText($noteStr, ['name'=>'Times New Roman','size'=>8,'italic'=>true,'color'=>'888888']);
+
+    $section->addTitle('Détail des alertes', 2);
+
+    $dataTable = $section->addTable([
+        'borderSize'=>3,'borderColor'=>'BBBBBB',
+        'cellMarginLeft'=>25,'cellMarginRight'=>25,'cellMarginTop'=>25,'cellMarginBottom'=>25,
+        'width'=>100,'unit'=>'pct',
+    ]);
+    $dataTable->addRow(360, ['tblHeader'=>true]);
+    $hBg    = ['bgColor'=>'1565C0'];
+    $hFont  = ['name'=>'Times New Roman','size'=>9,'bold'=>true,'color'=>'FFFFFF'];
+    $hAlign = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
+    $colDef = [
+        ['#',600],['Date / Heure',2600],['Temp. (°C)',1700],
+        ['Humidité (%)',1700],['Gaz (ppm)',1700],['PIR',1000],['Niveau',1600],
+    ];
+    foreach ($colDef as [$lbl, $w]) {
+        $dataTable->addCell($w, $hBg)->addText($lbl, $hFont, $hAlign);
+    }
+
+    foreach ($rows as $ri => $r) {
+        $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
+        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
+        $dataTable->addRow(280);
+        $bg   = ['bgColor' => $isCrit ? 'FFEBEE' : ($isWarn ? 'FFF3E0' : ($ri%2===0 ? 'FFFFFF' : 'F5F5F5'))];
+        $nTxt = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
+        $nClr = $isCrit ? 'C62828'   : ($isWarn ? 'E65100'  : '1B5E20');
+        $tClr = $r->temperature >= 32 ? 'C62828' : ($r->temperature >= 28 ? 'E65100' : '1B1B1B');
+        $hClr = $r->humidite    >= 85 ? 'C62828' : ($r->humidite    >= 75 ? 'E65100' : '1B1B1B');
+        $gClr = $r->gaz         >= 600? 'C62828' : ($r->gaz         >= 300? 'E65100' : '1B1B1B');
+        $pClr = $r->pir_detecte ? 'C62828' : '777777';
+        $fN   = ['name'=>'Times New Roman','size'=>9];
+        $fC   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
+        $fR   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT, 'spaceAfter'=>0];
+        $dataTable->addCell($colDef[0][1],$bg)->addText((string)$r->id, array_merge($fN,['color'=>'999999']), $fC);
+        $dataTable->addCell($colDef[1][1],$bg)->addText(\Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i'), array_merge($fN,['color'=>'222222']), ['spaceAfter'=>0]);
+        $dataTable->addCell($colDef[2][1],$bg)->addText(number_format((float)($r->temperature??0),1), array_merge($fN,['color'=>$tClr,'bold'=>$tClr!='1B1B1B']), $fR);
+        $dataTable->addCell($colDef[3][1],$bg)->addText(number_format((float)($r->humidite??0),1),    array_merge($fN,['color'=>$hClr,'bold'=>$hClr!='1B1B1B']), $fR);
+        $dataTable->addCell($colDef[4][1],$bg)->addText(number_format((float)($r->gaz??0),0),         array_merge($fN,['color'=>$gClr,'bold'=>$gClr!='1B1B1B']), $fR);
+        $dataTable->addCell($colDef[5][1],$bg)->addText($r->pir_detecte?'OUI':'NON', array_merge($fN,['color'=>$pClr,'bold'=>(bool)$r->pir_detecte]), $fC);
+        $dataTable->addCell($colDef[6][1],$bg)->addText($nTxt, array_merge($fN,['color'=>$nClr,'bold'=>true]), $fC);
+    }
+
+    $footer = $section->addFooter();
+    $footer->addPreserveText(
+        'Plateforme de Surveillance  ·  Rapport 24h condensé  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
+        ['name'=>'Times New Roman','size'=>9,'color'=>'999999'],
+        ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER]
+    );
+
+    $filename = 'rapport_24h_'.date('Y-m-d_H-i').'.docx';
+    $tmpFile  = tempnam(sys_get_temp_dir(), 'rapport_');
+    \PhpOffice\PhpWord\IOFactory::createWriter($word, 'Word2007')->save($tmpFile);
+    return response()->download($tmpFile, $filename, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ])->deleteFileAfterSend(true);
 });
 
 Route::get('/rapports/rapport-72h/word', function () use ($genWordRapport) {
