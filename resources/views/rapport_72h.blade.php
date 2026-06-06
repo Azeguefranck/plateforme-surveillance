@@ -61,7 +61,7 @@ tbody td{padding:8px 12px;border-top:1px solid #0d1a35;font-size:11px}
 
 <div class="toolbar">
     <button class="btn btn-back" onclick="history.back()">← Retour</button>
-    <button class="btn btn-png" id="btnPng" onclick="telechargerPng()">&#128247; Télécharger PNG</button>
+    <a class="btn btn-png" href="/rapports/rapport-72h/png">&#128247; Télécharger PNG</a>
     <span id="status" style="font-size:12px;color:#555"></span>
 </div>
 
