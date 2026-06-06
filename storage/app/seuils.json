@@ -1,0 +1,6 @@
+{
+    "temperature": {"warning": 28, "critique": 32},
+    "humidite":    {"warning": 75, "critique": 85},
+    "gaz":         {"warning": 400,"critique": 600},
+    "pir":         {"actif": 1}
+}
