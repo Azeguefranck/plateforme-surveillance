@@ -117,6 +117,31 @@ Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
 });
 
 // ── Impression / PDF ───────────────────────────────────────────────────────
+Route::get('/rapports/rapport-72h', function () {
+    if (!session('user')) return redirect('/login');
+
+    $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
+    if (!$latest) {
+        return view('rapport_72h', ['rows' => collect(), 'debut' => now()->subHours(72), 'fin' => now()]);
+    }
+    $fin   = \Carbon\Carbon::parse($latest);
+    $debut = $fin->copy()->subHours(72);
+
+    $rows = DB::table('mesures')
+        ->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at'])
+        ->whereBetween('created_at', [$debut, $fin])
+        ->where(function($q) {
+            $q->where('temperature', '>=', 28)
+              ->orWhere('humidite',    '>=', 75)
+              ->orWhere('gaz',         '>=', 300)
+              ->orWhere('pir_detecte', 1);
+        })
+        ->orderBy('created_at')
+        ->get();
+
+    return view('rapport_72h', compact('rows', 'debut', 'fin'));
+});
+
 Route::get('/rapports/print', function (\Illuminate\Http\Request $request) {
     if (!session('user')) return redirect('/login');
     $type  = $request->type  ?? 'mesures';
