@@ -149,17 +149,19 @@ Route::get('/rapports/rapport-72h/png', function () {
         ->orderBy('created_at')
         ->get()->toArray();
 
-    $fontR = '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf';
-    $fontB = '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf';
+    // Liberation Serif = équivalent métrique exact de Times New Roman
+    $fontR = '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf';
+    $fontB = '/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf';
+    $fs    = 12;  // taille de police corps tableau (pt)
 
     // ── Dimensions haute résolution (fond blanc — compatible Word) ────────
     $W       = 1600;
     $padX    = 50;
-    $rowH    = 34;
-    $headH   = 110;   // bandeau titre
-    $statsH  = 110;   // blocs statistiques
-    $chartH  = 260;   // graphique
-    $tblHead = 40;    // en-tête colonnes tableau
+    $rowH    = 38;    // hauteur ligne tableau (12pt → légèrement plus grand)
+    $headH   = 115;   // bandeau titre
+    $statsH  = 115;   // blocs statistiques
+    $chartH  = 270;   // graphique
+    $tblHead = 44;    // en-tête colonnes tableau
     $n       = count($rows);
     $H       = $headH + $statsH + 20 + $chartH + 20 + $tblHead + ($n * $rowH) + 60;
 
@@ -192,10 +194,10 @@ Route::get('/rapports/rapport-72h/png', function () {
 
     // ── Bandeau titre ────────────────────────────────────────────────────
     imagefilledrectangle($img, 0, 0, $W-1, $headH-1, $cNavy);
-    imagettftext($img, 22, 0, $padX, 44,  $cWhite, $fontB, 'Rapport 72 heures — Mesures capteurs IoT');
-    imagettftext($img, 11, 0, $padX, 70,  $cXLGray, $fontR,
+    imagettftext($img, 22, 0, $padX, 46,  $cWhite,  $fontB, 'Rapport 72 heures — Mesures capteurs IoT');
+    imagettftext($img, $fs, 0, $padX, 72,  $cXLGray, $fontR,
         'Période : '.$debut->format('d/m/Y H:i').'  →  '.$fin->format('d/m/Y H:i'));
-    imagettftext($img, 11, 0, $padX, 90,  $cXLGray, $fontR,
+    imagettftext($img, $fs, 0, $padX, 94,  $cXLGray, $fontR,
         'Généré le '.now()->format('d/m/Y à H:i').'   ·   '.$n.' enregistrement(s)');
 
     // ── Blocs statistiques ───────────────────────────────────────────────
@@ -217,9 +219,9 @@ Route::get('/rapports/rapport-72h/png', function () {
         $sx = $padX + $i * ($sw + 10);
         imagefilledrectangle($img, $sx, $sy, $sx+$sw, $sy+$statsH-16, $cStatBg[$i]);
         imagerectangle($img, $sx, $sy, $sx+$sw, $sy+$statsH-16, $cLGray);
-        imagettftext($img, 30, 0, $sx+18, $sy+52, $cStatVal[$i], $fontB, (string)$s['val']);
-        imagettftext($img, 10, 0, $sx+18, $sy+70, $cBlack,       $fontB, $s['lbl']);
-        imagettftext($img, 9,  0, $sx+18, $sy+86, $cGray,        $fontR, $s['unit']);
+        imagettftext($img, 30,   0, $sx+18, $sy+52, $cStatVal[$i], $fontB, (string)$s['val']);
+        imagettftext($img, $fs,  0, $sx+18, $sy+72, $cBlack,       $fontB, $s['lbl']);
+        imagettftext($img, $fs-1,0, $sx+18, $sy+90, $cGray,        $fontR, $s['unit']);
     }
 
     // ── Graphique (fond blanc) ───────────────────────────────────────────
@@ -234,14 +236,14 @@ Route::get('/rapports/rapport-72h/png', function () {
 
     imagefilledrectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cWhite);
     imagerectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cLGray);
-    imagettftext($img, 10, 0, $gx+10, $gy+20, $cGray, $fontB, 'ÉVOLUTION TEMPÉRATURE (°C) / HUMIDITÉ (%) / GAZ ÷ 10');
+    imagettftext($img, $fs, 0, $gx+10, $gy+22, $cGray, $fontB, 'ÉVOLUTION TEMPÉRATURE (°C) / HUMIDITÉ (%) / GAZ ÷ 10');
 
     // Grille horizontale + valeurs axe Y
     for ($g = 0; $g <= 5; $g++) {
         $yl  = $giY + (int)($giH * (1 - $g/5));
         $val = $g * 20;
         imageline($img, $giX, $yl, $giX+$giW, $yl, $g===0 ? $cLGray : $cXLGray);
-        imagettftext($img, 8, 0, $gx+8, $yl+4, $cGray, $fontR, (string)$val);
+        imagettftext($img, $fs-2, 0, $gx+8, $yl+4, $cGray, $fontR, (string)$val);
     }
     // Axe X bas
     imageline($img, $giX, $giY+$giH, $giX+$giW, $giY+$giH, $cLGray);
@@ -254,7 +256,7 @@ Route::get('/rapports/rapport-72h/png', function () {
                 $px = $giX + (int)($giW * $idx / max(1,$n-1));
                 imageline($img, $px, $giY+$giH, $px, $giY+$giH+4, $cGray);
                 $lbl = \Carbon\Carbon::parse($r->created_at)->format('d/m H:i');
-                imagettftext($img, 7, 0, $px-18, $giY+$giH+16, $cGray, $fontR, $lbl);
+                imagettftext($img, $fs-3, 0, $px-22, $giY+$giH+18, $cGray, $fontR, $lbl);
             }
         }
 
@@ -285,8 +287,8 @@ Route::get('/rapports/rapport-72h/png', function () {
     // Légende graphique
     $lx = $giX; $ly = $gy + $gh - 16;
     foreach ([['Température (°C)',$cRed],['Humidité (%)',$cBlueTxt],['Gaz ÷ 10',$cOrange]] as $leg) {
-        imagefilledrectangle($img, $lx, $ly-8, $lx+24, $ly, $leg[1]);
-        imagettftext($img, 9, 0, $lx+28, $ly, $cBlack, $fontR, $leg[0]);
+        imagefilledrectangle($img, $lx, $ly-10, $lx+26, $ly+2, $leg[1]);
+        imagettftext($img, $fs-1, 0, $lx+32, $ly+2, $cBlack, $fontR, $leg[0]);
         $lx += 160;
     }
 
@@ -299,7 +301,7 @@ Route::get('/rapports/rapport-72h/png', function () {
     imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+$tblHead, $cNavyBg);
     $cx = $padX + 8;
     foreach ($headers as $hi => $hdr) {
-        imagettftext($img, 10, 0, $cx, $ty+26, $cWhite, $fontB, $hdr);
+        imagettftext($img, $fs, 0, $cx, $ty+28, $cWhite, $fontB, $hdr);
         $cx += $cols[$hi];
     }
     // Séparateurs colonnes en-tête
@@ -337,7 +339,7 @@ Route::get('/rapports/rapport-72h/png', function () {
         ];
         $cx = $padX + 8;
         foreach ($cells as $ci => [$txt, $clr]) {
-            imagettftext($img, 10, 0, $cx, $ty+23, $clr,
+            imagettftext($img, $fs, 0, $cx, $ty+26, $clr,
                 ($ci === 6 || $ci === 5) ? $fontB : $fontR, $txt);
             $cx += $cols[$ci];
         }
@@ -354,7 +356,7 @@ Route::get('/rapports/rapport-72h/png', function () {
 
     // ── Pied de page ──────────────────────────────────────────────────────
     imageline($img, $padX, $ty+14, $W-$padX, $ty+14, $cLGray);
-    imagettftext($img, 9, 0, $padX, $ty+34, $cGray, $fontR,
+    imagettftext($img, $fs-1, 0, $padX, $ty+36, $cGray, $fontR,
         'Plateforme de Surveillance  ·  Rapport automatique 72h  ·  Généré le '.now()->format('d/m/Y à H:i'));
 
     // ── Sortie PNG ────────────────────────────────────────────────────────
