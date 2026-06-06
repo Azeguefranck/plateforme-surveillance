@@ -274,6 +274,7 @@ $genWordRapport = function (int $heures) {
 Route::get('/rapports/rapport-24h/word', function () {
     if (!session('user')) return redirect('/login');
 
+    // ── Données ───────────────────────────────────────────────────────────
     $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
     $fin    = $latest ? \Carbon\Carbon::parse($latest) : now();
     $debut  = $fin->copy()->subHours(24);
@@ -292,25 +293,28 @@ Route::get('/rapports/rapport-24h/word', function () {
     )->count();
     $pirOui    = $allRows->filter(fn($r) => $r->pir_detecte)->count();
 
-    // Filtrer : seulement WARNING / CRITIQUE / PIR
+    // Filtrer : WARNING / CRITIQUE / PIR uniquement
     $rows = $allRows->filter(fn($r) =>
         $r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300 || $r->pir_detecte
     )->values();
 
-    // Si encore trop de lignes, garder seulement CRITIQUE + PIR
-    $MAX_ROWS = 90;
-    $tronque  = false;
-    if ($rows->count() > $MAX_ROWS) {
+    // Si trop de lignes, garder CRITIQUE + PIR seulement
+    $PAGE1   = 25;  // lignes sur page 1 (après entête)
+    $PAGE2   = 30;  // lignes sur page 2
+    $PAGE3   = 30;  // lignes sur page 3
+    $MAX     = $PAGE1 + $PAGE2 + $PAGE3; // = 85
+    $tronque = false;
+    if ($rows->count() > $MAX) {
         $rows = $rows->filter(fn($r) =>
             $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600 || $r->pir_detecte
         )->values();
     }
-    if ($rows->count() > $MAX_ROWS) {
-        $rows    = $rows->take($MAX_ROWS);
+    if ($rows->count() > $MAX) {
+        $rows    = $rows->take($MAX);
         $tronque = true;
     }
 
-    $Jc   = \PhpOffice\PhpWord\SimpleType\Jc::class;
+    // ── PhpWord ───────────────────────────────────────────────────────────
     $word = new \PhpOffice\PhpWord\PhpWord();
     $word->setDefaultFontName('Times New Roman');
     $word->setDefaultFontSize(10);
@@ -331,73 +335,64 @@ Route::get('/rapports/rapport-24h/word', function () {
         'pageSizeH'    => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(21),
     ]);
 
+    // ── Page 1 : entête ───────────────────────────────────────────────────
     $section->addTitle('Rapport 24h condensé — Alertes capteurs IoT', 1);
 
-    $pStyle   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>100];
-    $metaPara = $section->addTextRun($pStyle);
-    $metaPara->addText('Période : ',        ['name'=>'Times New Roman','size'=>10,'bold'=>true]);
-    $metaPara->addText($debut->format('d/m/Y H:i').' → '.$fin->format('d/m/Y H:i'),
-                                            ['name'=>'Times New Roman','size'=>10]);
+    $metaPara = $section->addTextRun(['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>100]);
+    $metaPara->addText('Période : ',          ['name'=>'Times New Roman','size'=>10,'bold'=>true]);
+    $metaPara->addText($debut->format('d/m/Y H:i').' → '.$fin->format('d/m/Y H:i'), ['name'=>'Times New Roman','size'=>10]);
     $metaPara->addText('   |   Généré le : ', ['name'=>'Times New Roman','size'=>10,'bold'=>true]);
     $metaPara->addText(now()->format('d/m/Y H:i'), ['name'=>'Times New Roman','size'=>10]);
     $metaPara->addText('   |   '.$totalAll.' mesures totales', ['name'=>'Times New Roman','size'=>9,'color'=>'888888']);
 
     $section->addTitle('Résumé de la période', 2);
 
-    $statTable = $section->addTable([
-        'borderSize'=>5,'borderColor'=>'1565C0',
-        'cellMarginLeft'=>50,'cellMarginRight'=>50,'cellMarginTop'=>50,'cellMarginBottom'=>50,
-    ]);
-    $statTable->addRow(480);
-    $lblFont  = ['name'=>'Times New Roman','size'=>9,'bold'=>true];
-    $valFont  = ['name'=>'Times New Roman','size'=>16,'bold'=>true];
-    $unitFont = ['name'=>'Times New Roman','size'=>8,'color'=>'666666'];
     $hdrAlign = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
-    $statCols = [
+    $statTable = $section->addTable(['borderSize'=>5,'borderColor'=>'1565C0','cellMarginLeft'=>50,'cellMarginRight'=>50,'cellMarginTop'=>50,'cellMarginBottom'=>50]);
+    $statTable->addRow(480);
+    foreach ([
         ['Total mesures', $totalAll,  '0D47A1','BBDEFB','enreg.'],
         ['Critiques',     $critiques, 'C62828','FFCDD2','mesures'],
         ['Warnings',      $warnings,  'E65100','FFE0B2','mesures'],
         ['PIR détecté',   $pirOui,    '1B5E20','C8E6C9','détections'],
-    ];
-    foreach ($statCols as $sc) {
+    ] as $sc) {
         $cell = $statTable->addCell(3600, ['bgColor'=>$sc[3],'vAlign'=>'center']);
-        $cell->addText($sc[0], array_merge($lblFont,['color'=>$sc[2]]), array_merge($hdrAlign,['spaceBefore'=>20]));
-        $cell->addText((string)$sc[1], array_merge($valFont,['color'=>$sc[2]]), $hdrAlign);
-        $cell->addText($sc[4], $unitFont, array_merge($hdrAlign,['spaceAfter'=>20]));
+        $cell->addText($sc[0], ['name'=>'Times New Roman','size'=>9,'bold'=>true,'color'=>$sc[2]], array_merge($hdrAlign,['spaceBefore'=>20]));
+        $cell->addText((string)$sc[1], ['name'=>'Times New Roman','size'=>16,'bold'=>true,'color'=>$sc[2]], $hdrAlign);
+        $cell->addText($sc[4], ['name'=>'Times New Roman','size'=>8,'color'=>'666666'], array_merge($hdrAlign,['spaceAfter'=>20]));
     }
 
     $section->addTextBreak(1);
 
-    // Note filtre appliqué
-    $noteStr = 'Affichage : lignes WARNING / CRITIQUE / PIR uniquement';
-    if ($tronque) $noteStr .= ' — limité à '.$MAX_ROWS.' lignes (données tronquées)';
-    $noteRun = $section->addTextRun(['spaceAfter'=>80]);
-    $noteRun->addText($noteStr, ['name'=>'Times New Roman','size'=>8,'italic'=>true,'color'=>'888888']);
+    $noteStr = 'Affichage : lignes WARNING / CRITIQUE / PIR uniquement ('.$rows->count().' alertes';
+    $noteStr .= $tronque ? ', limité à '.$MAX.')' : ')';
+    $section->addTextRun(['spaceAfter'=>80])
+            ->addText($noteStr, ['name'=>'Times New Roman','size'=>8,'italic'=>true,'color'=>'888888']);
 
     $section->addTitle('Détail des alertes', 2);
 
-    $dataTable = $section->addTable([
-        'borderSize'=>3,'borderColor'=>'BBBBBB',
-        'cellMarginLeft'=>25,'cellMarginRight'=>25,'cellMarginTop'=>25,'cellMarginBottom'=>25,
-        'width'=>100,'unit'=>'pct',
-    ]);
-    $dataTable->addRow(360, ['tblHeader'=>true]);
-    $hBg    = ['bgColor'=>'1565C0'];
-    $hFont  = ['name'=>'Times New Roman','size'=>9,'bold'=>true,'color'=>'FFFFFF'];
-    $hAlign = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
-    $colDef = [
-        ['#',600],['Date / Heure',2600],['Temp. (°C)',1700],
+    // ── Styles tableau partagés ────────────────────────────────────────────
+    $tblStyle = ['borderSize'=>3,'borderColor'=>'BBBBBB','cellMarginLeft'=>25,'cellMarginRight'=>25,'cellMarginTop'=>25,'cellMarginBottom'=>25,'width'=>100,'unit'=>'pct'];
+    $colDef   = [
+        ['N°',600],['Date / Heure',2600],['Temp. (°C)',1700],
         ['Humidité (%)',1700],['Gaz (ppm)',1700],['PIR',1000],['Niveau',1600],
     ];
-    foreach ($colDef as [$lbl, $w]) {
-        $dataTable->addCell($w, $hBg)->addText($lbl, $hFont, $hAlign);
-    }
+    $hBg    = ['bgColor'=>'1565C0'];
+    $hFont  = ['name'=>'Times New Roman','size'=>9,'bold'=>true,'color'=>'FFFFFF'];
+    $hAlgn  = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
 
-    foreach ($rows as $ri => $r) {
+    $addHeader = function($tbl) use ($hBg, $hFont, $hAlgn, $colDef) {
+        $tbl->addRow(360, ['tblHeader'=>true]);
+        foreach ($colDef as [$lbl, $w]) {
+            $tbl->addCell($w, $hBg)->addText($lbl, $hFont, $hAlgn);
+        }
+    };
+
+    $addRow = function($tbl, $r, $num) use ($colDef) {
         $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
         $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
-        $dataTable->addRow(280);
-        $bg   = ['bgColor' => $isCrit ? 'FFEBEE' : ($isWarn ? 'FFF3E0' : ($ri%2===0 ? 'FFFFFF' : 'F5F5F5'))];
+        $tbl->addRow(280);
+        $bg   = ['bgColor' => $isCrit ? 'FFEBEE' : ($isWarn ? 'FFF3E0' : ($num%2===0 ? 'FFFFFF' : 'F5F5F5'))];
         $nTxt = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
         $nClr = $isCrit ? 'C62828'   : ($isWarn ? 'E65100'  : '1B5E20');
         $tClr = $r->temperature >= 32 ? 'C62828' : ($r->temperature >= 28 ? 'E65100' : '1B1B1B');
@@ -407,15 +402,41 @@ Route::get('/rapports/rapport-24h/word', function () {
         $fN   = ['name'=>'Times New Roman','size'=>9];
         $fC   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
         $fR   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT, 'spaceAfter'=>0];
-        $dataTable->addCell($colDef[0][1],$bg)->addText((string)$r->id, array_merge($fN,['color'=>'999999']), $fC);
-        $dataTable->addCell($colDef[1][1],$bg)->addText(\Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i'), array_merge($fN,['color'=>'222222']), ['spaceAfter'=>0]);
-        $dataTable->addCell($colDef[2][1],$bg)->addText(number_format((float)($r->temperature??0),1), array_merge($fN,['color'=>$tClr,'bold'=>$tClr!='1B1B1B']), $fR);
-        $dataTable->addCell($colDef[3][1],$bg)->addText(number_format((float)($r->humidite??0),1),    array_merge($fN,['color'=>$hClr,'bold'=>$hClr!='1B1B1B']), $fR);
-        $dataTable->addCell($colDef[4][1],$bg)->addText(number_format((float)($r->gaz??0),0),         array_merge($fN,['color'=>$gClr,'bold'=>$gClr!='1B1B1B']), $fR);
-        $dataTable->addCell($colDef[5][1],$bg)->addText($r->pir_detecte?'OUI':'NON', array_merge($fN,['color'=>$pClr,'bold'=>(bool)$r->pir_detecte]), $fC);
-        $dataTable->addCell($colDef[6][1],$bg)->addText($nTxt, array_merge($fN,['color'=>$nClr,'bold'=>true]), $fC);
+        $tbl->addCell($colDef[0][1],$bg)->addText((string)$num, array_merge($fN,['color'=>'999999']), $fC);
+        $tbl->addCell($colDef[1][1],$bg)->addText(\Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i'), array_merge($fN,['color'=>'222222']), ['spaceAfter'=>0]);
+        $tbl->addCell($colDef[2][1],$bg)->addText(number_format((float)($r->temperature??0),1), array_merge($fN,['color'=>$tClr,'bold'=>$tClr!='1B1B1B']), $fR);
+        $tbl->addCell($colDef[3][1],$bg)->addText(number_format((float)($r->humidite??0),1),    array_merge($fN,['color'=>$hClr,'bold'=>$hClr!='1B1B1B']), $fR);
+        $tbl->addCell($colDef[4][1],$bg)->addText(number_format((float)($r->gaz??0),0),         array_merge($fN,['color'=>$gClr,'bold'=>$gClr!='1B1B1B']), $fR);
+        $tbl->addCell($colDef[5][1],$bg)->addText($r->pir_detecte?'OUI':'NON', array_merge($fN,['color'=>$pClr,'bold'=>(bool)$r->pir_detecte]), $fC);
+        $tbl->addCell($colDef[6][1],$bg)->addText($nTxt, array_merge($fN,['color'=>$nClr,'bold'=>true]), $fC);
+    };
+
+    // ── Tableau page 1 ───────────────────────────────────────────────────
+    $chunk1 = $rows->slice(0,       $PAGE1);
+    $chunk2 = $rows->slice($PAGE1,  $PAGE2);
+    $chunk3 = $rows->slice($PAGE1 + $PAGE2);
+
+    $t1 = $section->addTable($tblStyle);
+    $addHeader($t1);
+    foreach ($chunk1 as $i => $r) { $addRow($t1, $r, $i + 1); }
+
+    // ── Tableau page 2 ───────────────────────────────────────────────────
+    if ($chunk2->count() > 0) {
+        $section->addPageBreak();
+        $t2 = $section->addTable($tblStyle);
+        $addHeader($t2);
+        foreach ($chunk2->values() as $i => $r) { $addRow($t2, $r, $PAGE1 + $i + 1); }
     }
 
+    // ── Tableau page 3 ───────────────────────────────────────────────────
+    if ($chunk3->count() > 0) {
+        $section->addPageBreak();
+        $t3 = $section->addTable($tblStyle);
+        $addHeader($t3);
+        foreach ($chunk3->values() as $i => $r) { $addRow($t3, $r, $PAGE1 + $PAGE2 + $i + 1); }
+    }
+
+    // ── Pied de page ─────────────────────────────────────────────────────
     $footer = $section->addFooter();
     $footer->addPreserveText(
         'Plateforme de Surveillance  ·  Rapport 24h condensé  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
