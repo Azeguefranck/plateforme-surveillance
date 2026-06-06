@@ -149,53 +149,56 @@ Route::get('/rapports/rapport-72h/png', function () {
         ->orderBy('created_at')
         ->get()->toArray();
 
-    // ── Polices ────────────────────────────────────────────────────────────
     $fontR = '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf';
     $fontB = '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf';
 
-    // ── Dimensions ────────────────────────────────────────────────────────
-    $W        = 1400;
-    $padX     = 40;
-    $rowH     = 28;
-    $cols     = [60, 210, 120, 120, 120, 90, 110]; // largeurs colonnes
-    $headers  = ['ID', 'Date / Heure', 'Temp (°C)', 'Humidité (%)', 'Gaz (ppm)', 'PIR', 'Niveau'];
-    $chartH   = 220;
-    $statsH   = 90;
-    $headSect = 80;
-    $tableTop = $headSect + $statsH + 20 + $chartH + 20;
-    $H        = $tableTop + 36 + (count($rows) * $rowH) + 50;
+    // ── Dimensions haute résolution (fond blanc — compatible Word) ────────
+    $W       = 1600;
+    $padX    = 50;
+    $rowH    = 34;
+    $headH   = 110;   // bandeau titre
+    $statsH  = 110;   // blocs statistiques
+    $chartH  = 260;   // graphique
+    $tblHead = 40;    // en-tête colonnes tableau
+    $n       = count($rows);
+    $H       = $headH + $statsH + 20 + $chartH + 20 + $tblHead + ($n * $rowH) + 60;
 
-    $img = imagecreatetruecolor($W, max($H, 500));
-    imagesavealpha($img, true);
+    $img = imagecreatetruecolor($W, max($H, 600));
 
-    // ── Couleurs ──────────────────────────────────────────────────────────
-    $cBg      = imagecolorallocate($img, 5,   11,  22);
-    $cCard    = imagecolorallocate($img, 14,  26,  56);
-    $cBorder  = imagecolorallocate($img, 30,  47,  90);
-    $cHead    = imagecolorallocate($img, 7,   16,  42);
-    $cNeon    = imagecolorallocate($img, 51,  255, 136);
-    $cBlue    = imagecolorallocate($img, 51,  181, 255);
-    $cWarn    = imagecolorallocate($img, 255, 214, 51);
-    $cDanger  = imagecolorallocate($img, 255, 87,  51);
+    // ── Palette fond blanc ────────────────────────────────────────────────
     $cWhite   = imagecolorallocate($img, 255, 255, 255);
-    $cGray    = imagecolorallocate($img, 170, 170, 170);
-    $cDark    = imagecolorallocate($img, 85,  85,  85);
-    $cRowCrit = imagecolorallocate($img, 18,  10,  8);
-    $cRowWarn = imagecolorallocate($img, 18,  15,  5);
-    $cRowAlt  = imagecolorallocate($img, 10,  20,  45);
+    $cBlack   = imagecolorallocate($img, 20,  20,  20);
+    $cGray    = imagecolorallocate($img, 100, 100, 100);
+    $cLGray   = imagecolorallocate($img, 220, 220, 220);
+    $cXLGray  = imagecolorallocate($img, 245, 245, 245);
+    $cNavy    = imagecolorallocate($img, 13,  71,  161);  // bleu foncé titre
+    $cNavyBg  = imagecolorallocate($img, 21,  101, 192);  // en-tête colonnes
+    $cRed     = imagecolorallocate($img, 198, 40,  40);   // critique
+    $cRedBg   = imagecolorallocate($img, 255, 235, 238);  // fond ligne critique
+    $cOrange  = imagecolorallocate($img, 230, 81,  0);    // warning
+    $cOrgBg   = imagecolorallocate($img, 255, 243, 224);  // fond ligne warning
+    $cGreen   = imagecolorallocate($img, 27,  94,  32);   // normal
+    $cBlueTxt = imagecolorallocate($img, 13,  71,  161);  // valeur bleue
+    $cStatBg  = [
+        imagecolorallocate($img, 227, 242, 253),
+        imagecolorallocate($img, 255, 235, 238),
+        imagecolorallocate($img, 255, 243, 224),
+        imagecolorallocate($img, 232, 245, 233),
+    ];
+    $cStatVal = [$cNavy, $cRed, $cOrange, $cGreen];
 
-    // Fond général
-    imagefilledrectangle($img, 0, 0, $W-1, $H-1, $cBg);
+    // Fond blanc
+    imagefilledrectangle($img, 0, 0, $W-1, $H-1, $cWhite);
 
-    // ── En-tête ───────────────────────────────────────────────────────────
-    imagettftext($img, 18, 0, $padX, 38, $cNeon,  $fontB, 'Rapport 72 heures — Mesures capteurs');
-    imagettftext($img, 10, 0, $padX, 58, $cDark,  $fontR,
-        'Période : '.$debut->format('d/m/Y H:i').' → '.$fin->format('d/m/Y H:i').
-        '   ·   Généré le '.now()->format('d/m/Y à H:i').
-        '   ·   '.count($rows).' enregistrement(s)');
-    imageline($img, $padX, $headSect-4, $W-$padX, $headSect-4, $cBorder);
+    // ── Bandeau titre ────────────────────────────────────────────────────
+    imagefilledrectangle($img, 0, 0, $W-1, $headH-1, $cNavy);
+    imagettftext($img, 22, 0, $padX, 44,  $cWhite, $fontB, 'Rapport 72 heures — Mesures capteurs IoT');
+    imagettftext($img, 11, 0, $padX, 70,  $cXLGray, $fontR,
+        'Période : '.$debut->format('d/m/Y H:i').'  →  '.$fin->format('d/m/Y H:i'));
+    imagettftext($img, 11, 0, $padX, 90,  $cXLGray, $fontR,
+        'Généré le '.now()->format('d/m/Y à H:i').'   ·   '.$n.' enregistrement(s)');
 
-    // ── Stats ─────────────────────────────────────────────────────────────
+    // ── Blocs statistiques ───────────────────────────────────────────────
     $critiques = 0; $warnings = 0; $pirOui = 0;
     foreach ($rows as $r) {
         if ($r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600) $critiques++;
@@ -203,118 +206,161 @@ Route::get('/rapports/rapport-72h/png', function () {
         if ($r->pir_detecte) $pirOui++;
     }
     $stats = [
-        ['val' => count($rows), 'lbl' => 'Total mesures', 'col' => $cBlue],
-        ['val' => $critiques,   'lbl' => 'Critiques',     'col' => $cDanger],
-        ['val' => $warnings,    'lbl' => 'Warnings',      'col' => $cWarn],
-        ['val' => $pirOui,      'lbl' => 'PIR détecté',   'col' => $cNeon],
+        ['val'=>$n,         'lbl'=>'Total mesures',   'unit'=>'enreg.'],
+        ['val'=>$critiques, 'lbl'=>'Niveau critique',  'unit'=>'mesures'],
+        ['val'=>$warnings,  'lbl'=>'Niveau warning',   'unit'=>'mesures'],
+        ['val'=>$pirOui,    'lbl'=>'Mouvement PIR',    'unit'=>'détections'],
     ];
-    $sw = (int)(($W - 2*$padX - 30) / 4);
+    $sy  = $headH + 14;
+    $sw  = (int)(($W - 2*$padX - 30) / 4);
     foreach ($stats as $i => $s) {
         $sx = $padX + $i * ($sw + 10);
-        $sy = $headSect + 6;
-        imagefilledrectangle($img, $sx, $sy, $sx+$sw, $sy+$statsH-10, $cCard);
-        imagerectangle($img, $sx, $sy, $sx+$sw, $sy+$statsH-10, $cBorder);
-        imagettftext($img, 26, 0, $sx+18, $sy+46, $s['col'], $fontB, (string)$s['val']);
-        imagettftext($img, 9,  0, $sx+18, $sy+66, $cDark,    $fontR, strtoupper($s['lbl']));
+        imagefilledrectangle($img, $sx, $sy, $sx+$sw, $sy+$statsH-16, $cStatBg[$i]);
+        imagerectangle($img, $sx, $sy, $sx+$sw, $sy+$statsH-16, $cLGray);
+        imagettftext($img, 30, 0, $sx+18, $sy+52, $cStatVal[$i], $fontB, (string)$s['val']);
+        imagettftext($img, 10, 0, $sx+18, $sy+70, $cBlack,       $fontB, $s['lbl']);
+        imagettftext($img, 9,  0, $sx+18, $sy+86, $cGray,        $fontR, $s['unit']);
     }
 
-    // ── Graphique lignes ──────────────────────────────────────────────────
-    if (count($rows) >= 2) {
-        $gx = $padX; $gy = $headSect + $statsH + 20;
-        $gw = $W - 2*$padX; $gh = $chartH;
-        imagefilledrectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cCard);
-        imagerectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cBorder);
-        imagettftext($img, 9, 0, $gx+10, $gy+16, $cDark, $fontR, 'TEMPÉRATURE / HUMIDITÉ / GAZ (÷10)');
+    // ── Graphique (fond blanc) ───────────────────────────────────────────
+    $gx = $padX;
+    $gy = $headH + $statsH + 24;
+    $gw = $W - 2*$padX;
+    $gh = $chartH;
+    $giX = $gx + 55;  // zone tracé (laisser espace axes gauche)
+    $giW = $gw - 60;
+    $giY = $gy + 30;
+    $giH = $gh - 50;
 
-        // Grille horizontale
-        for ($g = 1; $g <= 4; $g++) {
-            $yl = $gy + 25 + (int)(($gh-35) * $g / 4);
-            imageline($img, $gx+5, $yl, $gx+$gw-5, $yl, $cBorder);
+    imagefilledrectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cWhite);
+    imagerectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cLGray);
+    imagettftext($img, 10, 0, $gx+10, $gy+20, $cGray, $fontB, 'ÉVOLUTION TEMPÉRATURE (°C) / HUMIDITÉ (%) / GAZ ÷ 10');
+
+    // Grille horizontale + valeurs axe Y
+    for ($g = 0; $g <= 5; $g++) {
+        $yl  = $giY + (int)($giH * (1 - $g/5));
+        $val = $g * 20;
+        imageline($img, $giX, $yl, $giX+$giW, $yl, $g===0 ? $cLGray : $cXLGray);
+        imagettftext($img, 8, 0, $gx+8, $yl+4, $cGray, $fontR, (string)$val);
+    }
+    // Axe X bas
+    imageline($img, $giX, $giY+$giH, $giX+$giW, $giY+$giH, $cLGray);
+
+    if ($n >= 2) {
+        // Repères temporels axe X (max 8 labels)
+        $step = max(1, (int)($n / 8));
+        foreach ($rows as $idx => $r) {
+            if ($idx % $step === 0 || $idx === $n-1) {
+                $px = $giX + (int)($giW * $idx / max(1,$n-1));
+                imageline($img, $px, $giY+$giH, $px, $giY+$giH+4, $cGray);
+                $lbl = \Carbon\Carbon::parse($r->created_at)->format('d/m H:i');
+                imagettftext($img, 7, 0, $px-18, $giY+$giH+16, $cGray, $fontR, $lbl);
+            }
         }
 
-        // Normaliser et tracer les 3 séries
         $series = [
-            ['key'=>'temperature','color'=>$cDanger,'max'=>60],
-            ['key'=>'humidite',   'color'=>$cBlue,  'max'=>100],
-            ['key'=>'gaz',        'color'=>$cWarn,  'max'=>1000,'div'=>10],
+            ['key'=>'temperature','color'=>$cRed,     'max'=>100],
+            ['key'=>'humidite',   'color'=>$cBlueTxt, 'max'=>100],
+            ['key'=>'gaz',        'color'=>$cOrange,  'max'=>1000, 'div'=>10],
         ];
-        $n = count($rows);
         foreach ($series as $serie) {
             $pts = [];
             foreach ($rows as $idx => $r) {
                 $val = (float)($r->{$serie['key']} ?? 0);
                 if (isset($serie['div'])) $val /= $serie['div'];
-                $pct = min(1, max(0, $val / $serie['max']));
-                $px  = $gx + 5 + (int)(($gw-10) * $idx / max(1,$n-1));
-                $py  = $gy + $gh - 10 - (int)(($gh-35) * $pct);
-                $pts[] = [$px, $py];
+                $pct = min(1.0, max(0.0, $val / $serie['max']));
+                $pts[] = [
+                    $giX + (int)($giW * $idx / max(1,$n-1)),
+                    $giY + $giH - (int)($giH * $pct),
+                ];
             }
             for ($i = 0; $i < count($pts)-1; $i++) {
-                imageline($img, $pts[$i][0], $pts[$i][1], $pts[$i+1][0], $pts[$i+1][1], $serie['color']);
+                // Tracer 2 fois pour épaisseur
+                imageline($img, $pts[$i][0], $pts[$i][1],   $pts[$i+1][0], $pts[$i+1][1],   $serie['color']);
+                imageline($img, $pts[$i][0], $pts[$i][1]+1, $pts[$i+1][0], $pts[$i+1][1]+1, $serie['color']);
             }
-        }
-        // Légende
-        $lx = $gx + 10; $ly = $gy + $gh - 14;
-        foreach ([['Temp(°C)',$cDanger],['Hum(%)',$cBlue],['Gaz÷10',$cWarn]] as $li => $leg) {
-            imageline($img, $lx, $ly, $lx+18, $ly, $leg[1]);
-            imagettftext($img, 8, 0, $lx+22, $ly+4, $cGray, $fontR, $leg[0]);
-            $lx += 80;
         }
     }
 
+    // Légende graphique
+    $lx = $giX; $ly = $gy + $gh - 16;
+    foreach ([['Température (°C)',$cRed],['Humidité (%)',$cBlueTxt],['Gaz ÷ 10',$cOrange]] as $leg) {
+        imagefilledrectangle($img, $lx, $ly-8, $lx+24, $ly, $leg[1]);
+        imagettftext($img, 9, 0, $lx+28, $ly, $cBlack, $fontR, $leg[0]);
+        $lx += 160;
+    }
+
     // ── Tableau ───────────────────────────────────────────────────────────
-    $ty = $tableTop;
-    // En-tête tableau
-    imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+32, $cHead);
-    imagerectangle($img, $padX, $ty, $W-$padX, $ty+32, $cBorder);
-    $cx = $padX + 6;
+    $cols    = [70, 220, 140, 140, 140, 100, 130];
+    $headers = ['ID', 'Date / Heure', 'Temp. (°C)', 'Humidité (%)', 'Gaz (ppm)', 'PIR', 'Niveau'];
+    $ty      = $headH + $statsH + 24 + $chartH + 24;
+
+    // En-tête colonnes (bleu foncé)
+    imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+$tblHead, $cNavyBg);
+    $cx = $padX + 8;
     foreach ($headers as $hi => $hdr) {
-        imagettftext($img, 9, 0, $cx+2, $ty+21, $cDark, $fontB, strtoupper($hdr));
+        imagettftext($img, 10, 0, $cx, $ty+26, $cWhite, $fontB, $hdr);
         $cx += $cols[$hi];
     }
-    $ty += 32;
+    // Séparateurs colonnes en-tête
+    $cx = $padX;
+    foreach ($cols as $cw) {
+        $cx += $cw;
+        imageline($img, $cx, $ty, $cx, $ty+$tblHead, $cNavy);
+    }
+    $ty += $tblHead;
 
     // Lignes de données
     foreach ($rows as $ri => $r) {
         $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
         $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
-        $rowBg  = $isCrit ? $cRowCrit : ($isWarn ? $cRowWarn : ($ri%2===0 ? $cCard : $cRowAlt));
-        imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+$rowH-1, $rowBg);
-        imageline($img, $padX, $ty+$rowH-1, $W-$padX, $ty+$rowH-1, $cBorder);
 
-        $tColor    = $r->temperature >= 32 ? $cDanger : ($r->temperature >= 28 ? $cWarn : $cNeon);
-        $hColor    = $r->humidite    >= 85 ? $cDanger : ($r->humidite    >= 75 ? $cWarn : $cBlue);
-        $gColor    = $r->gaz         >= 600? $cDanger : ($r->gaz         >= 300? $cWarn : $cGray);
-        $pirColor  = $r->pir_detecte ? $cDanger : $cDark;
-        $niveauTxt = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
-        $niveauCol = $isCrit ? $cDanger   : ($isWarn ? $cWarn    : $cNeon);
+        $rowBg = $isCrit ? $cRedBg : ($isWarn ? $cOrgBg : ($ri%2===0 ? $cWhite : $cXLGray));
+        imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+$rowH-1, $rowBg);
+        imageline($img, $padX, $ty+$rowH-1, $W-$padX, $ty+$rowH-1, $cLGray);
+
+        $tClr = $r->temperature >= 32 ? $cRed    : ($r->temperature >= 28 ? $cOrange : $cBlack);
+        $hClr = $r->humidite    >= 85 ? $cRed    : ($r->humidite    >= 75 ? $cOrange : $cBlack);
+        $gClr = $r->gaz         >= 600? $cRed    : ($r->gaz         >= 300? $cOrange : $cBlack);
+        $pClr = $r->pir_detecte        ? $cRed    : $cGray;
+        $nTxt = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
+        $nClr = $isCrit ? $cRed      : ($isWarn ? $cOrange  : $cGreen);
 
         $cells = [
-            ['txt' => (string)$r->id,          'col' => $cDark],
-            ['txt' => \Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i:s'), 'col' => $cGray],
-            ['txt' => (string)($r->temperature ?? '—'), 'col' => $tColor],
-            ['txt' => (string)($r->humidite    ?? '—'), 'col' => $hColor],
-            ['txt' => (string)($r->gaz         ?? '—'), 'col' => $gColor],
-            ['txt' => $r->pir_detecte ? 'OUI' : 'NON',  'col' => $pirColor],
-            ['txt' => $niveauTxt,                        'col' => $niveauCol],
+            [(string)$r->id,                                                          $cGray],
+            [\Carbon\Carbon::parse($r->created_at)->format('d/m/Y H:i:s'),            $cBlack],
+            [number_format((float)($r->temperature ?? 0), 1),                         $tClr],
+            [number_format((float)($r->humidite    ?? 0), 1),                         $hClr],
+            [number_format((float)($r->gaz         ?? 0), 0),                         $gClr],
+            [$r->pir_detecte ? 'OUI' : 'NON',                                         $pClr],
+            [$nTxt,                                                                    $nClr],
         ];
         $cx = $padX + 8;
-        foreach ($cells as $ci => $cell) {
-            imagettftext($img, 9, 0, $cx, $ty+19, $cell['col'], $fontR, $cell['txt']);
+        foreach ($cells as $ci => [$txt, $clr]) {
+            imagettftext($img, 10, 0, $cx, $ty+23, $clr,
+                ($ci === 6 || $ci === 5) ? $fontB : $fontR, $txt);
             $cx += $cols[$ci];
+        }
+        // Séparateurs colonnes
+        $cx = $padX;
+        foreach ($cols as $cw) {
+            $cx += $cw;
+            imageline($img, $cx, $ty, $cx, $ty+$rowH-1, $cLGray);
         }
         $ty += $rowH;
     }
-    imagerectangle($img, $padX, $tableTop, $W-$padX, $ty, $cBorder);
+    // Bordure extérieure tableau
+    imagerectangle($img, $padX, $headH+$statsH+24+$chartH+24, $W-$padX, $ty, $cLGray);
 
     // ── Pied de page ──────────────────────────────────────────────────────
-    imagettftext($img, 8, 0, $padX, $ty+24, $cDark, $fontR,
-        'Plateforme de Surveillance  ·  Rapport 72h  ·  '.now()->format('d/m/Y H:i'));
+    imageline($img, $padX, $ty+14, $W-$padX, $ty+14, $cLGray);
+    imagettftext($img, 9, 0, $padX, $ty+34, $cGray, $fontR,
+        'Plateforme de Surveillance  ·  Rapport automatique 72h  ·  Généré le '.now()->format('d/m/Y à H:i'));
 
     // ── Sortie PNG ────────────────────────────────────────────────────────
     $filename = 'rapport_72h_'.date('Y-m-d_H-i').'.png';
     return response()->stream(function() use ($img) {
-        imagepng($img);
+        imagepng($img, null, 6); // compression 6/9 — bon ratio taille/qualité
         imagedestroy($img);
     }, 200, [
         'Content-Type'        => 'image/png',
