@@ -819,6 +819,7 @@ Route::get('/filter', function (Request $request) {
         }
         // Type mesures
         $q = DB::table('mesures')
+            ->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at'])
             ->whereBetween('created_at', [$debut . ' 00:00:00', $fin . ' 23:59:59'])
             ->orderByDesc('created_at');
         if ($salleId) $q->where('salle_id', (int) $salleId);

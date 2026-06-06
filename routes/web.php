@@ -123,8 +123,10 @@ Route::get('/rapports/print', function (\Illuminate\Http\Request $request) {
     $debut = $request->debut ?? now()->subDays(7)->toDateString();
     $fin   = $request->fin   ?? now()->toDateString();
     try {
-        $rows = DB::table($type)->whereBetween('created_at',[$debut.' 00:00:00',$fin.' 23:59:59'])
-                    ->orderByDesc('created_at')->limit(2000)->get();
+        $q = DB::table($type)->whereBetween('created_at',[$debut.' 00:00:00',$fin.' 23:59:59'])
+                    ->orderByDesc('created_at')->limit(2000);
+        if ($type === 'mesures') $q->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at']);
+        $rows = $q->get();
     } catch (\Exception $e) { $rows = collect(); }
     $data  = $rows->map(fn($r) => (array) $r)->toArray();
     $label = ['mesures'=>'Mesures capteurs','alertes'=>'Alertes','salles'=>'Salles','serveurs'=>'Serveurs'][$type] ?? $type;
@@ -155,6 +157,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         if ($niveau && $type === 'alertes') $q->where('niveau', $niveau);
         if ($salle)   $q->where('salle_id', $salle);
         if ($type === 'mesures') {
+            $q->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at']);
             if ($tempMin !== null) $q->where('temperature', '>=', (float)$tempMin);
             if ($tempMax !== null) $q->where('temperature', '<=', (float)$tempMax);
             if ($humMin  !== null) $q->where('humidite',    '>=', (float)$humMin);
