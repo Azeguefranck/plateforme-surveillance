@@ -181,18 +181,16 @@ Route::get('/rapports/rapport-72h/word', function () {
     $section->addTitle('Rapport 72 heures — Mesures capteurs IoT', 1);
 
     // Sous-titre période
-    $metaPara = $section->addParagraph();
-    $metaPara->getStyle()->setAlignment(\PhpOffice\PhpWord\SimpleType\Jc::CENTER)->setSpaceAfter(160);
-    $metaPara->addRun('Période : ', ['name'=>'Times New Roman','size'=>12,'bold'=>true]);
-    $metaPara->addRun(
-        $debut->format('d/m/Y H:i').' → '.$fin->format('d/m/Y H:i'),
-        ['name'=>'Times New Roman','size'=>12]
-    );
-    $metaPara->addRun('     Généré le : ', ['name'=>'Times New Roman','size'=>12,'bold'=>true]);
-    $metaPara->addRun(now()->format('d/m/Y à H:i'), ['name'=>'Times New Roman','size'=>12]);
+    $pStyle = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 160];
+    $metaPara = $section->addTextRun($pStyle);
+    $metaPara->addText('Période : ',          ['name'=>'Times New Roman','size'=>12,'bold'=>true]);
+    $metaPara->addText($debut->format('d/m/Y H:i').' -> '.$fin->format('d/m/Y H:i'),
+                                              ['name'=>'Times New Roman','size'=>12]);
+    $metaPara->addText('     Généré le : ',   ['name'=>'Times New Roman','size'=>12,'bold'=>true]);
+    $metaPara->addText(now()->format('d/m/Y a H:i'), ['name'=>'Times New Roman','size'=>12]);
 
     // Ligne séparatrice
-    $section->addLine(['width'=>\PhpOffice\PhpWord\Shared\Converter::cmToEmu(25),'height'=>0]);
+    $section->addTextBreak(1);
 
     // ── Tableau statistiques ──────────────────────────────────────────────
     $section->addTitle('Résumé de la période', 2);
@@ -219,9 +217,9 @@ Route::get('/rapports/rapport-72h/word', function () {
     $bgColors = ['BBDEFB','FFCDD2','FFE0B2','C8E6C9'];
     foreach ($statCols as $si => $sc) {
         $cell = $statTable->addCell(3600, ['bgColor'=>$bgColors[$si],'vAlign'=>'center']);
-        $cell->addText($sc[0],         $lblFont + ['color'=>$sc[2]], $hdrAlign + ['spaceBefore'=>40]);
-        $cell->addText((string)$sc[1], $valFont + ['color'=>$sc[2]], $hdrAlign);
-        $cell->addText($sc[3],         $unitFont,                    $hdrAlign + ['spaceAfter'=>40]);
+        $cell->addText($sc[0],         array_merge($lblFont, ['color'=>$sc[2]]), array_merge($hdrAlign, ['spaceBefore'=>40]));
+        $cell->addText((string)$sc[1], array_merge($valFont, ['color'=>$sc[2]]), $hdrAlign);
+        $cell->addText($sc[3],         $unitFont,                                array_merge($hdrAlign, ['spaceAfter'=>40]));
     }
 
     $section->addTextBreak(1);
