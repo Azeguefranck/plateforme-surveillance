@@ -130,12 +130,6 @@ Route::get('/rapports/rapport-72h', function () {
     $rows = DB::table('mesures')
         ->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at'])
         ->whereBetween('created_at', [$debut, $fin])
-        ->where(function($q) {
-            $q->where('temperature', '>=', 28)
-              ->orWhere('humidite',    '>=', 75)
-              ->orWhere('gaz',         '>=', 300)
-              ->orWhere('pir_detecte', 1);
-        })
         ->orderBy('created_at')
         ->get();
 
