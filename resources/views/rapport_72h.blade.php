@@ -62,7 +62,8 @@ tbody td{padding:8px 12px;border-top:1px solid #0d1a35;font-size:11px}
 <div class="toolbar">
     <button class="btn btn-back" onclick="history.back()">← Retour</button>
     <a class="btn btn-png" href="/rapports/rapport-72h/png">&#128247; Télécharger PNG</a>
-    <a class="btn" href="/rapports/rapport-72h/word" style="background:#2563eb;color:#fff">&#128196; Télécharger Word</a>
+    <a class="btn" href="/rapports/rapport-24h/word" style="background:#0ea5e9;color:#fff">&#128196; Word 24h</a>
+    <a class="btn" href="/rapports/rapport-72h/word" style="background:#2563eb;color:#fff">&#128196; Word 72h</a>
     <span id="status" style="font-size:12px;color:#555"></span>
 </div>
 
