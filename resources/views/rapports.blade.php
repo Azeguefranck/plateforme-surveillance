@@ -112,6 +112,10 @@ tr:hover td{background:rgba(51,181,255,.03)}
 <div class="pg-header">
     <div class="pg-title">&#128202; Rapports</div>
     <div style="display:flex;align-items:center;gap:12px">
+        <a href="/rapports/rapport-72h/word"
+           style="padding:8px 14px;background:transparent;border:1px solid #2563eb;color:#2563eb;border-radius:7px;font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap">
+            &#128196; Rapport 72h Word
+        </a>
         <a href="/rapports/rapport-72h/png"
            style="padding:8px 14px;background:transparent;border:1px solid #ff5733;color:#ff5733;border-radius:7px;font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap">
             &#128247; Rapport 72h PNG
