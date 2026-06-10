@@ -205,7 +205,8 @@ function pollMesuresLive() {
         if (equipsEl) {
           if (d.equipements && d.equipements.length) {
             const t = parseFloat(d.temperature)||0, h = parseFloat(d.humidite)||0, g = parseInt(d.gaz)||0;
-            const lvl = (t>=40||h>=85||g>=500) ? 'crit' : (t>=35||h>=75||g>=300) ? 'warn' : 'ok';
+            const lvl = (t>=SEUILS.temperature.crit||h>=SEUILS.humidite.crit||g>=SEUILS.gaz.crit) ? 'crit'
+                      : (t>=SEUILS.temperature.warn||h>=SEUILS.humidite.warn||g>=SEUILS.gaz.warn) ? 'warn' : 'ok';
             equipsEl.style.display = '';
             equipsEl.innerHTML =
               '<span class="equip-label"><i class="fa-solid fa-server" style="color:#3b82f6;margin-right:3px"></i>Équipements exposés :</span>'
