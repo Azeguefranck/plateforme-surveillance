@@ -404,9 +404,8 @@ Route::post('/capteurs', function (Request $request) {
     $temperature  = (float) ($request->temperature   ?? 0);
     $humidite     = (float) ($request->humidite      ?? 0);
     $gaz          = (float) ($request->gaz           ?? 0);
-    $pir          = (bool)  ($request->pir           ?? false);
-    $salleId      = $request->salle_id      ? (int) $request->salle_id      : null;
-    $equipementId = $request->equipement_id ? (int) $request->equipement_id : null;
+    $pir     = (bool) ($request->pir      ?? false);
+    $salleId = $request->salle_id ? (int) $request->salle_id : null;
 
     // Liste des capteurs présents dans la requête (non null = connecté)
     $capteursPresents = array_keys(array_filter([
@@ -420,10 +419,9 @@ Route::post('/capteurs', function (Request $request) {
         'temperature'   => $temperature,
         'humidite'      => $humidite,
         'gaz'           => $gaz,
-        'pir_detecte'   => $pir ? 1 : 0,
-        'salle_id'      => $salleId,
-        'equipement_id' => $equipementId,
-        'created_at'    => now(),
+        'pir_detecte' => $pir ? 1 : 0,
+        'salle_id'    => $salleId,
+        'created_at'  => now(),
         'updated_at'    => now(),
     ]);
 
@@ -463,9 +461,8 @@ Route::post('/capteurs', function (Request $request) {
                                  . ' : ' . $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite'],
                 'niveau'        => $newNiveau,
                 'valeur'        => $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite'],
-                'salle_id'      => $salleId,
-                'equipement_id' => $equipementId,
-                'resolu'        => 0,
+                'salle_id' => $salleId,
+                'resolu'   => 0,
                 'created_at'    => now(),
                 'updated_at'    => now(),
             ]);

@@ -90,13 +90,12 @@ def post_capteurs(payload: dict):
 # ── Écriture du fichier live (dashboard temps réel) ──────────────────────────
 def ecrire_live(data: dict):
     live = {
-        "temperature":   float(data.get("temperature") or 0),
-        "humidite":      float(data.get("humidite")    or 0),
-        "gaz":           int  (data.get("gaz")         or 0),
-        "pir":           int  (data.get("pir")         or 0),
-        "salle_id":      data.get("salle_id", 1),
-        "equipement_id": data.get("equipement_id"),
-        "ts":            time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "temperature": float(data.get("temperature") or 0),
+        "humidite":    float(data.get("humidite")    or 0),
+        "gaz":         int  (data.get("gaz")         or 0),
+        "pir":         int  (data.get("pir")         or 0),
+        "salle_id":    data.get("salle_id", 1),
+        "ts":          time.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     try:
         with open(LIVE_FILE, "w") as f:
@@ -142,12 +141,11 @@ def traiter_ligne(line: str):
     # ── Données périodiques (toutes les 10 s) → enregistrement DB + alertes ──
     if msg_type == "donnees":
         payload = {
-            "temperature":   float(data.get("temperature") or 0),
-            "humidite":      float(data.get("humidite")    or 0),
-            "gaz":           int  (data.get("gaz")         or 0),
-            "pir":           int  (data.get("pir")         or 0),
-            "salle_id":      data.get("salle_id", 1),
-            "equipement_id": data.get("equipement_id"),
+            "temperature": float(data.get("temperature") or 0),
+            "humidite":    float(data.get("humidite")    or 0),
+            "gaz":         int  (data.get("gaz")         or 0),
+            "pir":         int  (data.get("pir")         or 0),
+            "salle_id":    data.get("salle_id", 1),
         }
         # Mettre à jour le fichier live aussi (double sécurité dashboard)
         ecrire_live(data)
@@ -165,12 +163,11 @@ def traiter_ligne(line: str):
         cat = data.get("categorie", "")
         niv = data.get("niveau", "")
         payload = {
-            "temperature":   float(data.get("temperature") or 0),
-            "humidite":      float(data.get("humidite")    or 0),
-            "gaz":           int  (data.get("gaz")         or 0),
-            "pir":           1 if cat == "INTRUSION" else 0,
-            "salle_id":      data.get("salle_id", 1),
-            "equipement_id": data.get("equipement_id"),
+            "temperature": float(data.get("temperature") or 0),
+            "humidite":    float(data.get("humidite")    or 0),
+            "gaz":         int  (data.get("gaz")         or 0),
+            "pir":         1 if cat == "INTRUSION" else 0,
+            "salle_id":    data.get("salle_id", 1),
         }
         ecrire_live(data)
         ok, _ = post_capteurs(payload)

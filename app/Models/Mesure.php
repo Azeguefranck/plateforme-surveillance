@@ -15,6 +15,5 @@ class Mesure extends Model
         'gaz',
         'pir_detecte',
         'salle_id',
-        'equipement_id',
     ];
 }
