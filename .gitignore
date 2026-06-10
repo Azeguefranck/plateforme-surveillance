@@ -11,3 +11,5 @@ yarn-error.log
 .phpunit.result.cache
 __pycache__/
 *.pyc
+/storage/logs/
+laravel.log
