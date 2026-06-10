@@ -20,7 +20,6 @@
 }
 .no-data-banner.visible{display:block}
 
-/* ── Panneau par salle ── */
 .salle-panel{
   background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;
   padding:18px 20px 16px;margin-bottom:20px;
@@ -34,7 +33,6 @@
 .salle-panel-nom{font-size:15px;font-weight:700;color:#1e3a8a}
 .salle-panel-ts{font-size:11px;color:#94a3b8}
 
-/* ── Jauges ── */
 .gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:14px}
 .gauge-card{
   background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;
@@ -71,7 +69,6 @@
 .pir-det{background:rgba(239,68,68,.1);color:#dc2626;border:1px solid #ef4444;animation:pir-flash .8s infinite}
 @keyframes pir-flash{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* ── Équipements exposés ── */
 .salle-equips{display:flex;flex-wrap:wrap;gap:6px;padding-top:10px;border-top:1px solid #f1f5f9;align-items:center}
 .equip-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-right:4px;white-space:nowrap}
 .equip-chip{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;font-weight:600}
@@ -92,7 +89,6 @@
 <div id="salle-panels"></div>
 
 <script>
-// Seuils chargés depuis /api/seuils au démarrage (évite les valeurs obsolètes codées en dur)
 let SEUILS = {
   temperature: { warn:28,  crit:32,  max:80   },
   humidite:    { warn:75,  crit:85,  max:100  },
@@ -104,7 +100,6 @@ fetch('/api/seuils').then(r=>r.json()).then(s=>{
   if(s.gaz)         SEUILS.gaz         = { warn:s.gaz.warning,         crit:s.gaz.critique,         max:1000 };
 }).catch(()=>{});
 
-/* ── Crée ou retourne un panneau salle ── */
 function getPanel(sid, nom) {
   let p = document.getElementById('panel-' + sid);
   if (!p) {
@@ -156,7 +151,6 @@ function getPanel(sid, nom) {
   return p;
 }
 
-/* ── Met à jour une jauge ── */
 function majJauge(sid, nom, val) {
   const s    = SEUILS[nom];
   const el   = document.getElementById('g-'    + nom + '-' + sid);
@@ -169,7 +163,6 @@ function majJauge(sid, nom, val) {
   card.className = 'gauge-card ' + lvl + (val >= s.crit ? ' alerte-critique' : val >= s.warn ? ' alerte-warning' : '');
 }
 
-/* ── Polling principal ── */
 function pollMesuresLive() {
   fetch('/api/mesures-live')
     .then(r => { if (!r.ok) throw 0; return r.json(); })
@@ -200,7 +193,6 @@ function pollMesuresLive() {
         const tsEl = document.getElementById('ts-' + sid);
         if (tsEl) tsEl.textContent = 'Màj ' + new Date().toLocaleTimeString('fr-FR');
 
-        /* Équipements */
         const equipsEl = document.getElementById('equips-' + sid);
         if (equipsEl) {
           if (d.equipements && d.equipements.length) {
@@ -219,7 +211,6 @@ function pollMesuresLive() {
         }
       });
 
-      /* Supprimer les panneaux des salles inactives */
       document.querySelectorAll('.salle-panel').forEach(p => {
         if (!data[p.id.replace('panel-', '')]) p.remove();
       });

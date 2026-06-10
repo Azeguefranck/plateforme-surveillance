@@ -154,7 +154,6 @@ h1 {
 }
 .info-box i {color:#33b5ff;margin-top:2px;flex-shrink:0}
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 @media(max-width:640px){

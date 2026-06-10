@@ -20,7 +20,6 @@ $fieldMap = [
 *{box-sizing:border-box}
 body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
-/* ── Page header ──────────────────────────────────────── */
 .p-header{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:28px;flex-wrap:wrap;gap:12px;
@@ -33,7 +32,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .breadcrumb{font-size:12px;color:#5a6a99}
 .breadcrumb a{color:#33ff88;text-decoration:none}
 
-/* ── Flash ────────────────────────────────────────────── */
 .flash{
   padding:12px 18px;border-radius:10px;margin-bottom:20px;
   font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;
@@ -43,7 +41,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .flash-err{background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff5733}
 @keyframes fadeUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── Card base ────────────────────────────────────────── */
 .card{
   background:linear-gradient(135deg,#0e1a38,#0c1530);
   border:1px solid #1e2f5a;border-radius:18px;
@@ -67,14 +64,12 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
   background:linear-gradient(180deg,#33ff88,#33b5ff);flex-shrink:0;
 }
 
-/* ── Sensor grid ──────────────────────────────────────── */
 .sensor-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:16px;
 }
 
-/* ── Sensor card ──────────────────────────────────────── */
 .sc{
   background:rgba(255,255,255,.025);
   border:1px solid #1e2f5a;border-radius:14px;
@@ -95,14 +90,12 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .sc-name{font-size:15px;font-weight:700;color:#fff}
 .sc-desc{font-size:11px;color:#5a6a99;margin-top:2px}
 
-/* Current value bar */
 .sc-bar{
   height:4px;border-radius:2px;background:#1e2f5a;
   margin-bottom:14px;overflow:hidden;
 }
 .sc-fill{height:100%;border-radius:2px;transition:width .6s ease}
 
-/* Threshold inputs */
 .sc-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sc-field{display:flex;flex-direction:column;gap:4px}
 .sc-field label{
@@ -125,14 +118,12 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .input-warn:focus{border-color:#ffd633!important;box-shadow:0 0 0 3px rgba(255,214,51,.07)!important}
 .input-crit:focus{border-color:#ff5733!important;box-shadow:0 0 0 3px rgba(255,87,51,.07)!important}
 
-/* Unite tag */
 .unite-tag{
   display:inline-block;padding:1px 6px;border-radius:4px;
   font-size:10px;font-weight:700;background:rgba(255,255,255,.06);
   color:#8899cc;margin-left:4px;vertical-align:middle;
 }
 
-/* ── PIR card ─────────────────────────────────────────── */
 .pir-card{
   display:flex;align-items:center;justify-content:space-between;
   background:rgba(255,255,255,.025);
@@ -149,7 +140,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .pir-name{font-size:15px;font-weight:700;color:#fff}
 .pir-desc{font-size:11px;color:#5a6a99;margin-top:2px}
 
-/* Toggle switch */
 .toggle{position:relative;display:inline-block;width:52px;height:28px}
 .toggle input{opacity:0;width:0;height:0}
 .slider{
@@ -164,7 +154,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .toggle input:checked + .slider{background:rgba(51,255,136,.2);border:1px solid rgba(51,255,136,.4)}
 .toggle input:checked + .slider::before{transform:translateX(24px);background:#33ff88;box-shadow:0 0 10px rgba(51,255,136,.5)}
 
-/* ── Save button ──────────────────────────────────────── */
 .btn-save{
   display:inline-flex;align-items:center;gap:9px;
   padding:13px 28px;border-radius:10px;border:none;
@@ -179,7 +168,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
   box-shadow:0 0 24px rgba(51,255,136,.3);transform:translateY(-1px);
 }
 
-/* ── Config grid ──────────────────────────────────────── */
 .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.cfg-grid{grid-template-columns:1fr}}
 .cfg-item{
@@ -197,7 +185,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .cfg-val{font-size:14px;color:#c7d2ff;font-weight:500;word-break:break-all}
 .cfg-val.green{color:#33ff88}
 
-/* ── Status card ──────────────────────────────────────── */
 .status-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
 .stat-c{
   background:rgba(255,255,255,.025);border-radius:12px;
@@ -209,10 +196,8 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .stat-c.warn .stat-num{color:#ffd633}
 .stat-c.crit .stat-num{color:#ff5733}
 
-/* ── Sep ──────────────────────────────────────────────── */
 .sep{height:1px;margin:20px 0;background:linear-gradient(90deg,transparent,#1e2f5a,transparent)}
 
-/* ── Responsive ───────────────────────────────────────── */
 @media(max-width:600px){
   .sensor-grid{grid-template-columns:1fr}
   .sc-fields{grid-template-columns:1fr}
@@ -236,9 +221,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 @endif
 
 
-{{-- ═══════════════════════════════════════
-     SEUILS CAPTEURS
-════════════════════════════════════════ --}}
 <div class="card">
   <div class="card-title"><i class="fa-solid fa-satellite-dish"></i> Seuils d'alerte capteurs</div>
 
@@ -282,11 +264,10 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       </div>
       @endforeach
 
-    </div>{{-- /sensor-grid --}}
+    </div>
 
     <div class="sep"></div>
 
-    {{-- PIR --}}
     <div class="pir-card">
       <div class="pir-left">
         <div class="pir-ico"><i class="fa-solid fa-person-walking"></i></div>
@@ -309,9 +290,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 </div>
 
 
-{{-- ═══════════════════════════════════════
-     CONFIGURATION SYSTÈME
-════════════════════════════════════════ --}}
 <div class="card">
   <div class="card-title"><i class="fa-solid fa-wrench"></i> Configuration système</div>
 
@@ -334,7 +312,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="cfg-ico"><i class="fa-solid fa-clock"></i></div>
       <div>
         <div class="cfg-key">Intervalle envoi Arduino</div>
-        <div class="cfg-val">10 secondes</div>
+        <div class="cfg-val">30 secondes</div>
       </div>
     </div>
     <div class="cfg-item">
@@ -376,9 +354,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 </div>
 
 
-{{-- ═══════════════════════════════════════
-     STATUT TEMPS RÉEL
-════════════════════════════════════════ --}}
 <div class="card">
   <div class="card-title" style="justify-content:space-between;display:flex;align-items:center">
     <span style="display:flex;align-items:center;gap:8px">
@@ -418,7 +393,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
 
 <script>
-// Validation: warning < critique
 document.querySelectorAll('.sc').forEach(sc => {
   const warn = sc.querySelector('.input-warn');
   const crit = sc.querySelector('.input-crit');
@@ -430,7 +404,6 @@ document.querySelectorAll('.sc').forEach(sc => {
   }));
 });
 
-// Live stats
 function loadStats() {
   fetch('/api/stats')
     .then(r => r.json())

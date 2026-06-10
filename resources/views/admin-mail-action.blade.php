@@ -22,7 +22,6 @@ body{background:#060c1a;color:#d4dced;min-height:100vh;display:flex;flex-directi
 .card{width:100%;max-width:500px;background:#0d1a2e;padding:40px 36px;border-radius:18px;
   border:1px solid #182640;box-shadow:0 8px 40px rgba(0,0,0,.5);text-align:center;}
 
-/* Icône centrale */
 .result-icon{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;
   justify-content:center;margin:0 auto 24px;font-size:36px;}
 .icon-valide{background:rgba(47,168,79,.13);border:2px solid rgba(47,168,79,.7);
@@ -41,7 +40,6 @@ body{background:#060c1a;color:#d4dced;min-height:100vh;display:flex;flex-directi
 
 .result-msg{font-size:14px;color:#8090b0;margin-bottom:24px;line-height:1.7;}
 
-/* Fiche utilisateur */
 .user-card{background:#08121f;border:1px solid #182640;border-radius:12px;
   padding:18px 20px;margin-bottom:24px;text-align:left;}
 .user-card-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
@@ -50,17 +48,14 @@ body{background:#060c1a;color:#d4dced;min-height:100vh;display:flex;flex-directi
 .user-card-label{color:#6b7fa0;font-size:12px;min-width:90px;}
 .user-card-value{color:#d4dced;font-size:13px;font-weight:bold;}
 
-/* Badge statut */
 .badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:bold;letter-spacing:.5px;}
 .badge-valide{background:rgba(47,168,79,.15);color:#2fa84f;border:1px solid rgba(47,168,79,.3);}
 .badge-refuse{background:rgba(192,57,43,.15);color:#e74c3c;border:1px solid rgba(192,57,43,.3);}
 .badge-attente{background:rgba(217,119,6,.15);color:#f39c12;border:1px solid rgba(217,119,6,.3);}
 
-/* Déjà traité */
 .already-note{background:rgba(46,134,193,.08);border:1px solid rgba(46,134,193,.2);
   border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:#4a9fc4;}
 
-/* Boutons */
 .btn-primary{display:inline-block;padding:13px 28px;background:#2fa84f;color:#060c1a;
   text-decoration:none;border-radius:10px;font-weight:bold;font-size:14px;
   transition:.2s;margin:6px;}
@@ -91,7 +86,6 @@ body{background:#060c1a;color:#d4dced;min-height:100vh;display:flex;flex-directi
   <div class="card">
 
     @if(!$ok)
-      {{-- Erreur --}}
       <div class="result-icon icon-error">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
@@ -102,7 +96,6 @@ body{background:#060c1a;color:#d4dced;min-height:100vh;display:flex;flex-directi
       </a>
 
     @else
-      {{-- Succès --}}
       @if($action === 'valide')
         <div class="result-icon icon-valide"><i class="fa-solid fa-user-check"></i></div>
         <div class="result-title title-valide">Compte validé</div>

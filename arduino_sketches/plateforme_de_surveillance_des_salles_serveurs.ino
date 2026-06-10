@@ -27,7 +27,7 @@ int SEUIL_GAZ_C  = 600;
 bool PIR_ACTIF = true;
 
 float temperature = 0.0;
-float humidite    = 0.0;
+float humidite = 0.0;
 
 int gaz = 0;
 int pir = 0;
@@ -45,8 +45,8 @@ bool etatGaz  = false;
 #define EMAIL_COOLDOWN 600000UL
 #define PIR_COOLDOWN   300000UL
 
-#define INTERVALLE_MS  10000UL
-#define LIVE_MS         2000UL
+#define INTERVALLE_MS 30000UL
+#define LIVE_MS        2000UL
 
 unsigned long tEmailTemp = 0;
 unsigned long tEmailHum  = 0;
@@ -56,13 +56,13 @@ unsigned long tEmailPir  = 0;
 unsigned long tDernierEnvoi = 0;
 unsigned long tLive = 0;
 
-char jsonBuf[256];
+char jsonBuf[250];
 
 void lireCapteurs();
 void verifierAlertes();
 void envoyerLive();
 void envoyerDonnees();
-void envoyerAlerte(const char* cat, const char* niv, const char* msg);
+void envoyerAlerte(const char* cat,const char* niv,const char* msg);
 void afficherSerie();
 
 void ledVerte();
@@ -134,6 +134,7 @@ void loop() {
     tLive = now;
 
     gaz = analogRead(MQ135_PIN);
+
     pir = digitalRead(PIR_PIN);
 
     envoyerLive();
@@ -165,6 +166,7 @@ void lireCapteurs() {
     humidite = h;
 
   gaz = analogRead(MQ135_PIN);
+
   pir = digitalRead(PIR_PIN);
 }
 
@@ -261,30 +263,37 @@ void verifierAlertes() {
   if (alerteActive) {
 
     ledRouge();
+
     beep(150);
 
   } else {
 
     ledVerte();
+
     digitalWrite(BUZZER_PIN, LOW);
   }
 }
 
 void envoyerLive() {
 
-  char tB[8], hB[8];
+  char tB[8];
+  char hB[8];
 
-  dtostrf(temperature, 4, 1, tB);
-  dtostrf(humidite,    4, 1, hB);
+  dtostrf(temperature,4,1,tB);
+  dtostrf(humidite,4,1,hB);
 
-  snprintf(jsonBuf, sizeof(jsonBuf),
+  snprintf(jsonBuf,sizeof(jsonBuf),
     "{\"type\":\"live\","
     "\"salle_id\":%d,"
     "\"temperature\":%s,"
     "\"humidite\":%s,"
     "\"gaz\":%d,"
     "\"pir\":%d}",
-    SALLE_ID, tB, hB, gaz, pir
+    SALLE_ID,
+    tB,
+    hB,
+    gaz,
+    pir
   );
 
   Serial.println(jsonBuf);
@@ -292,19 +301,24 @@ void envoyerLive() {
 
 void envoyerDonnees() {
 
-  char tB[8], hB[8];
+  char tB[8];
+  char hB[8];
 
-  dtostrf(temperature, 4, 1, tB);
-  dtostrf(humidite,    4, 1, hB);
+  dtostrf(temperature,4,1,tB);
+  dtostrf(humidite,4,1,hB);
 
-  snprintf(jsonBuf, sizeof(jsonBuf),
+  snprintf(jsonBuf,sizeof(jsonBuf),
     "{\"type\":\"donnees\","
     "\"salle_id\":%d,"
     "\"temperature\":%s,"
     "\"humidite\":%s,"
     "\"gaz\":%d,"
     "\"pir\":%d}",
-    SALLE_ID, tB, hB, gaz, pir
+    SALLE_ID,
+    tB,
+    hB,
+    gaz,
+    pir
   );
 
   Serial.println(jsonBuf);
@@ -315,12 +329,13 @@ void envoyerAlerte(
   const char* niv,
   const char* msg) {
 
-  char tB[8], hB[8];
+  char tB[8];
+  char hB[8];
 
-  dtostrf(temperature, 4, 1, tB);
-  dtostrf(humidite,    4, 1, hB);
+  dtostrf(temperature,4,1,tB);
+  dtostrf(humidite,4,1,hB);
 
-  snprintf(jsonBuf, sizeof(jsonBuf),
+  snprintf(jsonBuf,sizeof(jsonBuf),
     "{\"type\":\"alerte\","
     "\"salle_id\":%d,"
     "\"categorie\":\"%s\","
@@ -329,7 +344,13 @@ void envoyerAlerte(
     "\"temperature\":%s,"
     "\"humidite\":%s,"
     "\"gaz\":%d}",
-    SALLE_ID, cat, niv, msg, tB, hB, gaz
+    SALLE_ID,
+    cat,
+    niv,
+    msg,
+    tB,
+    hB,
+    gaz
   );
 
   Serial.println(jsonBuf);
@@ -349,7 +370,7 @@ void afficherSerie() {
 
   Serial.print("G:");
   Serial.print(gaz);
-  Serial.print("ppm  ");
+  Serial.print("  ");
 
   Serial.print("PIR:");
   Serial.println(pir);
@@ -357,21 +378,21 @@ void afficherSerie() {
 
 void ledVerte() {
 
-  analogWrite(LED_R, 0);
-  analogWrite(LED_G, 255);
-  analogWrite(LED_B, 0);
+  analogWrite(LED_R,0);
+  analogWrite(LED_G,255);
+  analogWrite(LED_B,0);
 }
 
 void ledRouge() {
 
-  analogWrite(LED_R, 255);
-  analogWrite(LED_G, 0);
-  analogWrite(LED_B, 0);
+  analogWrite(LED_R,255);
+  analogWrite(LED_G,0);
+  analogWrite(LED_B,0);
 }
 
 void beep(int ms) {
 
-  digitalWrite(BUZZER_PIN, HIGH);
+  digitalWrite(BUZZER_PIN,HIGH);
   delay(ms);
-  digitalWrite(BUZZER_PIN, LOW);
+  digitalWrite(BUZZER_PIN,LOW);
 }

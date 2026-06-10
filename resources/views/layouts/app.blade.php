@@ -115,14 +115,12 @@ padding:20px;
 min-width:0;
 }
 
-/* ── Barre de progression PJAX ── */
 #_pbar{
   position:fixed;top:0;left:0;height:3px;width:0%;z-index:99999;
   background:linear-gradient(90deg,#3b82f6,#60efff);
   transition:width .25s ease,opacity .3s ease;
   opacity:0;box-shadow:0 0 8px rgba(59,130,246,.6);
 }
-/* ── Loader page ── */
 #_ploader{
   display:none;position:fixed;inset:0;z-index:99998;
   pointer-events:none;background:rgba(244,246,249,.35);
@@ -175,7 +173,6 @@ border-color:#cbd5e1;
 color:#1e2d4a;
 }
 
-/* ── Hamburger button ── */
 .menu-toggle{
 display:none;
 background:#f1f5f9;
@@ -191,7 +188,6 @@ transition:.2s;
 }
 .menu-toggle:hover{background:#e2e8f0}
 
-/* ── Sidebar overlay (mobile) ── */
 .sidebar-overlay{
 display:none;
 position:fixed;
@@ -203,7 +199,6 @@ backdrop-filter:blur(3px);
 }
 .sidebar-overlay.open{display:block}
 
-/* ── Sidebar close button (mobile) ── */
 .sidebar-close{
 display:none;
 background:none;
@@ -214,12 +209,10 @@ cursor:pointer;
 padding:2px 6px;
 }
 
-/* ── Global responsive ── */
 *{box-sizing:border-box}
 img{max-width:100%;height:auto}
 table{max-width:100%;width:100%}
 
-/* Elements that must never overflow their container */
 p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
 .alerte-msg,.alerte-time,.alerte-item,
 .stat-label,.stat-num,.gauge-label,.gauge-val,.gauge-unit,
@@ -235,7 +228,6 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   word-break:break-word;
 }
 
-/* ── Responsive breakpoints ── */
 @media(max-width:900px){
 .sidebar{
   left:-260px;
@@ -247,7 +239,6 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
 .main{margin-left:0;width:100%;padding:12px}
 .wrapper{flex-direction:column}
 .menu-toggle{display:flex}
-/* Grids collapse to single column */
 .stats-grid,.charts-grid,.charts-row,.gauges,.form-grid,.detail-grid,.stats-row{
   grid-template-columns:1fr!important;
   flex-direction:column!important;
@@ -259,27 +250,21 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
 .datetime{font-size:13px}
 .logout{padding:8px 12px;font-size:12px}
 .logout span{display:none}
-/* Tables scroll horizontally */
 .table-wrap,.card-body,[class*="table"]{overflow-x:auto;-webkit-overflow-scrolling:touch}
-/* Cards full width */
 .stat-card,.gauge-card,.chart-card,.scard,.detail-card,.table-card,.alertes-card{
   width:100%!important;
   min-width:0!important;
   max-width:100%!important;
 }
-/* Toolbars wrap on small screens */
 .toolbar,.filter-bar,.export-bar,.export-btns,.table-toolbar{
   flex-wrap:wrap!important;
   gap:8px!important;
 }
-/* Buttons shrink gracefully */
 .btn,.btn-neon,.btn-blue,.btn-red,.btn-green,.btn-gray,.btn-warn{
   font-size:12px!important;
   padding:7px 10px!important;
 }
-/* Badges & values don't overflow */
 .badge{max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Forms full width */
 .form-group,.form-grid{width:100%!important;grid-template-columns:1fr!important}
 .form-actions{flex-wrap:wrap!important;gap:8px!important}
 }
@@ -292,7 +277,6 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
 .datetime{font-size:11px}
 }
 
-/* ── Global UI: toasts, spinners, confirm ─────── */
 @keyframes _spin{to{transform:rotate(360deg)}}
 @keyframes _tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
 @keyframes _tOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(110%)}}
@@ -414,10 +398,8 @@ updateDateTime();
 </script>
 
 
-<!-- ── Global toasts ──────────────────────── -->
 <div id="_toasts"></div>
 
-<!-- ── Confirm dialog ────────────────────── -->
 <div id="_cdlg">
   <div class="_cbox" id="_cboxEl">
     <div class="_cbox-top"></div>
@@ -437,7 +419,6 @@ updateDateTime();
 </div>
 
 <script>
-/* ── Notifications toast ── */
 function notify(msg, type, dur) {
     type = type||'s'; dur = dur||3600;
     var icons={s:'<i class="fa-solid fa-check"></i>',e:'<i class="fa-solid fa-xmark"></i>',w:'<i class="fa-solid fa-triangle-exclamation"></i>',i:'<i class="fa-solid fa-circle-info"></i>'};
@@ -451,7 +432,6 @@ function notify(msg, type, dur) {
 }
 function _dismiss(el){if(!el||el.classList.contains('out'))return;el.classList.add('out');setTimeout(function(){if(el.parentNode)el.remove();},230);}
 
-/* ── Button loader ── */
 function btnLoad(btn,on){
     if(!btn)return;
     if(on===false){if(btn._orig!==undefined){btn.innerHTML=btn._orig;btn.disabled=false;btn.style.opacity='';}return;}
@@ -460,7 +440,6 @@ function btnLoad(btn,on){
     btn.disabled=true; btn.style.opacity='.72';
 }
 
-/* ── CSRF fetch ── */
 function csrfFetch(url,opts){
     opts=opts||{};
     var tok=(document.querySelector('meta[name="csrf-token"]')||{}).content||'';
@@ -468,7 +447,6 @@ function csrfFetch(url,opts){
     return fetch(url,Object.assign({},opts,{headers:hdrs}));
 }
 
-/* ── Confirm dialog ── */
 var _cdlgBusy = false;
 function confirmDlg(title, msg, opts) {
     return new Promise(function(res) {
@@ -512,7 +490,6 @@ function confirmDlg(title, msg, opts) {
     });
 }
 
-/* ── Hamburger / sidebar toggle ── */
 (function(){
   var toggle=document.getElementById('menuToggle');
   var close=document.getElementById('sidebarClose');
@@ -523,14 +500,12 @@ function confirmDlg(title, msg, opts) {
   if(toggle) toggle.addEventListener('click',openSidebar);
   if(close)  close.addEventListener('click',closeSidebar);
   if(overlay) overlay.addEventListener('click',closeSidebar);
-  // Mark active link
   var cur=window.location.pathname;
   document.querySelectorAll('.sidebar a').forEach(function(a){
     if(a.getAttribute('href')===cur) a.classList.add('active');
   });
 })();
 
-/* ── Logout ── */
 function doLogout() {
     confirmDlg(
         'Se déconnecter ?',
@@ -546,32 +521,22 @@ function doLogout() {
 </script>
 
 <script>
-/* ═══════════════════════════════════════════════════════
-   PJAX INSTANTANÉ
-   • Préchargement au survol (hover prefetch)
-   • Cache mémoire 60 s — swap immédiat si déjà en cache
-   • setInterval des pages stoppés proprement
-   • Styles par page injectés dans <head> sans accumulation
-═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  var CACHE_TTL = 60000; // 60 s de validité du cache
-  var _cache    = {};    // { url: { html, ts, finalUrl } }
-  var _inflight = {};    // promesses en cours (évite les doublons)
+  var CACHE_TTL = 60000;
+  var _cache    = {};
+  var _inflight = {};
 
-  /* ── Intervals + fetch en cours des pages ── */
   var _pi = [], _origSI = window.setInterval;
   window.setInterval = function () {
     var id = _origSI.apply(window, arguments);
     _pi.push(id);
     return id;
   };
-  /* Abort controllers actifs (polls API temps réel) */
   window.__pjaxAborts = window.__pjaxAborts || [];
   var _origFetch = window.fetch;
   window.fetch = function (url, opts) {
-    // Tracker les requêtes de polling (api/mesures-live, api/live-data)
     if (typeof url === 'string' && (url.indexOf('mesures-live') !== -1 || url.indexOf('live-data') !== -1)) {
       var ctrl = new AbortController();
       window.__pjaxAborts.push(ctrl);
@@ -582,12 +547,10 @@ function doLogout() {
   function _clearPI() {
     _pi.forEach(clearInterval);
     _pi = [];
-    // Annuler toutes les requêtes de polling en cours
     (window.__pjaxAborts || []).forEach(function (c) { try { c.abort(); } catch(e){} });
     window.__pjaxAborts = [];
   }
 
-  /* ── Barre de progression ── */
   var _bar    = document.getElementById('_pbar');
   var _loader = document.getElementById('_ploader');
   function _showBar() {
@@ -609,14 +572,12 @@ function doLogout() {
     if (_loader) _loader.classList.remove('on');
   }
 
-  /* ── Sidebar active ── */
   function _active(path) {
     document.querySelectorAll('.sidebar a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('href') === path);
     });
   }
 
-  /* ── Styles de page → <head> (propre) ── */
   function _applyStyles(box) {
     document.querySelectorAll('style[data-pjax]').forEach(function (s) { s.remove(); });
     box.querySelectorAll('style').forEach(function (old) {
@@ -628,7 +589,6 @@ function doLogout() {
     });
   }
 
-  /* ── Ré-exécution des scripts ── */
   function _exec(box) {
     box.querySelectorAll('script').forEach(function (old) {
       var nw = document.createElement('script');
@@ -638,7 +598,6 @@ function doLogout() {
     });
   }
 
-  /* ── Interne ? ── */
   function _isInternal(href) {
     if (!href || href === '#' || href.charAt(0) === '#') return false;
     if (/^(https?:)?\/\//.test(href))                   return false;
@@ -646,16 +605,13 @@ function doLogout() {
     return true;
   }
 
-  /* ── Fetch + mise en cache ── */
   function _fetch(url) {
     var abs = new URL(url, location.origin).href;
     var now = Date.now();
 
-    // Déjà en cache et frais
     if (_cache[abs] && (now - _cache[abs].ts) < CACHE_TTL)
       return Promise.resolve(_cache[abs]);
 
-    // Requête déjà en vol
     if (_inflight[abs]) return _inflight[abs];
 
     var p = fetch(abs, {
@@ -680,11 +636,9 @@ function doLogout() {
     return p;
   }
 
-  /* ── Swap du contenu ── */
   function _swap(entry, push) {
     var finalUrl = entry.finalUrl;
 
-    // Redirection vers login
     if (finalUrl.indexOf('/login') !== -1) { location.href = '/login'; return; }
 
     var doc    = new DOMParser().parseFromString(entry.html, 'text/html');
@@ -704,21 +658,18 @@ function doLogout() {
     if (t) document.title = t.textContent;
   }
 
-  /* ── NAVIGATION ── */
   function navigate(url, push) {
     var abs = new URL(url, location.origin).href;
     var now = Date.now();
 
     _clearPI();
 
-    // Cache chaud → swap immédiat (< 1 ms, vraiment instantané)
     if (_cache[abs] && (now - _cache[abs].ts) < CACHE_TTL) {
       _swap(_cache[abs], push);
       _hideBar();
       return;
     }
 
-    // Requête déjà en vol (préchargement en cours) → attendre sans relancer
     if (_inflight[abs]) {
       _showBar();
       _inflight[abs].then(function (entry) { _swap(entry, push); _hideBar(); })
@@ -726,23 +677,20 @@ function doLogout() {
       return;
     }
 
-    // Rien en cache → fetch + barre
     _showBar();
     _fetch(abs)
       .then(function (entry) { _swap(entry, push); _hideBar(); })
       .catch(function () { _hideBar(); location.href = url; });
   }
 
-  /* ── PRÉCHARGEMENT AU SURVOL ── */
   document.addEventListener('mouseover', function (e) {
     var a = e.target.closest('a');
     if (!a) return;
     var href = a.getAttribute('href');
     if (!_isInternal(href) || a.target === '_blank' || a.download || a.hasAttribute('data-no-pjax')) return;
-    _fetch(href); // commence le fetch sans attendre
+    _fetch(href);
   }, true);
 
-  /* ── INTERCEPTION CLICS ── */
   document.addEventListener('click', function (e) {
     var a = e.target.closest('a');
     if (!a) return;
@@ -755,27 +703,23 @@ function doLogout() {
     navigate(href);
   }, true);
 
-  /* ── RETOUR / AVANT NAVIGATEUR ── */
   window.addEventListener('popstate', function () {
     navigate(location.href, false);
   });
 
-  /* ── INVALIDATION DU CACHE après soumission de formulaire ── */
   document.addEventListener('submit', function () {
-    _cache = {}; // vide tout le cache — les données ont changé
+    _cache = {};
   }, true);
 
-  /* ── Init ── */
   history.replaceState({ pjax: location.href }, '', location.href);
   _active(location.pathname);
 
-  /* ── Précharger toutes les pages du menu au démarrage ── */
   setTimeout(function () {
     document.querySelectorAll('.sidebar a').forEach(function (a) {
       var href = a.getAttribute('href');
       if (_isInternal(href)) _fetch(href);
     });
-  }, 800); // 800 ms après chargement pour ne pas bloquer le rendu initial
+  }, 800);
 
 })();
 </script>

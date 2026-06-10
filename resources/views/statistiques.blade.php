@@ -60,7 +60,6 @@ canvas{max-height:200px}
     <div style="font-size:12px;color:#555" id="statsTimestamp">—</div>
 </div>
 
-<!-- Stats grid -->
 <div class="stats-grid">
     <div class="scard c0"><div class="v" id="st_mesures">—</div><div class="l">Mesures</div><div class="delta" style="color:#555" id="st_mesures_d"></div></div>
     <div class="scard c1"><div class="v" id="st_users">—</div><div class="l">Utilisateurs</div></div>
@@ -70,7 +69,6 @@ canvas{max-height:200px}
     <div class="scard c5"><div class="v" id="st_nonlu">—</div><div class="l">Non lues</div></div>
 </div>
 
-<!-- Charts -->
 <div class="charts-grid">
     <div class="chart-card">
         <div class="chart-header">
@@ -95,7 +93,6 @@ canvas{max-height:200px}
     <canvas id="chartGaz" style="max-height:180px"></canvas>
 </div>
 
-<!-- Details -->
 <div class="detail-grid">
     <div class="detail-card">
         <h4>Capteurs (dernière mesure)</h4>
@@ -113,7 +110,6 @@ canvas{max-height:200px}
     </div>
 </div>
 
-<!-- Export bar -->
 <div class="export-bar">
     <div class="lbl">Exporter les statistiques</div>
     <div class="export-btns">
@@ -130,7 +126,6 @@ canvas{max-height:200px}
 <script>
 var chartTemperature = null, chartHumidite = null, chartGaz = null;
 
-/* ── Labels fixes 0h → 23h ── */
 function buildHourlyLabels() {
     var labels = [];
     for (var i = 0; i <= 23; i++) {
@@ -139,7 +134,6 @@ function buildHourlyLabels() {
     return labels;
 }
 
-/* ── Construit map heure→données depuis l'API horaire ── */
 function buildHourMap(rows, live) {
     var map = {};
     (rows || []).forEach(function(r) {
@@ -149,7 +143,6 @@ function buildHourMap(rows, live) {
             gaz:         r.gaz         != null ? parseFloat(r.gaz)         : null,
         };
     });
-    // Heure courante : remplacer par la valeur live (plus précise)
     if (live && !live.error) {
         var h = new Date().getHours();
         map[h] = {
@@ -192,7 +185,6 @@ function buildCharts(rows, live) {
     var humData  = labels.map(function(_, i){ var d=map[i]; return d?d.humidite:null; });
     var gazData  = labels.map(function(_, i){ var d=map[i]; return d?d.gaz:null; });
 
-    /* ── Mise à jour en place si les graphiques existent déjà ── */
     if (chartsBuilt && chartTemperature && chartHumidite && chartGaz) {
         chartTemperature.data.datasets[0].data = tempData;
         chartTemperature.update('none');
@@ -211,7 +203,6 @@ function buildCharts(rows, live) {
         return;
     }
 
-    /* ── Construction initiale ── */
     if (chartTemperature) chartTemperature.destroy();
     chartTemperature = new Chart(document.getElementById('chartTemperature').getContext('2d'), {
         type: 'line',
@@ -298,7 +289,6 @@ function buildCharts(rows, live) {
 function loadStats() {
     document.getElementById('statsTimestamp').textContent = new Date().toLocaleString('fr-FR');
 
-    /* ── Compteurs ── */
     fetch('/api/stats')
         .then(function(r){return r.json();})
         .then(function(s) {
@@ -315,7 +305,6 @@ function loadStats() {
             document.getElementById('a_lu').textContent        = Math.max(0,((s.alertesWarning||0)+(s.alertesCritiques||0))-(s.alertesNonLues||0));
         }).catch(function(){});
 
-    /* ── Détail capteurs (dernière mesure) ── */
     fetch('/api/dashboard-data')
         .then(function(r){return r.json();})
         .then(function(d) {

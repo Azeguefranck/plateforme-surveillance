@@ -36,7 +36,6 @@
 .stat-num{font-size:32px;font-weight:800;color:var(--blue);margin-bottom:4px}
 .stat-sub{font-size:11px;color:#555}
 
-/* send form */
 .send-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px}
 .send-card h3{font-size:15px;font-weight:700;color:var(--neon);margin-bottom:18px}
 .send-form{display:grid;grid-template-columns:1fr 2fr auto;gap:14px;align-items:end}
@@ -47,7 +46,6 @@
 .form-group textarea{resize:vertical;min-height:60px}
 .char-count{font-size:10px;color:#555;text-align:right;margin-top:2px}
 
-/* toggles */
 .toggles-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px}
 .toggles-card h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:16px}
 .toggles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -64,7 +62,6 @@
 .toggle-switch input:checked+.slider{background:rgba(51,255,136,.3)}
 .toggle-switch input:checked+.slider:before{background:var(--neon);transform:translateX(20px)}
 
-/* history table */
 .history-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .history-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
 .history-title{font-size:14px;font-weight:700;color:#fff}
@@ -97,7 +94,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
 
 <div id="flashArea"></div>
 
-<!-- Top cards -->
 <div class="top-grid">
     <div class="status-card">
         <h4>État du modem</h4>
@@ -138,7 +134,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- Send SMS -->
 <div class="send-card">
     <h3>&#128241; Envoyer un SMS de test</h3>
     <div class="send-form">
@@ -156,7 +151,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- Alert toggles -->
 <div class="toggles-card">
     <h3>Alertes SMS par capteur</h3>
     <div class="toggles-grid" id="togglesGrid">
@@ -191,7 +185,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- SMS History -->
 <div class="history-card">
     <div class="history-header">
         <div class="history-title">Historique des alertes SMS</div>
@@ -243,7 +236,6 @@ function sendSms() {
     const msg = document.getElementById('smsMsg').value.trim();
     if (!to || !msg) { flash('Numéro et message requis.', 'error'); return; }
     flash('&#8987; Envoi en cours via Arduino...', 'success');
-    // In production, the Arduino handles SMS via AT commands — this logs the intent.
     setTimeout(() => {
         flash('&#10003; Commande SMS envoyée. Vérifiez le port série Arduino pour confirmation.', 'success');
         const tbody = document.getElementById('smsHistoryBody');

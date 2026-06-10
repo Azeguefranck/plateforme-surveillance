@@ -80,7 +80,6 @@ try {
     <div style="font-size:12px;color:#555">Session : {{ session('user')?->email ?? '—' }}</div>
 </div>
 
-<!-- Stats -->
 <div class="stats-row">
     <div class="scard t"><div class="v">{{ $statCounts['total'] }}</div><div class="l">Total</div></div>
     <div class="scard g"><div class="v">{{ $statCounts['valide'] }}</div><div class="l">Validés</div></div>
@@ -89,7 +88,6 @@ try {
     <div class="scard d"><div class="v">{{ $statCounts['refuse'] }}</div><div class="l">Refusés</div></div>
 </div>
 
-<!-- Filters -->
 <div class="filter-bar">
     <input type="text" id="userSearch" placeholder="Rechercher nom, email..." oninput="filterUsers()">
     <select id="statusFilter" onchange="filterUsers()">
@@ -107,7 +105,6 @@ try {
     <button class="btn btn-gray" onclick="resetFilters()">&#8635; Réinitialiser</button>
 </div>
 
-<!-- Table -->
 <div class="table-card">
     <div class="toolbar">
         <div>
@@ -206,7 +203,6 @@ function _doChangeStatut(btn, userId, status) {
                         badge.className = 'badge badge-'+status;
                         badge.textContent = status.replace('_',' ');
                     }
-                    // Update buttons state
                     var btns = row.querySelectorAll('.actions-cell .btn');
                     btns.forEach(function(b) {
                         var st = null;

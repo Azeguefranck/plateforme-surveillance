@@ -71,7 +71,6 @@ tr:hover td{background:rgba(255,87,51,.03)}
     </div>
 </div>
 
-<!-- Stats -->
 <div class="stats-row">
     <div class="scard t"><div class="v" id="stTotal">—</div><div class="l">Total</div></div>
     <div class="scard r"><div class="v" id="stCrit">—</div><div class="l">Critiques</div></div>
@@ -79,7 +78,6 @@ tr:hover td{background:rgba(255,87,51,.03)}
     <div class="scard g"><div class="v" id="stLu">—</div><div class="l">Non lues</div></div>
 </div>
 
-<!-- Filters -->
 <div class="filter-bar">
     <input type="text" id="aSearch" placeholder="Rechercher..." oninput="filterAlertes()">
     <select id="aNiveau" onchange="filterAlertes()">
@@ -98,7 +96,6 @@ tr:hover td{background:rgba(255,87,51,.03)}
     </div>
 </div>
 
-<!-- Table -->
 <div class="table-card">
     <div class="table-toolbar">
         <div>

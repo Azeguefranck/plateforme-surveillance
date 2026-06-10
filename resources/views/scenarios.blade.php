@@ -55,7 +55,6 @@ border-radius:20px;
 margin-bottom:20px;
 }
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 @media(max-width:640px){

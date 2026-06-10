@@ -40,7 +40,6 @@ color:#22c55e;
 font-weight:bold;
 }
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 table{max-width:100%;width:100%}

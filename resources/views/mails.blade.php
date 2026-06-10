@@ -12,14 +12,12 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
 .card{background:linear-gradient(135deg,#0e1a38,#111c3d);border:1px solid #1e2f5a;border-radius:18px;padding:24px;margin-bottom:24px}
 
-/* Stats */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
 .stat{background:linear-gradient(135deg,#0e1a38,#111c3d);border:1px solid #1e2f5a;border-radius:14px;padding:18px;text-align:center}
 .stat-num{font-size:30px;font-weight:700;color:#33ff88}
 .stat-num.crit{color:#ff5733}
 .stat-label{font-size:11px;color:#8899cc;margin-top:5px;text-transform:uppercase;letter-spacing:.5px}
 
-/* Filtres */
 .filtres{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
 .filtres select,.filtres input{
   background:#07102a;border:1px solid #1e2f5a;color:#c7d2ff;
@@ -32,7 +30,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 }
 .btn-filtre:hover{background:rgba(51,255,136,.2)}
 
-/* Table */
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{
@@ -63,7 +60,6 @@ tbody td{padding:12px 14px;color:#c7d2ff;vertical-align:middle}
   <div style="font-size:12px;color:#5a6a99">Destinataire : franckazegue0007@gmail.com</div>
 </div>
 
-<!-- Stats -->
 <div class="stats">
   <div class="stat">
     <div class="stat-num" id="st-total">—</div>
@@ -83,7 +79,6 @@ tbody td{padding:12px 14px;color:#c7d2ff;vertical-align:middle}
   </div>
 </div>
 
-<!-- Filtres -->
 <div class="card">
   <div class="filtres">
     <select id="f-niveau">

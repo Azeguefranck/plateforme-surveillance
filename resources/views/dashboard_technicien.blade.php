@@ -22,7 +22,6 @@
 }
 .no-data-banner.visible{display:block}
 
-/* ── Panneau salle ── */
 .salle-panel{
   background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;
   padding:18px 20px 16px;margin-bottom:20px;
@@ -36,7 +35,6 @@
 .salle-panel-nom{font-size:15px;font-weight:700;color:#1e3a8a}
 .salle-panel-ts{font-size:11px;color:#94a3b8}
 
-/* ── Jauges ── */
 .gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:14px}
 .gauge-card{
   background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;
@@ -68,13 +66,11 @@
 .crit .gauge-val {color:#dc2626}
 .crit .gauge-fill{background:#ef4444}
 
-/* ── PIR badge ── */
 .pir-badge{display:inline-block;padding:5px 16px;border-radius:50px;font-size:12px;font-weight:700;margin-top:6px}
 .pir-ok {background:rgba(34,197,94,.1);color:#16a34a;border:1px solid #22c55e}
 .pir-det{background:rgba(239,68,68,.1);color:#dc2626;border:1px solid #ef4444;animation:pir-flash .8s infinite}
 @keyframes pir-flash{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* ── Alertes récentes ── */
 .alerts-section{background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-top:16px}
 .alerts-title{font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:12px}
 .alert-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px}

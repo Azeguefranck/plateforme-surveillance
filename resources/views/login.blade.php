@@ -21,7 +21,6 @@ body {
   overflow:hidden;
 }
 
-/* Background grid */
 body::before {
   content:'';
   position:fixed;inset:0;
@@ -32,7 +31,6 @@ body::before {
   pointer-events:none;
 }
 
-/* Radial glow */
 body::after {
   content:'';
   position:fixed;inset:0;
@@ -56,7 +54,6 @@ body::after {
   to{opacity:1;transform:translateY(0)}
 }
 
-/* Top bar */
 .box-top {
   text-align:center;
   margin-bottom:28px;
@@ -79,7 +76,6 @@ h1 {
 }
 h1 span{color:#33ff88}
 
-/* Alert boxes */
 .alert-box {
   display:flex;align-items:flex-start;gap:10px;
   padding:12px 14px;border-radius:10px;
@@ -90,7 +86,6 @@ h1 span{color:#33ff88}
 .alert-success{background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.3);color:#33ff88}
 .alert-warn   {background:rgba(255,214,51,.1);border:1px solid rgba(255,214,51,.3);color:#ffd633}
 
-/* Form */
 .field {
   margin-bottom:16px;
 }
@@ -112,7 +107,6 @@ h1 span{color:#33ff88}
 }
 .field input::placeholder{color:#3a4a6a}
 
-/* Password wrapper */
 .pw-wrap{position:relative}
 .pw-wrap input{padding-right:44px}
 .pw-eye{
@@ -122,7 +116,6 @@ h1 span{color:#33ff88}
 }
 .pw-eye:hover{color:#33ff88}
 
-/* Submit */
 .btn-submit {
   width:100%;padding:13px;
   background:linear-gradient(135deg,rgba(51,255,136,.15),rgba(51,255,136,.08));
@@ -137,7 +130,6 @@ h1 span{color:#33ff88}
   transform:translateY(-1px);
 }
 
-/* Links */
 .links {
   margin-top:22px;
   display:flex;flex-direction:column;gap:10px;align-items:center;
@@ -152,7 +144,6 @@ h1 span{color:#33ff88}
   background:linear-gradient(90deg,transparent,#1e2f5a,transparent);
 }
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 @media(max-width:640px){
@@ -174,7 +165,6 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
     <h1><span>Connexion</span></h1>
   </div>
 
-  {{-- Messages de statut --}}
   @if(session('error'))
     @php
       $err = session('error');

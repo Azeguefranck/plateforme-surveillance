@@ -69,7 +69,6 @@ body{
 }
 .eye-btn:hover{color:#2fa84f;}
 
-/* Barre de force */
 .strength-bar{height:4px;border-radius:4px;background:#182640;margin-top:6px;overflow:hidden;}
 .strength-fill{height:100%;width:0;transition:width .3s,background .3s;border-radius:4px;}
 

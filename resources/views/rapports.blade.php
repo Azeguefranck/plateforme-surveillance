@@ -20,7 +20,6 @@
 .btn-gray{background:transparent;border:1px solid #2a3a5a;color:#777}
 .btn-gray:hover{border-color:#aaa;color:#aaa}
 
-/* type selector */
 .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .type-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:.2s;text-align:center}
 .type-card:hover{border-color:var(--blue)}
@@ -29,7 +28,6 @@
 .type-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
 .type-desc{font-size:11px;color:#555}
 
-/* filter section */
 .filter-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
 .filter-section h4{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;font-weight:700}
 .filter-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
@@ -43,7 +41,6 @@
 .range-sep{font-size:11px;color:#555}
 .filter-extra{display:none}
 
-/* format grid */
 .format-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
 .format-section h4{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;font-weight:700}
 .format-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
@@ -66,7 +63,6 @@
 .fmt-btn.pdf{border-color:rgba(255,87,51,.3)} .fmt-btn.pdf .fmt-label{color:var(--danger)}
 .fmt-btn.backup{border-color:rgba(51,255,136,.2)} .fmt-btn.backup .fmt-label{color:var(--neon)}
 
-/* stats row */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;text-align:center}
 .stat-card .val{font-size:26px;font-weight:800;margin-bottom:4px}
@@ -76,13 +72,11 @@
 .stat-card.warn  .val{color:var(--warn)}
 .stat-card.red   .val{color:var(--danger)}
 
-/* chart */
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .chart-title{font-size:14px;font-weight:700;color:#fff}
 canvas{max-height:200px}
 
-/* table */
 .table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .table-header{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border)}
 .table-title{font-size:13px;font-weight:700;color:#fff}
@@ -128,7 +122,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- Report type selector -->
 <div class="type-grid">
     <div class="type-card selected" data-type="mesures" onclick="selectType(this,'mesures')">
         <div class="type-icon">&#127777;</div>
@@ -147,7 +140,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- Filters -->
 <div class="filter-section">
     <h4>&#9881; Filtres</h4>
     <div class="filter-row">
@@ -196,7 +188,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
         <button class="btn btn-blue" onclick="loadReport()">&#8635; Filtrer</button>
     </div>
 
-    <!-- Extra filters for mesures -->
     <div class="filter-row filter-extra" id="extraFilters" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div class="filter-group">
             <label>&#127777; Température (°C)</label>
@@ -226,7 +217,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- Export format grid -->
 <div class="format-section">
     <h4>&#8595; Exporter le rapport</h4>
     <div class="format-grid">
@@ -293,7 +283,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     </div>
 </div>
 
-<!-- Stats row -->
 <div class="stats-row">
     <div class="stat-card blue"><div class="val" id="statTotal">—</div><div class="lbl">Total enreg.</div></div>
     <div class="stat-card green"><div class="val" id="statPeriod">—</div><div class="lbl">Sur la période</div></div>
@@ -301,7 +290,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     <div class="stat-card red"><div class="val" id="statCrit">—</div><div class="lbl">Critiques</div></div>
 </div>
 
-<!-- Chart -->
 <div class="chart-card" id="chartSection">
     <div class="chart-header">
         <div class="chart-title" id="chartTitle">Évolution sur la période</div>
@@ -310,7 +298,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
     <canvas id="reportChart"></canvas>
 </div>
 
-<!-- Data table -->
 <div class="table-card">
     <div class="table-header">
         <div class="table-title" id="tableTitle">Données</div>
@@ -332,7 +319,6 @@ function selectType(el, type) {
     currentType = type;
     const labels = {mesures:'Mesures capteurs', alertes:'Alertes', salles:'Salles & Équipements'};
     document.getElementById('chartTitle').textContent = labels[type];
-    // Show/hide mesures-specific filters
     document.getElementById('extraFilters').style.display = type === 'mesures' ? 'flex' : 'none';
     document.getElementById('niveauGroup').style.display  = type === 'alertes' ? '' : 'none';
     loadReport();
@@ -533,7 +519,6 @@ function downloadBackup() {
     notify('Génération du backup complet en cours…', 'i', 4000);
 }
 
-// Load salles into dropdown
 fetch('/api/salles-list').then(r => r.json()).then(salles => {
     const sel = document.getElementById('filterSalle');
     salles.forEach(s => {

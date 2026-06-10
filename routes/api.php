@@ -6,10 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\GeoController;
 
-// Routes géographiques — proxy GeoNames dans routes/web.php (getPays, getRegions, etc.)
 
-
-// ── Métadonnées fixes des capteurs (risques & solutions) ─────────────────────
 if (!function_exists('getSeuilsMeta')) :
 function getSeuilsMeta(): array
 {
@@ -33,7 +30,6 @@ function getSeuilsMeta(): array
 }
 endif;
 
-// ── Seuils depuis storage/app/seuils.json (mis en cache par requête) ─────────
 if (!function_exists('getSeuilsValeurs')) :
 function getSeuilsValeurs(): array
 {
@@ -49,7 +45,6 @@ function getSeuilsValeurs(): array
         }
     }
 
-    // Valeurs par défaut si le fichier n'existe pas
     $cache = [
         'temperature' => ['warning' => 28,   'critique' => 32],
         'humidite'    => ['warning' => 75,   'critique' => 85],
@@ -60,8 +55,6 @@ function getSeuilsValeurs(): array
 }
 endif;
 
-// ── Compare les valeurs mesurées aux seuils, retourne les alertes actives ─────
-// $presents : clés des capteurs effectivement envoyés par l'Arduino
 if (!function_exists('analyserMesures')) :
 function analyserMesures(array $valeurs, array $presents = []): array
 {
@@ -70,7 +63,6 @@ function analyserMesures(array $valeurs, array $presents = []): array
     $meta    = getSeuilsMeta();
 
     foreach ($meta as $capteur => $m) {
-        // Ignorer si le capteur n'était pas dans la requête
         if (!empty($presents) && !in_array($capteur, $presents, true)) continue;
 
         $val  = $valeurs[$capteur] ?? null;
@@ -94,7 +86,6 @@ function analyserMesures(array $valeurs, array $presents = []): array
 }
 endif;
 
-// ── Envoi email d'alerte (warning ou critique) par fork non-bloquant ─────────
 if (!function_exists('envoyerEmailAlerte')) :
 function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = [], ?int $salleId = null): void
 {
@@ -185,7 +176,6 @@ function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = 
     $emailTo   = $adminUser->email;
     $sujetMail = $sujet;
 
-    // Envoi non-bloquant via fork pour ne pas retarder la réponse API
     if (function_exists('pcntl_fork')) {
         $pid = pcntl_fork();
         if ($pid === 0) {
@@ -202,7 +192,6 @@ function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = 
             pcntl_waitpid($pid, $status, WNOHANG);
         }
     } else {
-        // Fallback synchrone si pcntl non disponible
         try {
             Mail::html($html, function ($mail) use ($emailTo, $sujetMail) {
                 $mail->to($emailTo)->subject($sujetMail);
@@ -214,14 +203,12 @@ function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = 
 }
 endif;
 
-// ── Envoi SMS via port série (module GSM) ─────────────────────────────────────
 if (!function_exists('envoyerSMS')) :
 function envoyerSMS(array $phones, string $msg): void
 {
     if (empty($phones)) return;
     $msg = mb_substr($msg, 0, 160);
 
-    // Cherche le port série disponible
     $port = null;
     foreach (['/dev/ttyUSB0', '/dev/ttyUSB1', '/dev/ttyACM0', '/dev/ttyACM1'] as $p) {
         if (file_exists($p)) { $port = $p; break; }
@@ -247,7 +234,6 @@ function envoyerSMS(array $phones, string $msg): void
 }
 endif;
 
-// ── Collecte les numéros validés + admin fixe ────────────────────────────────
 if (!function_exists('collecterPhonesUtilisateurs')) :
 function collecterPhonesUtilisateurs(): array
 {
@@ -304,7 +290,6 @@ function envoyerSMSMouvement(string $horodatage): void
 }
 endif;
 
-// ── Charge/sauvegarde l'état des alertes (anti-spam email) ───────────────────
 if (!function_exists('chargerEtatAlertes')) :
 function chargerEtatAlertes(): array
 {
@@ -330,7 +315,6 @@ function sauvegarderEtatAlertes(array $state): void
 }
 endif;
 
-// ── Envoi email d'intrusion PIR ───────────────────────────────────────────────
 if (!function_exists('envoyerEmailMouvement')) :
 function envoyerEmailMouvement(string $horodatage, ?int $salleId): void
 {
@@ -398,7 +382,6 @@ function envoyerEmailMouvement(string $horodatage, ?int $salleId): void
 }
 endif;
 
-// ── POST /api/capteurs — reçoit les données de l'Arduino ─────────────────────
 Route::post('/capteurs', function (Request $request) {
 
     $temperature  = (float) ($request->temperature   ?? 0);
@@ -407,14 +390,12 @@ Route::post('/capteurs', function (Request $request) {
     $pir     = (bool) ($request->pir      ?? false);
     $salleId = $request->salle_id ? (int) $request->salle_id : null;
 
-    // Liste des capteurs présents dans la requête (non null = connecté)
     $capteursPresents = array_keys(array_filter([
         'temperature' => $request->has('temperature') || $request->temperature !== null,
         'humidite'    => $request->has('humidite')    || $request->humidite    !== null,
         'gaz'         => $request->has('gaz')         || $request->gaz         !== null,
     ]));
 
-    // Enregistrer la mesure en base
     DB::table('mesures')->insert([
         'temperature'   => $temperature,
         'humidite'      => $humidite,
@@ -438,7 +419,7 @@ Route::post('/capteurs', function (Request $request) {
     $nbAlertes      = 0;
     $smsPending     = [];
     $poids          = ['normal' => 0, 'warning' => 1, 'critique' => 2];
-    $EMAIL_COOLDOWN = 720; // 12 min entre deux rappels par capteur
+    $EMAIL_COOLDOWN = 720;
 
     foreach (['temperature', 'humidite', 'gaz'] as $cap) {
         $newNiveau = isset($alertMap[$cap]) ? $alertMap[$cap]['niveau'] : 'normal';
@@ -453,7 +434,6 @@ Route::post('/capteurs', function (Request $request) {
 
         if (!$isEscalade && !$cooldownPasse) continue;
 
-        // Insère en base uniquement si escalade de niveau
         if ($isEscalade) {
             DB::table('alertes')->insert([
                 'type'          => $alertMap[$cap]['capteur'],
@@ -487,7 +467,6 @@ Route::post('/capteurs', function (Request $request) {
         ];
     }
 
-    // PIR : cooldown 10 min
     $PIR_EMAIL_COOLDOWN = 600;
     if ($pir && ($seuils['pir']['actif'] ?? 1)) {
         $lastPirEmail = $prevState['pir_last'] ?? 0;
@@ -511,7 +490,6 @@ Route::post('/capteurs', function (Request $request) {
 
     sauvegarderEtatAlertes($newState);
 
-    // Envoi SMS en arrière-plan (ne bloque pas la réponse JSON)
     if (!empty($smsPending)) {
         $phones = collecterPhonesUtilisateurs();
         if (!empty($phones)) {
@@ -532,10 +510,9 @@ Route::post('/capteurs', function (Request $request) {
 });
 
 
-// ── GET /api/live-data — données brutes du fichier relay ─────────────────────
 Route::get('/live-data', function () {
     $file     = '/tmp/latest_sensor.json';
-    $seuilAge = 6; // secondes — au-delà = Arduino déconnecté
+    $seuilAge = 6;
 
     if (!file_exists($file) || (time() - filemtime($file)) > $seuilAge) {
         return response()->json(['error' => 'no_data'], 204);
@@ -559,7 +536,6 @@ Route::get('/live-data', function () {
 });
 
 
-// ── GET /api/mesures-live — données temps réel par salle ─────────────────────
 Route::get('/mesures-live', function () {
     $seuilAge = 6;
     $liveFile = '/tmp/latest_sensor.json';
@@ -568,7 +544,6 @@ Route::get('/mesures-live', function () {
         $salles   = DB::table('salles')->get()->keyBy('id');
         $serveurs = DB::table('serveurs')->get()->groupBy('salle_id');
 
-        // Enrichit une entrée salle avec son nom et ses équipements
         $enrichir = function (int|string|null $sid) use ($salles, $serveurs): array {
             $salle  = $salles[$sid] ?? null;
             $equips = ($serveurs[$sid] ?? collect())
@@ -582,7 +557,6 @@ Route::get('/mesures-live', function () {
 
         $result = [];
 
-        // Lit le fichier relay si récent (Arduino connecté via USB)
         if (file_exists($liveFile) && (time() - filemtime($liveFile)) <= $seuilAge) {
             $d   = json_decode(file_get_contents($liveFile), true) ?? [];
             $sid = $d['salle_id'] ?? null;
@@ -598,7 +572,6 @@ Route::get('/mesures-live', function () {
             ], $enrichir($sid));
         }
 
-        // Si Arduino déconnecté → objet vide → dashboard affiche "déconnecté"
         return response()->json($result ?: (object) []);
     } catch (\Exception $e) {
         return response()->json((object) [], 500);
@@ -606,7 +579,6 @@ Route::get('/mesures-live', function () {
 });
 
 
-// ── GET /api/alertes-mails — alertes paginées avec stats ─────────────────────
 Route::get('/alertes-mails', function (Request $request) {
     $niveau  = $request->niveau   ?? '';
     $debut   = $request->debut    ?? '';
@@ -633,7 +605,6 @@ Route::get('/alertes-mails', function (Request $request) {
     return response()->json(['data' => $rows, 'total' => $total, 'stats' => $stats]);
 });
 
-// ── GET /api/mesures-recentes — dernières N mesures pour les graphiques ───────
 Route::get('/mesures-recentes', function (Request $request) {
     $n       = min((int) ($request->n ?? 30), 100);
     $mesures = DB::table('mesures')->latest()->limit($n)->get()->reverse()->values();
@@ -649,7 +620,6 @@ Route::get('/mesures-recentes', function (Request $request) {
 });
 
 
-// ── GET /api/dashboard-data — dernière mesure pour le dashboard ──────────────
 Route::get('/dashboard-data', function () {
     $mesure = DB::table('mesures')->latest()->first();
     if (!$mesure) {
@@ -661,7 +631,6 @@ Route::get('/dashboard-data', function () {
 });
 
 
-// ── GET /api/stats — compteurs globaux ───────────────────────────────────────
 Route::get('/stats', function () {
     return response()->json([
         'totalMesures'      => DB::table('mesures')->count(),
@@ -674,13 +643,11 @@ Route::get('/stats', function () {
 });
 
 
-// ── GET /api/seuils — seuils actifs en JSON ───────────────────────────────────
 Route::get('/seuils', function () {
     return response()->json(getSeuilsValeurs());
 });
 
 
-// ── GET /api/historique-data — historique filtré mesures ou alertes ───────────
 Route::get('/historique-data', function (Request $request) {
     $type    = $request->type    ?? 'mesures';
     $debut   = $request->debut   ?? now()->subDays(7)->toDateString();
@@ -722,7 +689,6 @@ Route::get('/historique-data', function (Request $request) {
 });
 
 
-// ── GET /api/mesures-horaires — moyennes par heure du jour ───────────────────
 Route::get('/mesures-horaires', function () {
     try {
         $today = now()->toDateString();
@@ -743,7 +709,6 @@ Route::get('/mesures-horaires', function () {
 });
 
 
-// ── GET /api/alertes-recentes — dernières alertes ────────────────────────────
 Route::get('/alertes-recentes', function (Request $request) {
     $limit = min((int) ($request->limit ?? 30), 500);
     try {
@@ -754,7 +719,6 @@ Route::get('/alertes-recentes', function (Request $request) {
 });
 
 
-// ── POST /api/alertes/lire — marquer alertes comme lues ─────────────────────
 Route::post('/alertes/lire', function (Request $request) {
     $id = $request->id;
     if ($id === 'all') {
@@ -766,7 +730,6 @@ Route::post('/alertes/lire', function (Request $request) {
 });
 
 
-// ── GET /api/salles-list — liste légère pour les dropdowns ───────────────────
 Route::get('/salles-list', function () {
     try {
         return response()->json(DB::table('salles')->select('id', 'nom')->orderBy('nom')->get());
@@ -776,7 +739,6 @@ Route::get('/salles-list', function () {
 });
 
 
-// ── GET /api/filter — filtrage avancé multi-types ────────────────────────────
 Route::get('/filter', function (Request $request) {
     $allowed = ['mesures', 'alertes', 'salles', 'serveurs'];
     $type    = in_array($request->type, $allowed) ? $request->type : 'mesures';
@@ -811,7 +773,6 @@ Route::get('/filter', function (Request $request) {
             $data  = $q->limit($limit)->get();
             return response()->json(['data' => $data, 'total' => $total]);
         }
-        // Type mesures
         $q = DB::table('mesures')
             ->select(['id','temperature','humidite','gaz','pir_detecte','salle_id','created_at'])
             ->whereBetween('created_at', [$debut . ' 00:00:00', $fin . ' 23:59:59'])
@@ -832,8 +793,6 @@ Route::get('/filter', function (Request $request) {
 });
 
 
-// ── GET /api/seuils-arduino — CSV pour l'Arduino ─────────────────────────────
-// Format : tw,tc,hw,hc,gw,gc,pir
 Route::get('/seuils-arduino', function () {
     $s   = getSeuilsValeurs();
     $csv = implode(',', [
@@ -849,7 +808,6 @@ Route::get('/seuils-arduino', function () {
 });
 
 
-// ── GET /api/phones — numéros pour les SMS ───────────────────────────────────
 Route::get('/phones', function () {
     $phones = [];
     try {
@@ -879,7 +837,6 @@ Route::get('/phones', function () {
 });
 
 
-// ── DELETE /api/alerte/{id} — supprime une alerte (session requise) ──────────
 Route::delete('/alerte/{id}', function (int $id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     DB::table('alertes')->where('id', $id)->delete();

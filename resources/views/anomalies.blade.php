@@ -64,7 +64,6 @@
     </div>
 </div>
 
-<!-- Compteurs -->
 <div class="stats-row">
     <div class="scard r"><div class="v" id="stCrit">—</div><div class="l">Critiques</div></div>
     <div class="scard w"><div class="v" id="stWarn">—</div><div class="l">Warnings</div></div>
@@ -72,13 +71,11 @@
     <div class="scard b"><div class="v" id="stTotal">—</div><div class="l">Total</div></div>
 </div>
 
-<!-- Capteurs en état anormal (temps réel) -->
 <div class="sensors-alert" id="sensorAlerts" style="display:none">
     <h3>&#128308; Capteurs en état anormal (temps réel)</h3>
     <div class="sensor-rows" id="sensorRows"></div>
 </div>
 
-<!-- Grille des anomalies -->
 <div id="anomaliesGrid" class="anomalies-grid">
     <div style="grid-column:1/-1;text-align:center;padding:40px;color:#33b5ff">
         Chargement des anomalies...
@@ -110,7 +107,6 @@ function loadAnomalies() {
     var grid = document.getElementById('anomaliesGrid');
     if (!grid) return;
 
-    // Charger seuils + alertes en parallèle
     var pSeuils  = fetch('/api/seuils').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; });
     var pAlerts  = fetch('/api/alertes-recentes?limit=200').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; });
     var pLive    = fetch('/api/dashboard-data').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; });
@@ -120,7 +116,6 @@ function loadAnomalies() {
         var alertes = Array.isArray(results[1]) ? results[1] : [];
         var live    = results[2] || {};
 
-        // Compteurs
         var crit     = 0, warn = 0, resolved = 0;
         for (var i = 0; i < alertes.length; i++) {
             if (alertes[i].niveau === 'critique') crit++;
@@ -136,7 +131,6 @@ function loadAnomalies() {
         if (elRes)  elRes.textContent  = resolved;
         if (elTot)  elTot.textContent  = alertes.length;
 
-        // Capteurs en temps réel
         var capteurNames = ['temperature','humidite','gaz'];
         var liveAlerts = [];
         for (var j = 0; j < capteurNames.length; j++) {
@@ -170,7 +164,6 @@ function loadAnomalies() {
             }
         }
 
-        // Grille des anomalies
         renderAnomalies(alertes);
     }).catch(function(err) {
         var grid = document.getElementById('anomaliesGrid');
@@ -278,7 +271,6 @@ function marquerTout() {
         .catch(function(){ notify('Erreur.', 'e'); });
 }
 
-// Chargement initial + rafraîchissement automatique
 loadAnomalies();
 setInterval(loadAnomalies, 10000);
 </script>

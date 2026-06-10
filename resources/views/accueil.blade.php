@@ -6,7 +6,6 @@
 <title>Surveillance des Salles Serveurs</title>
 <style>
 
-/* ── Reset ─────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
@@ -17,7 +16,6 @@ html, body {
   color:#fff;
 }
 
-/* ── Background animated grid ──────────────────────────── */
 .bg-grid {
   position:fixed; inset:0; z-index:0;
   background-image:
@@ -31,7 +29,6 @@ html, body {
   100% { background-position:0 50px,50px 0; }
 }
 
-/* ── Radial glow behind content ─────────────────────────── */
 .bg-glow {
   position:fixed; inset:0; z-index:0;
   background:
@@ -39,7 +36,6 @@ html, body {
     radial-gradient(ellipse 80% 40% at 50% 100%, rgba(0,60,180,.12) 0%, transparent 60%);
 }
 
-/* ── Scan line ──────────────────────────────────────────── */
 .scan-line {
   position:fixed; left:0; right:0; height:1px; z-index:1;
   background:linear-gradient(90deg, transparent 0%, rgba(0,255,136,.5) 40%, rgba(0,255,136,.8) 50%, rgba(0,255,136,.5) 60%, transparent 100%);
@@ -48,14 +44,12 @@ html, body {
 }
 @keyframes scanDown { 0%{top:-1px} 100%{top:100vh} }
 
-/* ── Corner brackets ───────────────────────────────────── */
 .corner { position:fixed; width:50px; height:50px; opacity:.6; }
 .corner-tl { top:18px; left:18px; border-top:2px solid #00ff88; border-left:2px solid #00ff88; border-radius:4px 0 0 0; }
 .corner-tr { top:18px; right:18px; border-top:2px solid #00ff88; border-right:2px solid #00ff88; border-radius:0 4px 0 0; }
 .corner-bl { bottom:18px; left:18px; border-bottom:2px solid #00ff88; border-left:2px solid #00ff88; border-radius:0 0 0 4px; }
 .corner-br { bottom:18px; right:18px; border-bottom:2px solid #00ff88; border-right:2px solid #00ff88; border-radius:0 0 4px 0; }
 
-/* ── Particles ──────────────────────────────────────────── */
 .particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
 .p {
   position:absolute; border-radius:50%; background:#00ff88;
@@ -68,7 +62,6 @@ html, body {
   100% { transform:translateY(-30px) scale(1); opacity:0; }
 }
 
-/* ── Main page layout ───────────────────────────────────── */
 .page {
   position:relative; z-index:2;
   width:100%; height:100vh;
@@ -78,7 +71,6 @@ html, body {
   padding:16px 20px;
 }
 
-/* ── Brand line ─────────────────────────────────────────── */
 .brand {
   display:flex; align-items:center; gap:12px;
   font-size:11px; letter-spacing:5px; color:#00ff88;
@@ -92,7 +84,6 @@ html, body {
 }
 .brand-line.r { transform:scaleX(-1); }
 
-/* ── Main title ─────────────────────────────────────────── */
 .main-title {
   font-size:clamp(20px, 4vw, 52px);
   font-weight:900; letter-spacing:2px;
@@ -111,7 +102,6 @@ html, body {
   opacity:0; animation:fadeUp .7s .35s forwards;
 }
 
-/* ── Server room visual ─────────────────────────────────── */
 .server-visual {
   width:min(680px, 92vw);
   height:min(185px, 26vh);
@@ -127,27 +117,23 @@ html, body {
   margin:10px 0;
 }
 
-/* Floor glow */
 .sv-floor {
   position:absolute; bottom:0; left:0; right:0;
   height:12px;
   background:linear-gradient(180deg, rgba(0,255,136,.08) 0%, transparent 100%);
 }
-/* Ceiling ambient */
 .sv-ceil {
   position:absolute; top:0; left:0; right:0;
   height:3px;
   background:linear-gradient(90deg, transparent 0%, rgba(0,80,255,.4) 30%, rgba(0,255,136,.5) 50%, rgba(0,80,255,.4) 70%, transparent 100%);
 }
 
-/* Rack container */
 .racks {
   display:flex; align-items:flex-end;
   height:100%; padding:10px 14px 12px;
   gap:8px; justify-content:center;
 }
 
-/* Individual rack */
 .rack {
   flex:1; max-width:68px;
   background:linear-gradient(180deg, #0c1d3e 0%, #07101f 100%);
@@ -172,7 +158,6 @@ html, body {
   background:rgba(0,255,136,.35); filter:blur(6px);
 }
 
-/* Server unit row */
 .unit {
   height:7px; border-radius:2px;
   background:linear-gradient(90deg, #091428, #162848);
@@ -185,7 +170,6 @@ html, body {
   background:#00ff88; opacity:.5;
 }
 
-/* LEDs */
 .led {
   width:4px; height:4px; border-radius:50%;
   animation:ledBlink 1.2s ease-in-out infinite;
@@ -197,7 +181,6 @@ html, body {
 .led.y { background:#ffd633; box-shadow:0 0 5px #ffd633; }
 @keyframes ledBlink { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-/* Monitoring screens */
 .sv-screens {
   position:absolute; top:10px; right:14px;
   display:flex; flex-direction:column; gap:6px;
@@ -218,7 +201,6 @@ html, body {
   line-height:1.5; opacity:.75; font-family:monospace;
 }
 
-/* Network cable visual */
 .sv-cables {
   position:absolute; bottom:12px; left:14px;
   display:flex; gap:3px;
@@ -231,7 +213,6 @@ html, body {
 .cable.y { background:#ffd633; height:18px; }
 .cable.r { background:#ff4444; height:12px; }
 
-/* ── Buttons ─────────────────────────────────────────────── */
 .buttons {
   display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
   opacity:0; animation:fadeUp .7s .6s forwards;
@@ -253,7 +234,6 @@ html, body {
 }
 .btn:hover::after { transform:translateY(0); }
 
-/* Register button — neon green */
 .btn-register {
   background:transparent;
   border:2px solid #00ff88; color:#00ff88;
@@ -267,7 +247,6 @@ html, body {
   text-shadow:0 0 8px rgba(0,255,136,.6);
 }
 
-/* Login button — blue */
 .btn-login {
   background:linear-gradient(135deg, #08266a 0%, #0c3090 100%);
   border:2px solid #1a4aaa; color:#90b8ff;
@@ -283,7 +262,6 @@ html, body {
 
 .btn-ico { font-size:15px; line-height:1; }
 
-/* ── Bottom status strip ─────────────────────────────────── */
 .status-strip {
   position:fixed; bottom:16px; left:0; right:0;
   display:flex; justify-content:center; gap:28px;
@@ -304,13 +282,11 @@ html, body {
 .sdot.y { background:#ffd633; box-shadow:0 0 6px #ffd633; animation-delay:1s; }
 @keyframes dotPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.6)} }
 
-/* ── Fade up ─────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity:0; transform:translateY(16px); }
   to   { opacity:1; transform:translateY(0); }
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
 @media(max-width:620px){
   .main-title { font-size:20px; letter-spacing:1px; }
   .server-visual { height:min(140px, 22vh); }
@@ -326,7 +302,6 @@ html, body {
   .brand { font-size:9px; letter-spacing:3px; }
 }
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 @media(max-width:640px){
@@ -338,28 +313,22 @@ body{overflow-x:hidden}
 </head>
 <body>
 
-<!-- Backgrounds -->
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 <div class="scan-line"></div>
 
-<!-- Corner brackets -->
 <div class="corner corner-tl"></div>
 <div class="corner corner-tr"></div>
 <div class="corner corner-bl"></div>
 <div class="corner corner-br"></div>
 
-<!-- Floating particles -->
 <div class="particles" id="particles"></div>
 
-<!-- Main content -->
 <div class="page">
 
-  <!-- Title -->
   <h1 class="main-title">SURVEILLANCE DES PARAMÈTRES DES ÉQUIPEMENTS<br><em>D'UNE SALLE SERVEURS</em></h1>
   <div class="title-rule"></div>
 
-  <!-- Server room visual -->
   <div class="server-visual">
     <div class="sv-ceil"></div>
 
@@ -450,9 +419,8 @@ body{overflow-x:hidden}
         <div class="unit"><div class="led g"></div></div>
       </div>
 
-    </div><!-- /racks -->
+    </div>
 
-    <!-- Monitoring screens (top-right) -->
     <div class="sv-screens">
       <div class="sv-screen">
         <div class="sv-screen-txt">TEMP: 24°C<br>HUM:  46%</div>
@@ -468,7 +436,6 @@ body{overflow-x:hidden}
       </div>
     </div>
 
-    <!-- Cable bundle -->
     <div class="sv-cables">
       <div class="cable g" style="height:22px"></div>
       <div class="cable b" style="height:16px"></div>
@@ -480,18 +447,16 @@ body{overflow-x:hidden}
     </div>
 
     <div class="sv-floor"></div>
-  </div><!-- /server-visual -->
+  </div>
 
-  <!-- Action buttons -->
   <div class="buttons">
     <a href="/login" class="btn btn-login">
       <span class="btn-ico">⊙</span> Se connecter
     </a>
   </div>
 
-</div><!-- /page -->
+</div>
 
-<!-- Status strip -->
 <div class="status-strip">
   <div class="sdot-item"><div class="sdot g"></div> Système actif</div>
   <div class="sdot-item"><div class="sdot b"></div> IoT connecté</div>
@@ -499,7 +464,6 @@ body{overflow-x:hidden}
 </div>
 
 <script>
-// Generate floating particles
 (function(){
   const c = document.getElementById('particles');
   for(let i = 0; i < 20; i++){

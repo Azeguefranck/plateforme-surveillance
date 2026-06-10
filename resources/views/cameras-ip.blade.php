@@ -12,7 +12,6 @@ input,select,textarea{user-select:text;-webkit-user-select:text;cursor:auto}
 
 body{background:#050816;color:#fff;min-height:100vh;padding:0}
 
-/* ── Top bar ── */
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
   background:#081126;padding:14px 20px;
@@ -48,10 +47,8 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 }
 .btn-check-all:hover{background:rgba(57,255,20,.15)}
 
-/* ── Main content ── */
 .page-body{padding:20px;max-width:1400px}
 
-/* ── Stats row ── */
 .stats{
   display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
   margin-bottom:18px;
@@ -71,17 +68,14 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .stat-offline i{color:#ff5733}
 .stat-pending i{color:#ffd633}
 
-/* ── Action bar ── */
 .action-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 
-/* ── Camera grid ── */
 .cameras-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
   gap:16px;
 }
 
-/* ── Empty state ── */
 .empty-state{
   grid-column:1/-1;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -92,7 +86,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .empty-state p{font-size:15px;font-weight:700}
 .empty-state small{font-size:12px;opacity:.7;text-align:center}
 
-/* ── Camera card ── */
 .cam-card{
   background:#0e1a38;border:1px solid #1e2f5a;border-radius:14px;
   overflow:hidden;transition:.2s;
@@ -121,12 +114,10 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .status-offline{background:rgba(255,87,51,.12);color:#ff5733;border:1px solid rgba(255,87,51,.3)}
 .status-pending{background:rgba(255,214,51,.1);color:#ffd633;border:1px solid rgba(255,214,51,.25)}
 
-/* Signal bars */
 .signal-bars{display:flex;align-items:flex-end;gap:2px;height:16px}
 .sig-bar{width:4px;background:#1e2f5a;border-radius:1px;transition:.3s}
 .sig-bar.sig-on{background:#33ff88}
 
-/* Camera stream area */
 .cam-stream{
   height:160px;background:#040d1e;
   display:flex;align-items:center;justify-content:center;
@@ -141,7 +132,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .stream-placeholder i{font-size:32px}
 .stream-placeholder span{font-size:11px;letter-spacing:.5px}
 
-/* Camera info */
 .cam-info{padding:0 14px 10px}
 .cam-name{font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -155,7 +145,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .cam-ping i{color:#33ff88;width:12px;text-align:center}
 .cam-ping{color:#33ff88}
 
-/* Camera actions */
 .cam-actions{
   display:flex;gap:6px;padding:8px 14px 12px;
   border-top:1px solid #0e1a38;
@@ -171,7 +160,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .cam-actions button i{font-size:12px}
 .cam-actions button.btn-ping-busy{opacity:.6;cursor:wait}
 
-/* ── Modal overlay ── */
 .modal-overlay{
   display:none;position:fixed;inset:0;
   background:rgba(2,5,18,.88);backdrop-filter:blur(10px);
@@ -236,7 +224,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 }
 .btn-save:hover{background:rgba(51,181,255,.22);box-shadow:0 0 16px rgba(51,181,255,.25)}
 
-/* ── Confirm dialog ── */
 .confirm-overlay{
   display:none;position:fixed;inset:0;
   background:rgba(2,5,18,.88);backdrop-filter:blur(10px);
@@ -259,7 +246,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .confirm-yes{background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.35);color:#ff5733}
 .confirm-yes:hover{background:#ff5733;color:#fff}
 
-/* ── Toast ── */
 @keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
 @keyframes tOut{from{opacity:1}to{opacity:0;transform:translateX(110%)}}
 #toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
@@ -275,7 +261,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
 .toast.w{background:rgba(22,18,6,.95);border:1px solid #ffd633;color:#ffd633}
 .toast.i{background:rgba(6,14,22,.95);border:1px solid #33b5ff;color:#33b5ff}
 
-/* ── Responsive ── */
 @media(max-width:600px){
   .topbar{padding:12px 14px}
   .page-title{font-size:15px}
@@ -285,7 +270,6 @@ body{background:#050816;color:#fff;min-height:100vh;padding:0}
   .form-row .field-sm{flex:1}
 }
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 @media(max-width:640px){
@@ -301,7 +285,6 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
 </head>
 <body>
 
-<!-- Top bar -->
 <div class="topbar">
   <div class="topbar-left">
     <a href="/dashboard" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
@@ -312,10 +295,8 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
   </button>
 </div>
 
-<!-- Page body -->
 <div class="page-body">
 
-  <!-- Stats -->
   <div class="stats">
     <div class="stat-card stat-total">
       <i class="fa-solid fa-video"></i>
@@ -347,14 +328,12 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
     </div>
   </div>
 
-  <!-- Action bar -->
   <div class="action-bar">
     <button class="btn-check-all" onclick="pingAll()">
       <i class="fa-solid fa-satellite-dish"></i> Vérifier toutes les caméras
     </button>
   </div>
 
-  <!-- Grid -->
   <div class="cameras-grid" id="camerasGrid">
     <div class="empty-state" id="emptyState" style="display:none">
       <i class="fa-solid fa-video-slash"></i>
@@ -365,7 +344,6 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
 
 </div>
 
-<!-- Add/Edit modal -->
 <div class="modal-overlay" id="camModal">
   <div class="modal">
     <div class="modal-header">
@@ -429,7 +407,6 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
   </div>
 </div>
 
-<!-- Confirm delete -->
 <div class="confirm-overlay" id="confirmDlg">
   <div class="confirm-box">
     <div class="confirm-icon"><i class="fa-solid fa-trash"></i></div>
@@ -442,7 +419,6 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
   </div>
 </div>
 
-<!-- Toasts -->
 <div id="toasts"></div>
 
 <script>
@@ -450,7 +426,6 @@ const STORAGE_KEY = 'supserver_cameras_v2';
 let _deletePendingId = null;
 let _editingId = null;
 
-/* ─── Storage ─────────────────────────────────── */
 function getCameras() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch(e) { return []; }
@@ -459,7 +434,6 @@ function saveCameras(cams) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cams));
 }
 
-/* ─── Type maps ────────────────────────────────── */
 const TYPE_ICONS = {
   ip:'fa-video', ptz:'fa-camera-rotate', fisheye:'fa-circle',
   thermal:'fa-fire', pir:'fa-person-rays', ir:'fa-moon'
@@ -469,7 +443,6 @@ const TYPE_LABELS = {
   thermal:'Thermique', pir:'PIR Mouvement', ir:'Infrarouge'
 };
 
-/* ─── Toast ───────────────────────────────────── */
 function toast(msg, type, dur) {
   type = type||'s'; dur = dur||3500;
   const icons = {s:'<i class="fa-solid fa-check"></i>', e:'<i class="fa-solid fa-xmark"></i>', w:'<i class="fa-solid fa-triangle-exclamation"></i>', i:'<i class="fa-solid fa-circle-info"></i>'};
@@ -486,7 +459,6 @@ function dismissToast(el) {
   setTimeout(() => el.remove(), 220);
 }
 
-/* ─── Render ──────────────────────────────────── */
 function renderCameras() {
   const cams = getCameras();
   const grid = document.getElementById('camerasGrid');
@@ -502,7 +474,6 @@ function renderCameras() {
   document.getElementById('stat-offline').textContent = offline;
   document.getElementById('stat-pending').textContent = pending;
 
-  /* Remove old cards */
   grid.querySelectorAll('.cam-card').forEach(c => c.remove());
 
   if (total === 0) { empty.style.display = 'flex'; return; }
@@ -586,7 +557,6 @@ function escAttr(s) {
   return String(s||'').replace(/"/g,'&quot;');
 }
 
-/* ─── Modal ───────────────────────────────────── */
 function openAddModal() {
   _editingId = null;
   document.getElementById('modal-title').textContent = 'Ajouter une caméra';
@@ -660,7 +630,6 @@ function saveCamera() {
   renderCameras();
 }
 
-/* ─── Delete ──────────────────────────────────── */
 function askDelete(id) {
   _deletePendingId = id;
   document.getElementById('confirmDlg').classList.add('open');
@@ -679,7 +648,6 @@ function doDelete() {
   toast('Caméra supprimée.', 'w');
 }
 
-/* ─── Ping ────────────────────────────────────── */
 function pingCamera(id, btn) {
   const cam = getCameras().find(c => c.id === id);
   if (!cam) return;
@@ -725,7 +693,6 @@ function pingAll() {
   cams.forEach(cam => pingCamera(cam.id));
 }
 
-/* ─── Screenshot / Open stream ──────────────── */
 function openStream(id) {
   const cam = getCameras().find(c => c.id === id);
   if (!cam) return;
@@ -733,7 +700,6 @@ function openStream(id) {
   window.open(url, '_blank');
 }
 
-/* ─── Keyboard ────────────────────────────────── */
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeModal();
@@ -747,7 +713,6 @@ document.getElementById('confirmDlg').addEventListener('click', function(e) {
   if (e.target === this) closeConfirm();
 });
 
-/* ─── Init ────────────────────────────────────── */
 renderCameras();
 </script>
 </body>

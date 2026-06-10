@@ -11,7 +11,6 @@
 .btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue)}
 .btn-blue:hover{background:var(--blue);color:#000}
 
-/* tabs */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px}
 .tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:#666;transition:.2s;white-space:nowrap}
 .tab:hover{color:#aaa;background:rgba(255,255,255,.04)}
@@ -23,7 +22,6 @@
 .tab.active.pwr{color:#cc88ff}
 .tab.active.alrt{color:var(--danger)}
 
-/* filter bar */
 .filter-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px}
 .filter-group{display:flex;flex-direction:column;gap:5px}
 .filter-group label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
@@ -31,7 +29,6 @@
 .filter-group input:focus,.filter-group select:focus{border-color:var(--blue)}
 .filter-group select option{background:#0e1a38}
 
-/* stats strip */
 .stats-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
 .stat-s{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
 .stat-s .v{font-size:22px;font-weight:800;margin-bottom:2px}
@@ -42,13 +39,11 @@
 .stat-s.red   .v{color:var(--danger)}
 .stat-s.purple .v{color:#cc88ff}
 
-/* chart */
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .chart-title{font-size:13px;font-weight:700;color:#fff}
 canvas{max-height:180px}
 
-/* table */
 .table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .table-toolbar{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
 .table-toolbar .title{font-size:13px;font-weight:700;color:#fff}
@@ -65,7 +60,6 @@ tr:hover td{background:rgba(51,181,255,.03)}
 .no-data{text-align:center;padding:40px;color:#555;font-size:12px}
 .loading{text-align:center;padding:40px;color:var(--blue);font-size:12px}
 
-/* pagination */
 .pagination{display:flex;justify-content:center;align-items:center;gap:8px;padding:14px;border-top:1px solid var(--border)}
 .page-btn{background:#07102a;border:1px solid var(--border);border-radius:6px;color:#aaa;padding:5px 12px;cursor:pointer;font-size:12px}
 .page-btn:hover{border-color:var(--blue);color:#fff}
@@ -84,7 +78,6 @@ table{display:block;overflow-x:auto}
     <div style="font-size:12px;color:#555" id="histTimestamp">—</div>
 </div>
 
-<!-- Tabs -->
 <div class="tabs">
     <div class="tab active" data-tab="all"     onclick="switchTab(this,'all')">Toutes mesures</div>
     <div class="tab" data-tab="alertes" onclick="switchTab(this,'alertes')">Alertes</div>
@@ -93,7 +86,6 @@ table{display:block;overflow-x:auto}
     <div class="tab" data-tab="gaz" onclick="switchTab(this,'gaz')">Gaz</div>
 </div>
 
-<!-- Filter bar -->
 <div class="filter-bar">
     <div class="filter-group">
         <label>Date début</label>
@@ -137,7 +129,6 @@ table{display:block;overflow-x:auto}
             <option value="critique">Critique</option>
         </select>
     </div>
-    <!-- Sensor range filters — shown per tab -->
     <div class="filter-group" id="rangeGroup" style="display:none">
         <label id="rangeLabel">Plage</label>
         <div style="display:flex;gap:5px;align-items:center">
@@ -149,7 +140,6 @@ table{display:block;overflow-x:auto}
     <button class="btn btn-blue" onclick="loadHistory()">&#8635; Filtrer</button>
 </div>
 
-<!-- Export formats -->
 <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px">
   <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:12px">&#8595; Exporter l'historique</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px">
@@ -183,7 +173,6 @@ table{display:block;overflow-x:auto}
   </div>
 </div>
 
-<!-- Stats strip -->
 <div class="stats-strip">
     <div class="stat-s blue"><div class="v" id="hTotal">—</div><div class="l">Total</div></div>
     <div class="stat-s green"><div class="v" id="hMin">—</div><div class="l">Min</div></div>
@@ -192,7 +181,6 @@ table{display:block;overflow-x:auto}
     <div class="stat-s red"><div class="v" id="hAlerts">—</div><div class="l">Alertes</div></div>
 </div>
 
-<!-- Chart -->
 <div class="chart-card" id="histChartCard" style="display:none">
     <div class="chart-header">
         <div class="chart-title" id="chartTitle">Évolution</div>
@@ -201,7 +189,6 @@ table{display:block;overflow-x:auto}
     <canvas id="histChart"></canvas>
 </div>
 
-<!-- Table -->
 <div class="table-card">
     <div class="table-toolbar">
         <div class="title" id="tableTitle">Historique</div>
@@ -235,7 +222,6 @@ function switchTab(el, tab) {
     if (tabStyles[tab]) el.classList.add(tabStyles[tab]);
     currentTab = tab;
     document.getElementById('niveauGroup').style.display = tab === 'alertes' ? '' : 'none';
-    // Show sensor range filter for sensor-specific tabs
     const rangeGroup = document.getElementById('rangeGroup');
     if (rangeLabels[tab]) {
         rangeGroup.style.display = '';
@@ -273,7 +259,6 @@ function loadHistory() {
 
     const type = currentTab === 'alertes' ? 'alertes' : 'mesures';
     let url = `/api/historique-data?type=${type}&debut=${debut}&fin=${fin}&niveau=${niveau}&limit=${limit}&salle_id=${salleId}`;
-    // Append sensor range param for active tab
     const rangeParamMap = {temperature:['temp_min','temp_max'], humidite:['hum_min','hum_max'], gaz:['gaz_min','gaz_max']};
     if (rangeParamMap[currentTab]) {
         const [minKey, maxKey] = rangeParamMap[currentTab];
@@ -439,7 +424,6 @@ function exportHistory(format) {
     if (typeof notify === 'function') notify('Téléchargement ' + (labels[format]||format.toUpperCase()) + ' en cours...','i',2500);
 }
 
-// Load salles into dropdown
 fetch('/api/salles-list').then(r => r.json()).then(salles => {
     const sel = document.getElementById('hSalle');
     salles.forEach(s => {

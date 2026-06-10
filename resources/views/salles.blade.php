@@ -72,7 +72,6 @@
 .modal-close{float:right;background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;margin-top:-4px}
 .modal-close:hover{color:#fff}
 
-/* ── Live capteurs sur carte salle ── */
 .room-live{
   margin:10px 0;padding:10px 12px;border-radius:10px;
   background:rgba(51,181,255,.05);border:1px solid rgba(51,181,255,.15);
@@ -104,7 +103,6 @@
 <div class="alert alert-success">&#10003; {{ session('success_salle') }}</div>
 @endif
 
-<!-- Stats -->
 <div class="stats-row">
     <div class="stat-card blue"><div class="val"><i class="fa-solid fa-server" style="font-size:24px"></i> {{ $stats['total'] }}</div><div class="lbl">Total salles</div></div>
     <div class="stat-card green"><div class="val"><i class="fa-solid fa-circle-check" style="font-size:24px"></i> {{ $stats['actives'] }}</div><div class="lbl">Actives</div></div>
@@ -130,7 +128,6 @@
 </div>
 @endif
 
-<!-- Rooms grid -->
 <div class="rooms-header">
     <div class="rooms-title">Liste des salles</div>
     <div class="rooms-count">{{ count($salles) }} salle(s)</div>
@@ -163,7 +160,6 @@
         <div class="room-info-row"><span>Description</span><span>{{ Str::limit($salle->description, 60) }}</span></div>
         @endif
     </div>
-    <!-- Live capteurs (rempli par JS) -->
     <div class="room-live" id="salle-live-{{ $salle->id }}">
         <div class="room-live-title"><i class="fa-solid fa-circle" style="color:var(--neon);font-size:7px;vertical-align:middle;margin-right:4px"></i>Mesures en temps réel</div>
         <div class="room-live-gauges">
@@ -195,7 +191,6 @@
 </div>
 @endif
 
-<!-- Add Modal -->
 <div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
     <h3><i class="fa-solid fa-plus-circle"></i> Nouvelle Salle <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></h3>
@@ -243,7 +238,6 @@
 </div>
 </div>
 
-<!-- Edit Modal -->
 <div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
     <h3><i class="fa-solid fa-pen-to-square"></i> Modifier la Salle <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></h3>
@@ -313,7 +307,6 @@ function openEdit(id, nom, code, localisation, responsable, capacite, statut, de
     document.getElementById('editModal').classList.add('open');
 }
 
-/* ── Temps réel : mini-jauges sur chaque carte salle ── */
 const S = { temperature:{warn:28,crit:32}, humidite:{warn:75,crit:85}, gaz:{warn:400,crit:600} };
 
 function niveauClass(capteur, val) {

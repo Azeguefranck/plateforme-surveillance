@@ -1,9 +1,6 @@
 @extends('layouts.app')
 @section('content')
 <style>
-/* ═══════════════════════════════════════════════════
-   VARIABLES & RESET
-═══════════════════════════════════════════════════ */
 :root{
   --bg:        #05080f;
   --surface:   #0b1120;
@@ -25,9 +22,6 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
-/* ═══════════════════════════════════════════════════
-   HEADER
-═══════════════════════════════════════════════════ */
 .hdr{
   display:flex;align-items:flex-start;justify-content:space-between;
   gap:16px;margin-bottom:28px;flex-wrap:wrap;
@@ -70,9 +64,6 @@
 }
 .btn-add i{font-size:14px}
 
-/* ═══════════════════════════════════════════════════
-   ALERT
-═══════════════════════════════════════════════════ */
 .alert{
   display:flex;align-items:center;gap:10px;
   padding:13px 18px;border-radius:12px;margin-bottom:22px;font-size:13px;font-weight:500;
@@ -81,9 +72,6 @@
 }
 @keyframes fadeSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
-/* ═══════════════════════════════════════════════════
-   STAT CARDS
-═══════════════════════════════════════════════════ */
 .stats-row{
   display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:26px;
 }
@@ -122,9 +110,6 @@
 .sv-hors  {color:var(--txt2)}
 .stat-lbl{font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
 
-/* ═══════════════════════════════════════════════════
-   FILTER BAR
-═══════════════════════════════════════════════════ */
 .filter-bar{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);padding:14px 18px;
@@ -152,9 +137,6 @@
 }
 .flt-sel:focus{border-color:var(--neon);box-shadow:0 0 0 3px rgba(0,229,255,.08)}
 
-/* ═══════════════════════════════════════════════════
-   TABLE CONTAINER
-═══════════════════════════════════════════════════ */
 .table-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);
@@ -182,7 +164,6 @@ tbody tr:hover{
 }
 tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 
-/* Column specialties */
 .col-code{color:var(--txt3);font-family:'JetBrains Mono','Fira Code',monospace;font-size:11px}
 .col-name .main{font-weight:700;color:#fff;font-size:13.5px}
 .col-name .sub{font-size:11px;color:var(--txt3);margin-top:2px}
@@ -194,7 +175,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 .col-place .sal{font-weight:500}
 .col-place .rck{font-size:11px;color:var(--txt3);margin-top:2px}
 
-/* Empty state */
 .empty-state{
   text-align:center;padding:60px 20px;
 }
@@ -208,9 +188,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 .empty-sub{font-size:13px;color:var(--txt3)}
 .empty-sub strong{color:var(--neon);cursor:pointer}
 
-/* ═══════════════════════════════════════════════════
-   BADGES STATUT
-═══════════════════════════════════════════════════ */
 .badge{
   display:inline-flex;align-items:center;gap:5px;
   padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;
@@ -232,16 +209,12 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 .badge-obsolete      {background:rgba(61,80,112,.1);color:var(--txt3);border:1px solid var(--border)}
 .badge-remplace      {background:rgba(61,80,112,.1);color:var(--txt3);border:1px solid var(--border)}
 
-/* Criticité */
 .crit-pill{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700}
 .crit-faible  {background:rgba(0,230,118,.08);color:#4caf50}
 .crit-normale {background:rgba(107,130,168,.08);color:var(--txt2)}
 .crit-haute   {background:rgba(255,196,0,.1);color:#ffc400}
 .crit-critique{background:rgba(255,23,68,.15);color:#ff1744}
 
-/* ═══════════════════════════════════════════════════
-   ACTION BUTTONS
-═══════════════════════════════════════════════════ */
 .actions{display:flex;gap:6px;flex-wrap:nowrap}
 .btn-act{
   padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:600;
@@ -261,7 +234,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 }
 .btn-del:hover{background:rgba(255,61,87,.16);border-color:rgba(255,61,87,.4)}
 
-/* Pagination */
 .pager{display:flex;justify-content:center;gap:5px;padding:16px;flex-wrap:wrap}
 .pg-btn{
   padding:6px 13px;border-radius:8px;border:1px solid var(--border);
@@ -269,9 +241,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 }
 .pg-btn:hover,.pg-btn.active{border-color:var(--neon);color:var(--neon);background:rgba(0,229,255,.06)}
 
-/* ═══════════════════════════════════════════════════
-   MODAL
-═══════════════════════════════════════════════════ */
 .modal-overlay{
   display:none;position:fixed;inset:0;
   background:rgba(0,0,0,.8);backdrop-filter:blur(6px);
@@ -304,7 +273,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 }
 .modal-close:hover{background:rgba(255,61,87,.15);color:var(--red);border-color:rgba(255,61,87,.3)}
 
-/* Tabs */
 .tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;background:var(--surface2);padding:5px;border-radius:12px}
 .tab{
   padding:7px 16px;border-radius:9px;font-size:12px;font-weight:600;
@@ -316,7 +284,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 
-/* Form */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-group{display:flex;flex-direction:column;gap:6px}
 .form-group.span2{grid-column:span 2}
@@ -352,7 +319,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 }
 .btn-save:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(0,229,255,.4)}
 
-/* Detail modal */
 .detail-section{margin-bottom:18px}
 .detail-section-title{
   font-size:10.5px;color:var(--neon);text-transform:uppercase;
@@ -365,9 +331,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 .detail-key{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600}
 .detail-val{font-size:13px;color:var(--txt);font-weight:500}
 
-/* ═══════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════ */
 @media(max-width:1100px){
   .stats-row{grid-template-columns:repeat(3,1fr)}
 }
@@ -386,7 +349,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
   .stats-row{grid-template-columns:1fr 1fr}
   .filter-bar{padding:12px}
 }
-/* ── Capteurs live par équipement ── */
 .live-sensors{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
 .ls-dot{display:inline-flex;align-items:center;gap:2px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;
         background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.25);color:#00e676}
@@ -400,7 +362,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 <div class="alert"><i class="fa-solid fa-circle-check"></i> {{ session('success_srv') }}</div>
 @endif
 
-{{-- ══ EN-TÊTE ══ --}}
 <div class="hdr">
   <div class="hdr-left">
     @if(isset($salleActive) && $salleActive)
@@ -427,7 +388,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
   </div>
 </div>
 
-{{-- ══ STATISTIQUES ══ --}}
 <div class="stats-row">
   <div class="stat-card">
     <div class="stat-icon si-total"><i class="fa-solid fa-layer-group"></i></div>
@@ -451,7 +411,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
   </div>
 </div>
 
-{{-- ══ BARRE DE FILTRES ══ --}}
 <div class="filter-bar">
   <div class="search-wrap">
     <i class="fa-solid fa-magnifying-glass"></i>
@@ -478,7 +437,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
   </select>
 </div>
 
-{{-- ══ TABLEAU ══ --}}
 <div class="table-card">
   <div class="table-wrap">
     <table id="equipTable">
@@ -571,7 +529,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 </div>
 
 
-{{-- ══ MODAL AJOUT ══ --}}
 <div class="modal-overlay" id="addModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
   <button class="modal-close" onclick="document.getElementById('addModal').classList.remove('open')">&#215;</button>
@@ -695,7 +652,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 </div>
 
 
-{{-- ══ MODAL MODIFICATION ══ --}}
 <div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
   <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">&#215;</button>
@@ -812,7 +768,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 </div>
 
 
-{{-- ══ MODAL DÉTAILS ══ --}}
 <div class="modal-overlay" id="detailModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal">
   <button class="modal-close" onclick="document.getElementById('detailModal').classList.remove('open')">&#215;</button>
@@ -829,7 +784,6 @@ tbody td{padding:14px 16px;color:var(--txt);vertical-align:middle}
 const EQUIPEMENTS = @json($equipements->keyBy('id'));
 const SALLES      = @json($salles->keyBy('id'));
 
-/* ── Horloge ──────────────────────────────────── */
 (function tick(){
   const now = new Date();
   const t = now.toLocaleTimeString('fr-FR');
@@ -839,7 +793,6 @@ const SALLES      = @json($salles->keyBy('id'));
   setTimeout(tick, 1000);
 })();
 
-/* ── Filtrage ─────────────────────────────────── */
 function filtrer() {
   const q    = document.getElementById('search').value.toLowerCase();
   const cat  = document.getElementById('f-categorie').value;
@@ -856,7 +809,6 @@ function filtrer() {
   });
 }
 
-/* ── Tabs ─────────────────────────────────────── */
 function switchTab(modal, idx, btn) {
   document.querySelectorAll(`[data-modal="${modal}"]`).forEach(p => p.classList.remove('active'));
   document.querySelectorAll(`#${modal}-tabs .tab`).forEach(b => b.classList.remove('active'));
@@ -864,20 +816,17 @@ function switchTab(modal, idx, btn) {
   btn.classList.add('active');
 }
 
-/* ── Helpers ──────────────────────────────────── */
 function sv(id, val) { const el = document.getElementById(id); if (el) el.value = val ?? ''; }
 function ss(id, val) {
   const el = document.getElementById(id); if (!el) return;
   for (let i=0; i<el.options.length; i++) if (el.options[i].value==val) { el.selectedIndex=i; break; }
 }
 
-/* ── Ouvrir ajout ─────────────────────────────── */
 function openAdd() {
   switchTab('add', 0, document.querySelector('#add-tabs .tab'));
   document.getElementById('addModal').classList.add('open');
 }
 
-/* ── Ouvrir modification ──────────────────────── */
 function openEdit(id) {
   const e = EQUIPEMENTS[id]; if (!e) return;
   document.getElementById('editForm').action = '/equipements/' + id;
@@ -903,7 +852,6 @@ function openEdit(id) {
   document.getElementById('editModal').classList.add('open');
 }
 
-/* ── Ouvrir détails ───────────────────────────── */
 function openDetail(id) {
   const e = EQUIPEMENTS[id]; if (!e) return;
   const salle = SALLES[e.salle_id] ? SALLES[e.salle_id].nom : '—';
@@ -961,7 +909,6 @@ function openDetail(id) {
   document.getElementById('detailModal').classList.add('open');
 }
 
-/* ── Suppression ──────────────────────────────── */
 function confirmDel(id) {
   if (typeof confirmDlg === 'function') {
     confirmDlg('Supprimer cet équipement ?','Cet équipement sera définitivement supprimé. Cette action est irréversible.',
@@ -971,7 +918,6 @@ function confirmDel(id) {
   }
 }
 
-/* ── Capteurs live par équipement ─────────────── */
 const LS_S = { temperature:{warn:28,crit:32}, humidite:{warn:75,crit:85}, gaz:{warn:400,crit:600} };
 function lsClass(cap, v) { return v >= LS_S[cap].crit ? 'crit' : v >= LS_S[cap].warn ? 'warn' : ''; }
 

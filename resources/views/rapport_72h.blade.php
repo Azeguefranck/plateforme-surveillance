@@ -218,11 +218,9 @@ function telechargerPng() {
     });
 }
 
-// Téléchargement automatique dès que la page et le graphique sont prêts
 window.addEventListener('load', function() {
     const st = document.getElementById('status');
     st.textContent = 'Génération du PNG en cours…';
-    // Attendre 1.2s pour que Chart.js finisse de dessiner
     setTimeout(function() {
         telechargerPng();
     }, 1200);

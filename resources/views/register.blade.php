@@ -24,7 +24,6 @@ html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,san
 
 .reg-page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:30px 16px 50px;}
 
-/* Header */
 .reg-header{text-align:center;margin-bottom:28px;animation:fadeDown .6s ease;}
 .reg-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:8px;}
 .reg-logo-icon{width:38px;height:38px;border-radius:8px;background:rgba(57,255,20,.08);border:1.5px solid var(--green);
@@ -33,11 +32,9 @@ html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,san
 .reg-title{font-size:26px;font-weight:900;letter-spacing:.1em;color:#fff;text-transform:uppercase;}
 .reg-sub{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-top:4px;}
 
-/* Card */
 .reg-card{width:100%;max-width:860px;background:var(--card);border:1px solid var(--bd);border-radius:20px;
   overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5);animation:fadeUp .7s ease .1s both;}
 
-/* Steps header */
 .steps-header{background:var(--card2);padding:20px 28px 0;border-bottom:1px solid var(--bd);}
 .steps-row{display:flex;align-items:center;justify-content:center;overflow-x:auto;}
 .step-item{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:100px;position:relative;flex:1;cursor:pointer;}
@@ -57,7 +54,6 @@ html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,san
 .prog-bar{height:3px;background:rgba(255,255,255,.05);}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .5s ease;box-shadow:0 0 8px rgba(57,255,20,.4);}
 
-/* Body */
 .reg-body{padding:30px 32px;}
 @media(max-width:600px){.reg-body{padding:20px 16px;}}
 .step-pane{display:none;animation:fadeIn .35s ease;}
@@ -65,13 +61,11 @@ html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,san
 .pane-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:.04em;}
 .pane-sub{font-size:12px;color:var(--muted);margin-bottom:22px;}
 
-/* Grid */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .fg.col1{grid-template-columns:1fr;}
 @media(max-width:640px){.fg{grid-template-columns:1fr;}}
 .f-full{grid-column:1/-1;}
 
-/* Field */
 .fld{display:flex;flex-direction:column;gap:5px;}
 .flbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(57,255,20,.7);font-weight:700;}
 .flbl .req{color:#ff5a5a;margin-left:2px;}
@@ -83,7 +77,6 @@ html,body{width:100%;min-height:100vh;background:var(--bg);font-family:Arial,san
 select.finp option{background:#0c1c34;color:#fff;}
 .dob-grid{display:grid;grid-template-columns:1fr 1.6fr 1.3fr;gap:6px;}
 
-/* Tom Select dark */
 .ts-wrapper .ts-control{background:rgba(0,0,0,.35)!important;border:1px solid rgba(57,255,20,.15)!important;
   border-radius:8px!important;color:#fff!important;padding:10px 12px!important;min-height:44px!important;font-size:13px!important;}
 .ts-wrapper.focus .ts-control{border-color:var(--green)!important;box-shadow:0 0 0 3px rgba(57,255,20,.08)!important;}
@@ -93,7 +86,6 @@ select.finp option{background:#0c1c34;color:#fff;}
 .ts-wrapper .ts-dropdown .option:hover,.ts-wrapper .ts-dropdown .option.active{background:rgba(57,255,20,.1)!important;color:#fff!important;}
 .ts-wrapper .ts-control input{color:#fff!important;background:transparent!important;}
 
-/* Photo */
 .photo-zone{display:flex;align-items:center;gap:16px;padding:16px;background:rgba(0,0,0,.25);
   border:2px dashed rgba(57,255,20,.2);border-radius:12px;cursor:pointer;transition:border-color .25s;grid-column:1/-1;}
 .photo-zone:hover{border-color:var(--green);}
@@ -103,26 +95,22 @@ select.finp option{background:#0c1c34;color:#fff;}
 .photo-info .photo-title{font-size:13px;color:#fff;margin-bottom:4px;}
 .photo-info .photo-sub{font-size:11px;color:var(--muted);}
 
-/* Dial */
 .dial-row{display:flex;gap:8px;align-items:flex-end;}
 .dial-badge{flex-shrink:0;height:44px;min-width:80px;background:rgba(57,255,20,.07);border:1px solid var(--bd);
   border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
   color:var(--green);letter-spacing:.04em;transition:all .25s;}
 .dial-badge.loaded{box-shadow:0 0 10px rgba(57,255,20,.2);}
 
-/* Loader */
 .loader{display:none;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:4px;}
 .loader.show{display:flex;}
 .spin{width:12px;height:12px;border:2px solid rgba(57,255,20,.2);border-top-color:var(--green);
   border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Section divider */
 .sec-div{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;}
 .sec-div-line{flex:1;height:1px;background:var(--bd);}
 .sec-div-text{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(57,255,20,.5);}
 
-/* Password */
 .pwd-bars{display:flex;gap:3px;margin-top:5px;}
 .pwd-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.07);transition:background .3s;}
 .s1,.s2{background:#ff4444;}.s3{background:#ffaa00;}.s4,.s5{background:#39ff14;}
@@ -133,7 +121,6 @@ select.finp option{background:#0c1c34;color:#fff;}
   color:rgba(57,255,20,.45);font-size:15px;line-height:1;transition:color .2s;padding:0;}
 .eye-btn:hover{color:var(--green);}
 
-/* Recap */
 .recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:rgba(0,0,0,.25);
   border-radius:12px;padding:16px;border:1px solid var(--bd);}
 @media(max-width:600px){.recap-grid{grid-template-columns:1fr;}}
@@ -160,11 +147,9 @@ select.finp option{background:#0c1c34;color:#fff;}
 .cgu-check:checked::after{content:'✓';font-size:11px;color:#000;font-weight:900;}
 .cgu-label{font-size:12px;color:var(--muted);}
 
-/* Flash */
 .flash{padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:13px;display:flex;align-items:center;gap:10px;}
 .flash-err{background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);color:#ff6060;}
 
-/* Buttons */
 .nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;
   border-top:1px solid var(--bd);flex-wrap:wrap;gap:12px;}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:8px;font-size:13px;
@@ -178,12 +163,10 @@ select.finp option{background:#0c1c34;color:#fff;}
 .btn-skip{background:none;border:none;font-size:11px;color:var(--muted);letter-spacing:.06em;cursor:pointer;text-transform:uppercase;padding:4px 8px;}
 .btn-skip:hover{color:#fff;}
 
-/* Footer */
 .reg-footer{text-align:center;margin-top:22px;font-size:13px;color:var(--muted);animation:fadeUp .6s ease .3s both;}
 .reg-footer a{color:var(--cyan);text-decoration:none;}
 .reg-footer a:hover{color:#fff;}
 
-/* Err */
 .finp.err{border-color:#ff5a5a!important;}
 .err-msg{font-size:11px;color:#ff6060;margin-top:3px;}
 
@@ -191,7 +174,6 @@ select.finp option{background:#0c1c34;color:#fff;}
 @keyframes fadeUp  {from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none}}
 @keyframes fadeIn  {from{opacity:0;transform:scale(.98)}       to{opacity:1;transform:none}}
 
-/* ── Responsive anti-overflow ── */
 *{overflow-wrap:break-word;word-break:break-word}
 img,video,iframe{max-width:100%;height:auto}
 @media(max-width:640px){
@@ -245,7 +227,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
         <input type="hidden" name="pays_geoname_id" id="h_pays_gid" value="2233387">
         <input type="hidden" name="pays_nom"        id="h_pays_nom" value="Cameroun">
 
-        {{-- ══ STEP 1 : IDENTITÉ ══ --}}
         <div class="step-pane active" id="pane1">
           <div class="pane-title"><i class="fa-solid fa-user"></i> Identité personnelle</div>
           <div class="pane-sub">Vos informations de base</div>
@@ -327,12 +308,10 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
           </div>
         </div>
 
-        {{-- ══ STEP 2 : LOCALISATION ══ --}}
         <div class="step-pane" id="pane2">
           <div class="pane-title"><i class="fa-solid fa-earth-africa"></i> Localisation géographique</div>
           <div class="pane-sub">Votre pays, région et adresse</div>
           <div class="fg">
-            {{-- Pays — Cameroun uniquement --}}
             <div class="fld f-full">
               <label class="flbl">Pays</label>
               <div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.35);border:1px solid rgba(57,255,20,.25);border-radius:8px;padding:11px 13px;">
@@ -341,7 +320,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
                 <span style="color:rgba(255,255,255,.35);font-size:11px;margin-left:auto">+237</span>
               </div>
             </div>
-            {{-- Téléphone --}}
             <div class="fld f-full">
               <label class="flbl">Téléphone <span class="req">*</span></label>
               <div class="dial-row">
@@ -349,7 +327,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
                 <input class="finp" type="tel" name="telephone" id="telephone" placeholder="Numéro de téléphone" style="flex:1" value="{{ old('telephone') }}">
               </div>
             </div>
-            {{-- [NOUVEAU] Niveau 2 : Région (Tom Select ou texte libre) --}}
             <div class="fld">
               <label class="flbl"><i class="fa-solid fa-globe"></i> Région / Province / État</label>
               <div class="loader" id="regLoader"><div class="spin"></div> Chargement des régions...</div>
@@ -358,7 +335,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
               <input type="hidden" name="region"            id="h_region"  value="{{ old('region') }}">
               <input type="hidden" name="region_geoname_id" id="h_reg_gid" value="{{ old('region_geoname_id') }}">
             </div>
-            {{-- [NOUVEAU] Niveau 3 : Département (Tom Select ou texte libre) --}}
             <div class="fld">
               <label class="flbl"><i class="fa-solid fa-building-columns"></i> Département / District / Comté</label>
               <div class="loader" id="deptLoader"><div class="spin"></div> Chargement...</div>
@@ -367,7 +343,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
               <input type="hidden" name="departement"     id="h_dept"     value="{{ old('departement') }}">
               <input type="hidden" name="dept_geoname_id" id="h_dept_gid" value="{{ old('dept_geoname_id') }}">
             </div>
-            {{-- [NOUVEAU] Niveau 4 : Arrondissement (Tom Select ou texte libre) --}}
             <div class="fld">
               <label class="flbl"><i class="fa-solid fa-house-chimney"></i> Arrondissement / Commune</label>
               <div class="loader" id="arrondLoader"><div class="spin"></div> Chargement...</div>
@@ -376,17 +351,14 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
               <input type="hidden" name="arrondissement"  id="h_arrond"   value="{{ old('arrondissement') }}">
               <input type="hidden" name="arr_geoname_id"  id="h_arr_gid"  value="{{ old('arr_geoname_id') }}">
             </div>
-            {{-- Niveau 5 : Ville / Résidence (saisie libre) --}}
             <div class="fld">
               <label class="flbl"><i class="fa-solid fa-city"></i> Ville / Résidence</label>
               <input class="finp" type="text" name="ville_residence" id="h_ville" placeholder="Ex: Yaoundé, Douala, Paris..." value="{{ old('ville_residence') }}">
             </div>
-            {{-- Quartier --}}
             <div class="fld">
               <label class="flbl">Quartier</label>
               <input class="finp" type="text" name="quartier" placeholder="Ex: Bastos, Montmartre, Downtown..." value="{{ old('quartier') }}">
             </div>
-            {{-- Adresse --}}
             <div class="fld">
               <label class="flbl">Adresse complète</label>
               <input class="finp" type="text" name="adresse" placeholder="Rue, numéro, bâtiment..." value="{{ old('adresse') }}">
@@ -398,7 +370,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
           </div>
         </div>
 
-        {{-- ══ STEP 3 : PROFESSIONNEL ══ --}}
         <div class="step-pane" id="pane3">
           <div class="pane-title"><i class="fa-solid fa-briefcase"></i> Informations professionnelles</div>
           <div class="pane-sub">Votre activité et votre rôle</div>
@@ -429,7 +400,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
           </div>
         </div>
 
-        {{-- ══ STEP 4 : COMPTE ══ --}}
         <div class="step-pane" id="pane4">
           <div class="pane-title"><i class="fa-solid fa-lock"></i> Informations de connexion</div>
           <div class="pane-sub">Votre email et mot de passe sécurisé</div>
@@ -470,7 +440,6 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
           </div>
         </div>
 
-        {{-- ══ STEP 5 : CONFIRMATION ══ --}}
         <div class="step-pane" id="pane5">
           <div class="pane-title"><i class="fa-solid fa-circle-check"></i> Confirmation</div>
           <div class="pane-sub">Vérifiez vos informations avant de soumettre</div>
@@ -521,17 +490,14 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
 <script src="/vendor/tom-select/js/tom-select.complete.min.js"></script>
 <script>
-/* ── Cameroun uniquement ─────────────────────────── */
 var currentCountry = {iso:'CM', fr:'Cameroun', en:'Cameroon', dial:'+237'};
 
-/* ── Config des niveaux géographiques ──────────────── */
 var GEO_LEVELS = {
   region: { sel:'select-region', txt:'txt-region', hid:'h_region',  gid:'h_reg_gid',  loader:'regLoader'    },
   dept:   { sel:'select-dept',   txt:'txt-dept',   hid:'h_dept',    gid:'h_dept_gid', loader:'deptLoader'   },
   arr:    { sel:'select-arr',    txt:'txt-arr',    hid:'h_arrond',  gid:'h_arr_gid',  loader:'arrondLoader' }
 };
 
-/* ── [NOUVEAU] Réinitialise un niveau géo ─────────────────── */
 function resetGeoLevel(level){
   var cfg = GEO_LEVELS[level]; if(!cfg) return;
   var sel = document.getElementById(cfg.sel);
@@ -542,14 +508,12 @@ function resetGeoLevel(level){
   var g = cfg.gid ? document.getElementById(cfg.gid) : null; if(g) g.value='';
 }
 
-/* ── [NOUVEAU] Charge un niveau via proxy GeoNames ──────────── */
 function loadGeoLevel(endpoint, geonameId, level, onSelect){
   var cfg = GEO_LEVELS[level]; if(!cfg) return;
   var sel    = document.getElementById(cfg.sel);
   var txt    = document.getElementById(cfg.txt);
   var loader = document.getElementById(cfg.loader);
 
-  // Cacher, montrer loader
   if(sel){ if(sel.tomselect) sel.tomselect.destroy(); sel.innerHTML=''; sel.style.display='none'; }
   if(txt) txt.style.display='none';
   if(loader) loader.classList.add('show');
@@ -559,7 +523,6 @@ function loadGeoLevel(endpoint, geonameId, level, onSelect){
     .then(function(data){
       if(loader) loader.classList.remove('show');
       if(data && data.length > 0){
-        // Tom Select avec les données GeoNames
         if(sel){
           sel.style.display = '';
           new TomSelect('#'+cfg.sel, {
@@ -578,7 +541,6 @@ function loadGeoLevel(endpoint, geonameId, level, onSelect){
           });
         }
       } else {
-        // Fallback : champ texte libre
         if(sel) sel.style.display='none';
         if(txt){
           txt.style.display='';
@@ -599,7 +561,6 @@ function loadGeoLevel(endpoint, geonameId, level, onSelect){
 
 function xss(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-/* ── Steps ───────────────────────────────────────── */
 var curStep=1,TOTAL=5;
 function goStep(n){
   document.getElementById('pane'+curStep).classList.remove('active');
@@ -626,7 +587,6 @@ function validateStep(n){
     return true;
   }
   if(n===2){
-    // Pays = Cameroun (fixe)
     if(!document.getElementById('telephone').value.trim()){markErr('telephone','Le téléphone est requis');return false;}
     return true;
   }
@@ -646,7 +606,6 @@ function markErr(id,msg){
   if(el){el.classList.add('err');el.focus();setTimeout(function(){el.classList.remove('err');},3000);}
 }
 
-/* ── Recap ───────────────────────────────────────── */
 function buildRecap(){
   var prenom=document.getElementById('prenom').value;
   var nom=document.getElementById('nom').value;
@@ -667,7 +626,6 @@ function buildRecap(){
   else{rImg.textContent=(prenom.charAt(0)+nom.charAt(0)).toUpperCase()||'';if(!rImg.textContent)rImg.innerHTML='<i class="fa-solid fa-user"></i>';}
 }
 
-/* ── Password ────────────────────────────────────── */
 function checkPwd(v){
   var s=0;
   if(v.length>=8)s++;if(v.length>=12)s++;
@@ -709,7 +667,6 @@ function previewPhoto(inp){
   r.readAsDataURL(inp.files[0]);
 }
 
-/* ── Date picker (jour / mois / année) ────────────── */
 (function(){
   function daysInMonth(m,y){return m?new Date(y||2000,parseInt(m),0).getDate():31;}
   function fillDays(n,cur){
@@ -739,7 +696,6 @@ function previewPhoto(inp){
   if(ms)ms.onchange=onMonthYear;
   if(ys)ys.onchange=onMonthYear;
   if(ds)ds.onchange=syncHidden;
-  // Pre-populate from old() value
   var old=document.getElementById('dob-hidden');
   if(old&&old.value&&/^\d{4}-\d{2}-\d{2}$/.test(old.value)){
     var pts=old.value.split('-');
@@ -749,10 +705,7 @@ function previewPhoto(inp){
   }
 })();
 
-/* ── Init — cascade Cameroun au chargement ─────── */
 document.addEventListener('DOMContentLoaded', function(){
-  // Déclencher la cascade région→département→arrondissement pour le Cameroun
-  // geonameId Cameroun = 2233387
   loadGeoLevel('regions', 2233387, 'region', function(regGid){
     ['dept','arr'].forEach(resetGeoLevel);
     loadGeoLevel('departements', regGid, 'dept', function(deptGid){

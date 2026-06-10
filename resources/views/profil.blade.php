@@ -28,11 +28,9 @@ $date_inscription = $u->created_at ? \Carbon\Carbon::parse($u->created_at)->form
 @endphp
 
 <style>
-/* ── Base ─────────────────────────────────────────────── */
 *{box-sizing:border-box}
 body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
-/* ── Page header ──────────────────────────────────────── */
 .profil-header{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:28px;flex-wrap:wrap;gap:12px;
@@ -45,7 +43,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .breadcrumb{font-size:12px;color:#5a6a99}
 .breadcrumb a{color:#33ff88;text-decoration:none}
 
-/* ── Flash messages ───────────────────────────────────── */
 .flash{
   padding:12px 18px;border-radius:10px;margin-bottom:20px;
   font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;
@@ -55,14 +52,12 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .flash-error  {background:rgba(255,87,51,.1);border:1px solid rgba(255,87,51,.3);color:#ff5733}
 @keyframes fadeUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── Grid layouts ─────────────────────────────────────── */
 .grid-top{display:grid;grid-template-columns:300px 1fr;gap:20px;margin-bottom:20px}
 .grid-mid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 .grid-bot{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 @media(max-width:1024px){.grid-top{grid-template-columns:1fr}}
 @media(max-width:768px){.grid-mid,.grid-bot{grid-template-columns:1fr}}
 
-/* ── Card base ────────────────────────────────────────── */
 .card{
   background:linear-gradient(135deg,#0e1a38,#0c1530);
   border:1px solid #1e2f5a;border-radius:18px;
@@ -86,7 +81,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
   background:linear-gradient(180deg,#33ff88,#33b5ff);flex-shrink:0;
 }
 
-/* ── Avatar card ──────────────────────────────────────── */
 .avatar-card{text-align:center}
 .avatar-wrap{
   position:relative;display:inline-block;margin:0 auto 16px;
@@ -134,7 +128,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .meta-row .ml{color:#5a6a99}
 .meta-row .mr{color:#c7d2ff;font-weight:600}
 
-/* Photo upload button */
 .btn-photo{
   display:inline-flex;align-items:center;gap:7px;
   padding:8px 18px;border-radius:8px;
@@ -145,7 +138,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .btn-photo:hover{border-color:#33ff88;color:#33ff88;background:rgba(51,255,136,.05)}
 .btn-photo input{display:none}
 
-/* ── Form fields ──────────────────────────────────────── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr}}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
@@ -168,7 +160,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .field input[readonly]:focus{border-color:#1e2f5a;box-shadow:none}
 .field select option{background:#0e1a38;color:#e0e8ff}
 
-/* Password field with toggle */
 .pw-wrap{position:relative}
 .pw-wrap input{width:100%;padding-right:44px}
 .pw-eye{
@@ -178,11 +169,9 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 }
 .pw-eye:hover{color:#33ff88}
 
-/* Password strength */
 .pw-strength{margin-top:6px;display:flex;gap:4px}
 .pw-bar{height:3px;border-radius:2px;flex:1;background:#1e2f5a;transition:.3s}
 
-/* ── Buttons ──────────────────────────────────────────── */
 .btn-primary{
   display:inline-flex;align-items:center;gap:8px;
   padding:11px 24px;border-radius:9px;border:none;
@@ -210,13 +199,11 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 }
 .btn-actions{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
 
-/* ── Section separator ────────────────────────────────── */
 .section-sep{
   height:1px;margin:24px 0;
   background:linear-gradient(90deg,transparent,#1e2f5a,transparent);
 }
 
-/* ── Timeline ─────────────────────────────────────────── */
 .timeline{display:flex;flex-direction:column;gap:0}
 .tl-item{
   display:flex;gap:14px;padding:12px 0;
@@ -239,7 +226,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .tl-msg{font-size:13px;color:#c7d2ff;line-height:1.4}
 .tl-time{font-size:11px;color:#3a4a6a;margin-top:3px}
 
-/* ── Notification switches ────────────────────────────── */
 .switch-list{display:flex;flex-direction:column;gap:10px}
 .switch-row{
   display:flex;align-items:center;justify-content:space-between;
@@ -249,7 +235,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .switch-row:hover{border-color:#1e2f5a;background:rgba(255,255,255,.05)}
 .switch-label{font-size:13px;color:#c7d2ff;display:flex;align-items:center;gap:9px}
 .switch-ico{font-size:15px;width:20px;text-align:center}
-/* Toggle switch */
 .toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
 .toggle-slider{
@@ -264,7 +249,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .toggle input:checked + .toggle-slider{background:rgba(51,255,136,.25);border:1px solid rgba(51,255,136,.4)}
 .toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:#33ff88;box-shadow:0 0 8px rgba(51,255,136,.5)}
 
-/* ── Security info ────────────────────────────────────── */
 .sec-list{display:flex;flex-direction:column;gap:10px}
 .sec-row{
   display:flex;align-items:flex-start;gap:12px;
@@ -281,7 +265,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .sec-val{font-size:13px;color:#c7d2ff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec-val.online{color:#33ff88}
 
-/* ── Stats mini ───────────────────────────────────────── */
 .stats-mini{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 .stat-mini{
   background:rgba(255,255,255,.03);border-radius:10px;
@@ -291,13 +274,11 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 .stat-mini-num{font-size:24px;font-weight:700;color:#33ff88;line-height:1}
 .stat-mini-label{font-size:11px;color:#5a6a99;margin-top:5px;letter-spacing:.5px;text-transform:uppercase}
 
-/* ── Scroll ───────────────────────────────────────────── */
 .card-scroll{max-height:380px;overflow-y:auto;padding-right:4px}
 .card-scroll::-webkit-scrollbar{width:3px}
 .card-scroll::-webkit-scrollbar-track{background:#0a1225}
 .card-scroll::-webkit-scrollbar-thumb{background:#33ff88;border-radius:2px}
 
-/* ── Geo cascade ──────────────────────────────────────── */
 .geo-sel{width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;outline:none;transition:.2s;cursor:pointer;appearance:none;-webkit-appearance:none}
 .geo-sel:focus{border-color:#33ff88;box-shadow:0 0 0 2px rgba(51,255,136,.1)}
 .geo-sel:disabled{opacity:.45;cursor:not-allowed}
@@ -307,13 +288,11 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 </style>
 
 
-{{-- ── Header ── --}}
 <div class="profil-header">
   <h1><i class="fa-solid fa-user"></i> Mon <span>Profil</span></h1>
   <div class="breadcrumb"><a href="/dashboard">Dashboard</a> / Mon Profil</div>
 </div>
 
-{{-- ── Flash messages ── --}}
 @if(session('success_profil'))
   <div class="flash flash-success"><i class="fa-solid fa-circle-check" style="color:#33ff88"></i> {{ session('success_profil') }}</div>
 @endif
@@ -333,12 +312,8 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 @endif
 
 
-{{-- ═══════════════════════════════════════════════════════
-     ROW 1 : Avatar  |  Informations personnelles
-════════════════════════════════════════════════════════ --}}
 <div class="grid-top">
 
-  {{-- ── Carte Avatar ── --}}
   <div class="card avatar-card">
     <div class="card-title">Identité</div>
 
@@ -363,7 +338,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       </span>
     </div>
 
-    {{-- Photo upload form --}}
     <form action="/profil/photo" method="POST" enctype="multipart/form-data" id="form-photo">
       @csrf
       <label class="btn-photo">
@@ -394,7 +368,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </div>
   </div>
 
-  {{-- ── Informations personnelles ── --}}
   <div class="card">
     <div class="card-title">Informations personnelles</div>
 
@@ -423,7 +396,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="section-sep"></div>
 
       <div class="form-grid-3">
-        {{-- Pays --}}
         <div class="field">
           <label><i class="fa-solid fa-earth-africa"></i> Pays</label>
           <input type="hidden" name="pays"     id="p_pays_val"    value="{{ old('pays',    $u->pays    ?? '') }}">
@@ -433,7 +405,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </select>
           <div class="geo-ld" id="p_pays_ld">Chargement…</div>
         </div>
-        {{-- Région --}}
         <div class="field">
           <label><i class="fa-solid fa-globe"></i> Région / Province / État</label>
           <select class="geo-sel" name="region" id="p_region_sel" disabled>
@@ -441,7 +412,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </select>
           <div class="geo-ld" id="p_reg_ld">Chargement…</div>
         </div>
-        {{-- Département --}}
         <div class="field">
           <label><i class="fa-solid fa-building-columns"></i> Département / District</label>
           <select class="geo-sel" name="departement" id="p_dept_sel" disabled>
@@ -449,7 +419,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </select>
           <div class="geo-ld" id="p_dept_ld">Chargement…</div>
         </div>
-        {{-- Arrondissement --}}
         <div class="field">
           <label><i class="fa-solid fa-house-chimney"></i> Arrondissement / Commune</label>
           <input type="hidden" name="arrondissement" id="p_h_arrond" value="{{ old('arrondissement', $u->arrondissement ?? '') }}">
@@ -459,7 +428,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           <input class="geo-sel" id="p_arrond_txt" type="text" name="_arrond_txt" placeholder="Ex: Yaoundé 1er, Lyon 3e…" value="{{ old('arrondissement', $u->arrondissement ?? '') }}" style="display:block">
           <div class="geo-ld" id="p_arrond_ld">Chargement…</div>
         </div>
-        {{-- Ville --}}
         <div class="field">
           <label><i class="fa-solid fa-city"></i> Ville / Résidence</label>
           <select class="geo-sel" name="ville_residence" id="p_ville_sel" disabled>
@@ -467,7 +435,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </select>
           <div class="geo-ld" id="p_ville_ld">Chargement…</div>
         </div>
-        {{-- Quartier --}}
         <div class="field">
           <label>Quartier</label>
           <input type="text" name="quartier" value="{{ old('quartier', $u->quartier ?? '') }}">
@@ -497,15 +464,11 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </form>
   </div>
 
-</div>{{-- /grid-top --}}
+</div>
 
 
-{{-- ═══════════════════════════════════════════════════════
-     ROW 2 : Sécurité  |  Sécurité avancée
-════════════════════════════════════════════════════════ --}}
 <div class="grid-mid">
 
-  {{-- ── Changer le mot de passe ── --}}
   <div class="card">
     <div class="card-title"><i class="fa-solid fa-lock"></i> Sécurité du compte</div>
 
@@ -555,7 +518,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </form>
   </div>
 
-  {{-- ── Sécurité avancée ── --}}
   <div class="card">
     <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Sécurité avancée</div>
 
@@ -616,21 +578,16 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </div>
   </div>
 
-</div>{{-- /grid-mid --}}
+</div>
 
 
-{{-- ═══════════════════════════════════════════════════════
-     ROW 3 : Activités  |  Notifications
-════════════════════════════════════════════════════════ --}}
 <div class="grid-bot">
 
-  {{-- ── Activités récentes ── --}}
   <div class="card">
     <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Activités récentes</div>
     <div class="card-scroll">
       <div class="timeline" id="timeline">
 
-        {{-- Connexion actuelle --}}
         <div class="tl-item">
           <div class="tl-dot g"><i class="fa-solid fa-key"></i></div>
           <div class="tl-body">
@@ -639,7 +596,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </div>
         </div>
 
-        {{-- Alertes depuis la DB --}}
         @forelse($alertes as $alerte)
           @php
             $ico   = $alerte->niveau === 'critique' ? '<i class="fa-solid fa-circle" style="color:#ff5733"></i>' : ($alerte->niveau === 'warning' ? '<i class="fa-solid fa-circle" style="color:#ffd633"></i>' : '<i class="fa-solid fa-circle" style="color:#33ff88"></i>');
@@ -663,7 +619,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </div>
         @endforelse
 
-        {{-- Inscription --}}
         <div class="tl-item">
           <div class="tl-dot b"><i class="fa-solid fa-circle-check"></i></div>
           <div class="tl-body">
@@ -676,7 +631,6 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </div>
   </div>
 
-  {{-- ── Préférences notifications ── --}}
   <div class="card">
     <div class="card-title"><i class="fa-solid fa-bell"></i> Préférences notifications</div>
 
@@ -712,11 +666,10 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </div>
   </div>
 
-</div>{{-- /grid-bot --}}
+</div>
 
 
 <script>
-// ── Preview photo avant upload ──────────────────────────
 function previewPhoto(input) {
   if (!input.files || !input.files[0]) return;
   const r = new FileReader();
@@ -734,14 +687,12 @@ function previewPhoto(input) {
   r.readAsDataURL(input.files[0]);
 }
 
-// ── Toggle visibility mot de passe ─────────────────────
 function togglePw(id, btn) {
   const el = document.getElementById(id);
   if (el.type === 'password') { el.type = 'text'; btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>'; }
   else                        { el.type = 'password'; btn.innerHTML = '<i class="fa-solid fa-eye"></i>'; }
 }
 
-// ── Indicateur force mot de passe ──────────────────────
 function updateStrength(v) {
   let s = 0;
   if (v.length >= 8)  s++;
@@ -759,7 +710,6 @@ function updateStrength(v) {
   document.getElementById('pw-label').style.color  = v.length ? colors[s - 1] : '#5a6a99';
 }
 
-// ── Notifications localStorage ──────────────────────────
 const NOTIF_KEY = 'supserver_notifs';
 function saveNotif() {
   const ids = ['notif-email','notif-temp','notif-gaz','notif-power','notif-pir','notif-sms','notif-anomalie'];
@@ -780,16 +730,13 @@ function loadNotif() {
 }
 loadNotif();
 
-// ── Infos sécurité avancée ─────────────────────────────
 (function() {
-  // Device
   const ua = navigator.userAgent;
   let device = 'Ordinateur';
   if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) device = 'Mobile';
   else if (/Tablet|iPad/i.test(ua)) device = 'Tablette';
   document.getElementById('user-device').textContent = device;
 
-  // Browser
   let browser = 'Inconnu';
   if (ua.includes('Chrome') && !ua.includes('Edg'))  browser = 'Google Chrome';
   else if (ua.includes('Firefox'))                    browser = 'Mozilla Firefox';
@@ -798,19 +745,16 @@ loadNotif();
   else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
   document.getElementById('user-browser').textContent = browser;
 
-  // Last activity
   const now = new Date();
   document.getElementById('user-activity').textContent = now.toLocaleString('fr-FR');
   document.getElementById('tl-now').textContent = now.toLocaleString('fr-FR');
 
-  // IP via API publique
   fetch('https://api.ipify.org?format=json')
     .then(r => r.json())
     .then(d => { if(d.ip) document.getElementById('user-ip').textContent = d.ip; })
     .catch(() => { document.getElementById('user-ip').textContent = 'Non disponible'; });
 })();
 
-// ── Mini stats depuis /api/stats ────────────────────────
 fetch('/api/stats')
   .then(r => r.json())
   .then(s => {
@@ -819,7 +763,6 @@ fetch('/api/stats')
   })
   .catch(() => {});
 
-// ── Geographic cascade (profil) ─────────────────────────
 (function(){
 const PRE_PAYS   = @json($u->pays    ?? '');
 const PRE_ISO    = @json($u->iso_pays?? '');
@@ -999,13 +942,11 @@ function pLoadVilles(countryEn, dept, preSelect){
     .catch(()=>{pLd('p_ville_ld',false);pReset(sel,false,'— Villes non disponibles —')});
 }
 
-// Build country dropdown & wire events
 document.addEventListener('DOMContentLoaded',function(){
   const pSel=document.getElementById('p_pays_sel');
   const pVal=document.getElementById('p_pays_val');
   const pIso=document.getElementById('p_iso_val');
 
-  // Populate country list
   P_CTRS.sort((a,b)=>a.fr.localeCompare(b.fr,'fr')).forEach(c=>{
     const o=document.createElement('option');
     o.value=c.iso; o.dataset.en=c.en; o.dataset.fr=c.fr;
@@ -1014,12 +955,10 @@ document.addEventListener('DOMContentLoaded',function(){
     pSel.appendChild(o);
   });
 
-  // Sync hidden pays/iso on change
   pSel.addEventListener('change',function(){
     const opt=pSel.options[pSel.selectedIndex];
     pVal.value=opt.dataset.fr||'';
     pIso.value=opt.value||'';
-    // Reset downstream
     pReset(document.getElementById('p_region_sel'),true,'— Choisir un pays d\'abord —');
     pReset(document.getElementById('p_dept_sel'),true,'— Choisir une région d\'abord —');
     pReset(document.getElementById('p_ville_sel'),true,'— Choisir un département d\'abord —');
@@ -1030,7 +969,6 @@ document.addEventListener('DOMContentLoaded',function(){
     if(opt.dataset.en) pLoadRegions(opt.dataset.en,'');
   });
 
-  // Region → Dept cascade
   document.getElementById('p_region_sel').addEventListener('change',function(){
     const opt=pSel.options[pSel.selectedIndex];
     const region=this.value;
@@ -1043,7 +981,6 @@ document.addEventListener('DOMContentLoaded',function(){
     if(opt && opt.dataset.en && region) pLoadDepts(opt.dataset.en, region,'');
   });
 
-  // Dept → Arrond + Ville cascade
   document.getElementById('p_dept_sel').addEventListener('change',function(){
     const opt=pSel.options[pSel.selectedIndex];
     const dept=this.value;
@@ -1058,12 +995,10 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   });
 
-  // Sync arrond text input → hidden
   document.getElementById('p_arrond_txt').addEventListener('input',function(){
     document.getElementById('p_h_arrond').value=this.value;
   });
 
-  // Pre-populate if user has existing data
   if(PRE_ISO || PRE_PAYS){
     const opt=Array.from(pSel.options).find(o=>o.value===PRE_ISO || o.dataset.fr===PRE_PAYS || o.dataset.en===PRE_PAYS);
     if(opt){
