@@ -193,6 +193,8 @@ class AuthController extends Controller
 
         session(['user' => $admin]);
 
+        $role = $admin->role ?? '';
+        if ($role === 'technicien') return redirect('/dashboard-technicien');
         return redirect('/dashboard');
     }
 

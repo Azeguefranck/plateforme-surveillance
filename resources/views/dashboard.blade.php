@@ -94,14 +94,18 @@
 <script>
 // Seuils chargés depuis /api/seuils au démarrage (évite les valeurs obsolètes codées en dur)
 let SEUILS = {
-  temperature: { warn:28,  crit:32,  max:80   },
-  humidite:    { warn:75,  crit:85,  max:100  },
-  gaz:         { warn:400, crit:600, max:1000 },
+  temperature: { warn:28,   crit:32,   max:80   },
+  humidite:    { warn:75,   crit:85,   max:100  },
+  gaz:         { warn:400,  crit:600,  max:1000 },
+  courant:     { warn:10,   crit:15,   max:30   },
+  puissance:   { warn:1000, crit:1500, max:3000 },
 };
 fetch('/api/seuils').then(r=>r.json()).then(s=>{
   if(s.temperature) SEUILS.temperature = { warn:s.temperature.warning, crit:s.temperature.critique, max:80 };
   if(s.humidite)    SEUILS.humidite    = { warn:s.humidite.warning,    crit:s.humidite.critique,    max:100 };
   if(s.gaz)         SEUILS.gaz         = { warn:s.gaz.warning,         crit:s.gaz.critique,         max:1000 };
+  if(s.courant)     SEUILS.courant     = { warn:s.courant.warning,     crit:s.courant.critique,     max:30 };
+  if(s.puissance)   SEUILS.puissance   = { warn:s.puissance.warning,   crit:s.puissance.critique,   max:3000 };
 }).catch(()=>{});
 
 /* ── Crée ou retourne un panneau salle ── */
@@ -149,6 +153,22 @@ function getPanel(sid, nom) {
            <div style="font-size:42px;margin:10px 0"><i class="fa-solid fa-person-walking"></i></div>
            <div class="pir-badge pir-ok" id="pir-badge-${sid}">AUCUN MOUVEMENT</div>
          </div>
+         <div class="gauge-card ok" id="card-courant-${sid}" style="display:none">
+           <div class="gauge-label"><i class="fa-solid fa-bolt" style="color:#f59e0b;margin-right:4px"></i>Courant</div>
+           <div class="gauge-ring">
+             <span class="gauge-val" id="g-courant-${sid}">—</span>
+             <span class="gauge-unit">A</span>
+           </div>
+           <div class="gauge-bar"><div class="gauge-fill" id="f-courant-${sid}" style="width:0%"></div></div>
+         </div>
+         <div class="gauge-card ok" id="card-puissance-${sid}" style="display:none">
+           <div class="gauge-label"><i class="fa-solid fa-plug" style="color:#8b5cf6;margin-right:4px"></i>Puissance</div>
+           <div class="gauge-ring">
+             <span class="gauge-val" id="g-puissance-${sid}">—</span>
+             <span class="gauge-unit">W</span>
+           </div>
+           <div class="gauge-bar"><div class="gauge-fill" id="f-puissance-${sid}" style="width:0%"></div></div>
+         </div>
        </div>
        <div class="salle-equips" id="equips-${sid}" style="display:none"></div>`;
     document.getElementById('salle-panels').appendChild(p);
@@ -190,6 +210,20 @@ function pollMesuresLive() {
         majJauge(sid, 'temperature', parseFloat(d.temperature) || 0);
         majJauge(sid, 'humidite',    parseFloat(d.humidite)    || 0);
         majJauge(sid, 'gaz',         parseInt(d.gaz)           || 0);
+
+        if (d.courant != null) {
+          majJauge(sid, 'courant',   parseFloat(d.courant));
+          majJauge(sid, 'puissance', parseFloat(d.puissance) || 0);
+          const cCard = document.getElementById('card-courant-'  + sid);
+          const pCard = document.getElementById('card-puissance-' + sid);
+          if (cCard) cCard.style.display = '';
+          if (pCard) pCard.style.display = '';
+        } else {
+          const cCard = document.getElementById('card-courant-'  + sid);
+          const pCard = document.getElementById('card-puissance-' + sid);
+          if (cCard) cCard.style.display = 'none';
+          if (pCard) pCard.style.display = 'none';
+        }
 
         const pir   = d.pir == 1 || d.pir === true || d.pir === 'true';
         const badge = document.getElementById('pir-badge-'  + sid);

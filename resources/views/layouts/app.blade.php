@@ -345,16 +345,25 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
     <button class="sidebar-close" id="sidebarClose" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
   </div>
 
+  @php $userRole = session('user') ? (session('user')->role ?? '') : ''; @endphp
+
+  @if($userRole === 'technicien')
+  <a href="/dashboard-technicien"><i class="fa-solid fa-screwdriver-wrench"></i> Tableau Technicien</a>
+  @else
   <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+  @endif
   <a href="/accueil"><i class="fa-solid fa-house"></i> Accueil</a>
   <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
   <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
   <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>
+  @if($userRole !== 'technicien' && $userRole !== 'invite')
   <a href="/mails"><i class="fa-solid fa-envelope"></i> Mails</a>
+  @endif
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
-
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
+  @if($userRole === 'admin' || $userRole === 'superadmin')
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
+  @endif
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
 </div>
 

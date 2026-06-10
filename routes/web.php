@@ -14,6 +14,10 @@ use App\Http\Controllers\GeoController;
 Route::view('/','accueil');
 Route::view('/accueil','accueil');
 Route::view('/dashboard','dashboard');
+Route::get('/dashboard-technicien', function () {
+    if (!session('user')) return redirect('/login');
+    return view('dashboard_technicien');
+});
 Route::view('/login','login');
 
 
