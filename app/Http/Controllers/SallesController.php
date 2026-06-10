@@ -35,7 +35,6 @@ class SallesController extends Controller
             ];
         } catch (\Exception $e) {}
 
-        // Dernière mesure pour afficher temp/hum globale
         $derniereMesure = null;
         try {
             $derniereMesure = DB::table('mesures')->latest()->first();

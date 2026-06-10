@@ -4,16 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-// Gestion des seuils d'alerte stockés dans storage/app/seuils.json
 class ParametresController extends Controller
 {
-    // Chemin vers le fichier de seuils
     private function seuilsPath(): string
     {
         return storage_path('app/seuils.json');
     }
 
-    // Seuils par défaut si le fichier n'existe pas
     public function defaults(): array
     {
         return [
@@ -24,7 +21,6 @@ class ParametresController extends Controller
         ];
     }
 
-    // Charge les seuils depuis le fichier JSON
     public function load(): array
     {
         if (!file_exists($this->seuilsPath())) {
@@ -34,7 +30,6 @@ class ParametresController extends Controller
         return is_array($data) ? $data : $this->defaults();
     }
 
-    // Affiche la page paramètres
     public function show()
     {
         $user = session('user');
@@ -44,7 +39,6 @@ class ParametresController extends Controller
         return view('parametres', compact('user', 'seuils'));
     }
 
-    // Sauvegarde les seuils envoyés par le formulaire
     public function saveSeuils(Request $request)
     {
         $user = session('user');

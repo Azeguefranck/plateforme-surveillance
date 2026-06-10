@@ -3,7 +3,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-// [NOUVEAU] Ajoute les colonnes geonameId et les nouveaux champs géo
 return new class extends Migration
 {
     public function up(): void

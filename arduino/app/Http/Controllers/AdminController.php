@@ -16,10 +16,6 @@ class AdminController extends Controller
         return view('utilisateurs', compact('users'));
     }
 
-    // ══════════════════════════════════════════════════════
-    //  ACTIONS DEPUIS LE PANNEAU ADMIN (POST)
-    // ══════════════════════════════════════════════════════
-
     public function valider($id)
     {
         DB::table('users')->where('id', $id)->update([
@@ -68,18 +64,10 @@ class AdminController extends Controller
         return back()->with('success', 'Compte de ' . ($user->nom ?? '') . ' mis en attente.');
     }
 
-    // ══════════════════════════════════════════════════════
-    //  TOKEN SÉCURISÉ POUR LIENS EMAIL
-    // ══════════════════════════════════════════════════════
-
     public static function mailToken(int $id, string $action): string
     {
         return substr(hash_hmac('sha256', $id . '|' . $action, config('app.key')), 0, 40);
     }
-
-    // ══════════════════════════════════════════════════════
-    //  ACTIONS DEPUIS LIEN EMAIL (GET — sans connexion requise)
-    // ══════════════════════════════════════════════════════
 
     public function validerMail($id, $token)
     {
@@ -149,10 +137,6 @@ class AdminController extends Controller
         return view('admin-mail-action', ['ok' => true, 'action' => 'attente', 'user' => $user, 'already' => $already,
             'msg' => $already ? 'Ce compte était déjà en attente.' : 'Compte mis en attente. Un email de notification a été envoyé à ' . $user->email . '.']);
     }
-
-    // ══════════════════════════════════════════════════════
-    //  MÉTHODES EMAIL PRIVÉES
-    // ══════════════════════════════════════════════════════
 
     private function envoyerEmailValidation($user)
     {

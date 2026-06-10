@@ -73,7 +73,6 @@ return new class extends Migration
                 $table->string('document_configuration', 255)->nullable();
         });
 
-        // Changer l'ENUM statut pour inclure toutes les valeurs utilisées
         if (Schema::hasColumn('serveurs', 'statut')) {
             \DB::statement("ALTER TABLE serveurs MODIFY statut ENUM('en_ligne','hors_ligne','maintenance') DEFAULT 'en_ligne'");
         }

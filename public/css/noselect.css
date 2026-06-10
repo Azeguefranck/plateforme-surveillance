@@ -1,13 +1,3 @@
-/*
- * ================================================================
- *  PLATEFORME SURVEILLANCE — Anti-sélection globale
- *  Ce fichier est chargé EN PREMIER sur toutes les pages.
- *  Il désactive la sélection de texte sur tous les éléments
- *  non-formulaire et réactive correctement les champs de saisie.
- * ================================================================
- */
-
-/* ── 1. Désactivation globale ── */
 *,
 *::before,
 *::after {
@@ -18,7 +8,6 @@
   -webkit-touch-callout: none;
 }
 
-/* ── 2. Désactivation drag involontaire ── */
 img,
 svg,
 canvas,
@@ -28,7 +17,6 @@ video {
   pointer-events: auto;
 }
 
-/* ── 3. Curseur par défaut sur les éléments non-cliquables ── */
 body,
 div,
 section,
@@ -69,7 +57,6 @@ code {
   cursor: default;
 }
 
-/* ── 4. Curseur pointer sur éléments interactifs ── */
 button,
 a,
 [onclick],
@@ -105,7 +92,6 @@ a,
   cursor: pointer !important;
 }
 
-/* ── 5. Réactivation complète pour les champs de saisie ── */
 input,
 input[type="text"],
 input[type="email"],
@@ -139,12 +125,10 @@ select,
   cursor: text;
 }
 
-/* select garde le cursor pointer */
 select {
   cursor: pointer;
 }
 
-/* ── 6. Éléments spéciaux : garder text pour copier valeurs ── */
 .sensor-val,
 .stat-num,
 .kpi-val,
@@ -158,7 +142,6 @@ select {
   cursor: default;
 }
 
-/* ── 7. Désactivation surlignage tableau ── */
 table,
 .tbl,
 .avg-table,
@@ -171,7 +154,6 @@ table,
           user-select: none;
 }
 
-/* ── 8. Désactivation sélection sidebar & topbar ── */
 .sidebar,
 .sidebar a,
 .sidebar a *,
@@ -184,7 +166,6 @@ table,
           user-select: none;
 }
 
-/* ── 9. Désactivation sélection cartes dashboard ── */
 .card,
 .stat-card,
 .kpi-card,
@@ -219,7 +200,6 @@ table,
           user-select: none;
 }
 
-/* ── 10. Désactivation badges & labels ── */
 .badge,
 .badge-niv,
 .badge-crit,
@@ -285,7 +265,6 @@ table,
           user-select: none;
 }
 
-/* ── 11. Boutons : jamais de sélection ── */
 button,
 .btn,
 .btn-action,
@@ -325,13 +304,11 @@ button,
   cursor: pointer !important;
 }
 
-/* ── 12. Ancres : jamais de sélection ── */
 a {
   -webkit-user-select: none;
           user-select: none;
 }
 
-/* ── 13. Évite les highlights mobiles (iOS/Android) ── */
 button,
 a,
 [onclick] {
@@ -339,7 +316,6 @@ a,
   -webkit-touch-callout: none;
 }
 
-/* ── 14. Modals & overlays ── */
 .modal,
 .modal-bg,
 .modal-header,
@@ -353,14 +329,12 @@ a,
           user-select: none;
 }
 
-/* ── 15. Historique SMS ── */
 .sms-wrap,
 .sms-wrap *:not(input):not(textarea):not(select) {
   -webkit-user-select: none;
           user-select: none;
 }
 
-/* ── 16. Prevent text highlight on double-click menus ── */
 .sidebar a:active,
 button:active,
 a:active {
@@ -368,7 +342,6 @@ a:active {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── 17. Pagination & navigation ── */
 .pagination,
 .pagination *,
 .tabs,

@@ -9,10 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
-    /**
-     * Retourne toujours un stdClass depuis la session,
-     * quelle que soit la façon dont le driver l'a sérialisé.
-     */
     private function getUser(): ?\stdClass
     {
         $raw = session('user');

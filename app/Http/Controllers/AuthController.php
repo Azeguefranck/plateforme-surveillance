@@ -12,7 +12,6 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Check DB before validation (unique:users hits the DB)
         try {
             DB::connection()->getPdo();
         } catch (\Exception $e) {
@@ -28,11 +27,9 @@ class AuthController extends Controller
             'pays'     => 'required|string',
         ]);
 
-        // Génération du token sécurisé pour les boutons d'action dans l'email admin
         $adminToken    = bin2hex(random_bytes(32));
         $tokenExpires  = now()->addHours(48);
 
-        // Photo de profil
         $photoPath = null;
         if ($request->hasFile('photo_profil')) {
             $photoPath = $request->file('photo_profil')->store('photos', 'public');
@@ -77,7 +74,6 @@ class AuthController extends Controller
             'updated_at'       => now(),
         ]);
 
-        // Email de confirmation à l'utilisateur
         try {
             Mail::raw(
                 "Bonjour " . $request->prenom . " " . $request->nom . ",\n\n" .
@@ -95,8 +91,6 @@ class AuthController extends Controller
             );
         } catch (\Exception $e) {}
 
-        // Email HTML professionnel à l'administrateur avec 3 boutons d'action
-        // On utilise l'hôte réel de la requête, pas APP_URL (évite 127.0.0.1 dans les emails)
         $baseUrl     = $request->getSchemeAndHttpHost();
         $validerUrl  = $baseUrl . '/admin/validate-user/' . $adminToken;
         $refuserUrl  = $baseUrl . '/admin/refuse-user/'   . $adminToken;

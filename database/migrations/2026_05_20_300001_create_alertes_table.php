@@ -12,9 +12,9 @@ return new class extends Migration
 
         Schema::create('alertes', function (Blueprint $table) {
             $table->id();
-            $table->string('type')->default('info');       // capteur : temperature, humidite, gaz, pir
+            $table->string('type')->default('info');
             $table->text('message');
-            $table->string('niveau')->default('warning'); // warning | critique
+            $table->string('niveau')->default('warning');
             $table->string('valeur')->nullable();
             $table->unsignedBigInteger('salle_id')->nullable();
             $table->unsignedBigInteger('equipement_id')->nullable();

@@ -38,7 +38,6 @@ Route::view('/historique','historique');
 Route::view('/statistiques','statistiques');
 Route::view('/mails','mails');
 Route::view('/anomalies','anomalies');
-// [NOUVEAU] Routes proxy GeoNames (username jamais exposé côté client)
 Route::get('/geo/pays',                        [GeoController::class, 'getPays']);
 Route::get('/geo/regions/{geonameId}',         [GeoController::class, 'getRegions']);
 Route::get('/geo/departements/{geonameId}',    [GeoController::class, 'getDepartements']);
@@ -62,7 +61,6 @@ Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
 Route::view('/rapports','rapports');
 
 
-// ── AJAX : supprimer utilisateur ───────────────────────────────────────────
 Route::delete('/user/{id}', function ($id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     $target = DB::table('users')->where('id', $id)->first();
@@ -72,14 +70,12 @@ Route::delete('/user/{id}', function ($id) {
     return response()->json(['success' => true, 'message' => 'Utilisateur supprimé.']);
 });
 
-// ── AJAX : supprimer une alerte ────────────────────────────────────────────
 Route::delete('/alerte/{id}', function ($id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     DB::table('alertes')->where('id', $id)->delete();
     return response()->json(['success' => true]);
 });
 
-// ── AJAX : vider toutes les alertes ───────────────────────────────────────
 Route::post('/alertes/vider', function () {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     $n = DB::table('alertes')->count();
@@ -87,7 +83,6 @@ Route::post('/alertes/vider', function () {
     return response()->json(['success' => true, 'message' => "$n alertes supprimées."]);
 });
 
-// ── AJAX : ping serveur ────────────────────────────────────────────────────
 Route::get('/serveur/{id}/ping', function ($id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     try {
@@ -111,7 +106,6 @@ Route::get('/serveur/{id}/ping', function ($id) {
     }
 });
 
-// ── Ping caméra IP (fsockopen) ──────────────────────────────────────────────
 Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
     if (!session('user')) return response()->json(['reachable' => false, 'msg' => 'Non autorisé']);
     $ip   = $request->ip_addr ?? '';
@@ -125,7 +119,6 @@ Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
     return response()->json(['reachable' => false, 'time' => $ms, 'msg' => "Inaccessible ({$ip}:{$port})"]);
 });
 
-// ── Impression / PDF ───────────────────────────────────────────────────────
 Route::get('/rapports/rapport-72h', function () {
     if (!session('user')) return redirect('/login');
 
@@ -145,7 +138,6 @@ Route::get('/rapports/rapport-72h', function () {
     return view('rapport_72h', compact('rows', 'debut', 'fin'));
 });
 
-// ── Fonction partagée de génération Word (24h ou 72h) ──────────────────────
 $genWordRapport = function (int $heures) {
     if (!session('user')) return redirect('/login');
 
@@ -283,7 +275,6 @@ $genWordRapport = function (int $heures) {
 Route::get('/rapports/rapport-24h/word', function () {
     if (!session('user')) return redirect('/login');
 
-    // ── Données ───────────────────────────────────────────────────────────
     $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
     $fin    = $latest ? \Carbon\Carbon::parse($latest) : now();
     $debut  = $fin->copy()->subHours(24);
@@ -302,16 +293,14 @@ Route::get('/rapports/rapport-24h/word', function () {
     )->count();
     $pirOui    = $allRows->filter(fn($r) => $r->pir_detecte)->count();
 
-    // Filtrer : WARNING / CRITIQUE / PIR uniquement
     $rows = $allRows->filter(fn($r) =>
         $r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400 || $r->pir_detecte
     )->values();
 
-    // Si trop de lignes, garder CRITIQUE + PIR seulement
-    $PAGE1   = 25;  // lignes sur page 1 (après entête)
-    $PAGE2   = 30;  // lignes sur page 2
-    $PAGE3   = 30;  // lignes sur page 3
-    $MAX     = $PAGE1 + $PAGE2 + $PAGE3; // = 85
+    $PAGE1   = 25;
+    $PAGE2   = 30;
+    $PAGE3   = 30;
+    $MAX     = $PAGE1 + $PAGE2 + $PAGE3;
     $tronque = false;
     if ($rows->count() > $MAX) {
         $rows = $rows->filter(fn($r) =>
@@ -323,7 +312,6 @@ Route::get('/rapports/rapport-24h/word', function () {
         $tronque = true;
     }
 
-    // ── PhpWord ───────────────────────────────────────────────────────────
     $word = new \PhpOffice\PhpWord\PhpWord();
     $word->setDefaultFontName('Times New Roman');
     $word->setDefaultFontSize(10);
@@ -344,7 +332,6 @@ Route::get('/rapports/rapport-24h/word', function () {
         'pageSizeH'    => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(21),
     ]);
 
-    // ── Page 1 : entête ───────────────────────────────────────────────────
     $section->addTitle('Rapport 24h condensé — Alertes capteurs IoT', 1);
 
     $metaPara = $section->addTextRun(['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>100]);
@@ -380,7 +367,6 @@ Route::get('/rapports/rapport-24h/word', function () {
 
     $section->addTitle('Détail des alertes', 2);
 
-    // ── Styles tableau partagés ────────────────────────────────────────────
     $tblStyle = ['borderSize'=>3,'borderColor'=>'BBBBBB','cellMarginLeft'=>25,'cellMarginRight'=>25,'cellMarginTop'=>25,'cellMarginBottom'=>25,'width'=>100,'unit'=>'pct'];
     $colDef   = [
         ['N°',600],['Date / Heure',2600],['Temp. (°C)',1700],
@@ -420,7 +406,6 @@ Route::get('/rapports/rapport-24h/word', function () {
         $tbl->addCell($colDef[6][1],$bg)->addText($nTxt, array_merge($fN,['color'=>$nClr,'bold'=>true]), $fC);
     };
 
-    // ── Tableau page 1 ───────────────────────────────────────────────────
     $chunk1 = $rows->slice(0,       $PAGE1);
     $chunk2 = $rows->slice($PAGE1,  $PAGE2);
     $chunk3 = $rows->slice($PAGE1 + $PAGE2);
@@ -429,7 +414,6 @@ Route::get('/rapports/rapport-24h/word', function () {
     $addHeader($t1);
     foreach ($chunk1 as $i => $r) { $addRow($t1, $r, $i + 1); }
 
-    // ── Tableau page 2 ───────────────────────────────────────────────────
     if ($chunk2->count() > 0) {
         $section->addPageBreak();
         $t2 = $section->addTable($tblStyle);
@@ -437,7 +421,6 @@ Route::get('/rapports/rapport-24h/word', function () {
         foreach ($chunk2->values() as $i => $r) { $addRow($t2, $r, $PAGE1 + $i + 1); }
     }
 
-    // ── Tableau page 3 ───────────────────────────────────────────────────
     if ($chunk3->count() > 0) {
         $section->addPageBreak();
         $t3 = $section->addTable($tblStyle);
@@ -445,7 +428,6 @@ Route::get('/rapports/rapport-24h/word', function () {
         foreach ($chunk3->values() as $i => $r) { $addRow($t3, $r, $PAGE1 + $PAGE2 + $i + 1); }
     }
 
-    // ── Pied de page ─────────────────────────────────────────────────────
     $footer = $section->addFooter();
     $footer->addPreserveText(
         'Plateforme de Surveillance  ·  Rapport 24h condensé  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
@@ -478,38 +460,35 @@ Route::get('/rapports/rapport-72h/png', function () {
         ->orderBy('created_at')
         ->get()->toArray();
 
-    // Liberation Serif = équivalent métrique exact de Times New Roman
     $fontR = '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf';
     $fontB = '/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf';
-    $fs    = 12;  // taille de police corps tableau (pt)
+    $fs    = 12;
 
-    // ── Dimensions haute résolution (fond blanc — compatible Word) ────────
     $W       = 1600;
     $padX    = 50;
-    $rowH    = 38;    // hauteur ligne tableau (12pt → légèrement plus grand)
-    $headH   = 115;   // bandeau titre
-    $statsH  = 115;   // blocs statistiques
-    $chartH  = 270;   // graphique
-    $tblHead = 44;    // en-tête colonnes tableau
+    $rowH    = 38;
+    $headH   = 115;
+    $statsH  = 115;
+    $chartH  = 270;
+    $tblHead = 44;
     $n       = count($rows);
     $H       = $headH + $statsH + 20 + $chartH + 20 + $tblHead + ($n * $rowH) + 60;
 
     $img = imagecreatetruecolor($W, max($H, 600));
 
-    // ── Palette fond blanc ────────────────────────────────────────────────
     $cWhite   = imagecolorallocate($img, 255, 255, 255);
     $cBlack   = imagecolorallocate($img, 20,  20,  20);
     $cGray    = imagecolorallocate($img, 100, 100, 100);
     $cLGray   = imagecolorallocate($img, 220, 220, 220);
     $cXLGray  = imagecolorallocate($img, 245, 245, 245);
-    $cNavy    = imagecolorallocate($img, 13,  71,  161);  // bleu foncé titre
-    $cNavyBg  = imagecolorallocate($img, 21,  101, 192);  // en-tête colonnes
-    $cRed     = imagecolorallocate($img, 198, 40,  40);   // critique
-    $cRedBg   = imagecolorallocate($img, 255, 235, 238);  // fond ligne critique
-    $cOrange  = imagecolorallocate($img, 230, 81,  0);    // warning
-    $cOrgBg   = imagecolorallocate($img, 255, 243, 224);  // fond ligne warning
-    $cGreen   = imagecolorallocate($img, 27,  94,  32);   // normal
-    $cBlueTxt = imagecolorallocate($img, 13,  71,  161);  // valeur bleue
+    $cNavy    = imagecolorallocate($img, 13,  71,  161);
+    $cNavyBg  = imagecolorallocate($img, 21,  101, 192);
+    $cRed     = imagecolorallocate($img, 198, 40,  40);
+    $cRedBg   = imagecolorallocate($img, 255, 235, 238);
+    $cOrange  = imagecolorallocate($img, 230, 81,  0);
+    $cOrgBg   = imagecolorallocate($img, 255, 243, 224);
+    $cGreen   = imagecolorallocate($img, 27,  94,  32);
+    $cBlueTxt = imagecolorallocate($img, 13,  71,  161);
     $cStatBg  = [
         imagecolorallocate($img, 227, 242, 253),
         imagecolorallocate($img, 255, 235, 238),
@@ -518,10 +497,8 @@ Route::get('/rapports/rapport-72h/png', function () {
     ];
     $cStatVal = [$cNavy, $cRed, $cOrange, $cGreen];
 
-    // Fond blanc
     imagefilledrectangle($img, 0, 0, $W-1, $H-1, $cWhite);
 
-    // ── Bandeau titre ────────────────────────────────────────────────────
     imagefilledrectangle($img, 0, 0, $W-1, $headH-1, $cNavy);
     imagettftext($img, 22, 0, $padX, 46,  $cWhite,  $fontB, 'Rapport 72 heures — Mesures capteurs IoT');
     imagettftext($img, $fs, 0, $padX, 72,  $cXLGray, $fontR,
@@ -529,7 +506,6 @@ Route::get('/rapports/rapport-72h/png', function () {
     imagettftext($img, $fs, 0, $padX, 94,  $cXLGray, $fontR,
         'Généré le '.now()->format('d/m/Y à H:i').'   ·   '.$n.' enregistrement(s)');
 
-    // ── Blocs statistiques ───────────────────────────────────────────────
     $critiques = 0; $warnings = 0; $pirOui = 0;
     foreach ($rows as $r) {
         if ($r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600) $critiques++;
@@ -553,12 +529,11 @@ Route::get('/rapports/rapport-72h/png', function () {
         imagettftext($img, $fs-1,0, $sx+18, $sy+90, $cGray,        $fontR, $s['unit']);
     }
 
-    // ── Graphique (fond blanc) ───────────────────────────────────────────
     $gx = $padX;
     $gy = $headH + $statsH + 24;
     $gw = $W - 2*$padX;
     $gh = $chartH;
-    $giX = $gx + 55;  // zone tracé (laisser espace axes gauche)
+    $giX = $gx + 55;
     $giW = $gw - 60;
     $giY = $gy + 30;
     $giH = $gh - 50;
@@ -567,18 +542,15 @@ Route::get('/rapports/rapport-72h/png', function () {
     imagerectangle($img, $gx, $gy, $gx+$gw, $gy+$gh, $cLGray);
     imagettftext($img, $fs, 0, $gx+10, $gy+22, $cGray, $fontB, 'ÉVOLUTION TEMPÉRATURE (°C) / HUMIDITÉ (%) / GAZ ÷ 10');
 
-    // Grille horizontale + valeurs axe Y
     for ($g = 0; $g <= 5; $g++) {
         $yl  = $giY + (int)($giH * (1 - $g/5));
         $val = $g * 20;
         imageline($img, $giX, $yl, $giX+$giW, $yl, $g===0 ? $cLGray : $cXLGray);
         imagettftext($img, $fs-2, 0, $gx+8, $yl+4, $cGray, $fontR, (string)$val);
     }
-    // Axe X bas
     imageline($img, $giX, $giY+$giH, $giX+$giW, $giY+$giH, $cLGray);
 
     if ($n >= 2) {
-        // Repères temporels axe X (max 8 labels)
         $step = max(1, (int)($n / 8));
         foreach ($rows as $idx => $r) {
             if ($idx % $step === 0 || $idx === $n-1) {
@@ -606,14 +578,12 @@ Route::get('/rapports/rapport-72h/png', function () {
                 ];
             }
             for ($i = 0; $i < count($pts)-1; $i++) {
-                // Tracer 2 fois pour épaisseur
                 imageline($img, $pts[$i][0], $pts[$i][1],   $pts[$i+1][0], $pts[$i+1][1],   $serie['color']);
                 imageline($img, $pts[$i][0], $pts[$i][1]+1, $pts[$i+1][0], $pts[$i+1][1]+1, $serie['color']);
             }
         }
     }
 
-    // Légende graphique
     $lx = $giX; $ly = $gy + $gh - 16;
     foreach ([['Température (°C)',$cRed],['Humidité (%)',$cBlueTxt],['Gaz ÷ 10',$cOrange]] as $leg) {
         imagefilledrectangle($img, $lx, $ly-10, $lx+26, $ly+2, $leg[1]);
@@ -621,19 +591,16 @@ Route::get('/rapports/rapport-72h/png', function () {
         $lx += 160;
     }
 
-    // ── Tableau ───────────────────────────────────────────────────────────
     $cols    = [70, 220, 140, 140, 140, 100, 130];
     $headers = ['ID', 'Date / Heure', 'Temp. (°C)', 'Humidité (%)', 'Gaz (ppm)', 'PIR', 'Niveau'];
     $ty      = $headH + $statsH + 24 + $chartH + 24;
 
-    // En-tête colonnes (bleu foncé)
     imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+$tblHead, $cNavyBg);
     $cx = $padX + 8;
     foreach ($headers as $hi => $hdr) {
         imagettftext($img, $fs, 0, $cx, $ty+28, $cWhite, $fontB, $hdr);
         $cx += $cols[$hi];
     }
-    // Séparateurs colonnes en-tête
     $cx = $padX;
     foreach ($cols as $cw) {
         $cx += $cw;
@@ -641,7 +608,6 @@ Route::get('/rapports/rapport-72h/png', function () {
     }
     $ty += $tblHead;
 
-    // Lignes de données
     foreach ($rows as $ri => $r) {
         $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
         $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400);
@@ -672,7 +638,6 @@ Route::get('/rapports/rapport-72h/png', function () {
                 ($ci === 6 || $ci === 5) ? $fontB : $fontR, $txt);
             $cx += $cols[$ci];
         }
-        // Séparateurs colonnes
         $cx = $padX;
         foreach ($cols as $cw) {
             $cx += $cw;
@@ -680,18 +645,15 @@ Route::get('/rapports/rapport-72h/png', function () {
         }
         $ty += $rowH;
     }
-    // Bordure extérieure tableau
     imagerectangle($img, $padX, $headH+$statsH+24+$chartH+24, $W-$padX, $ty, $cLGray);
 
-    // ── Pied de page ──────────────────────────────────────────────────────
     imageline($img, $padX, $ty+14, $W-$padX, $ty+14, $cLGray);
     imagettftext($img, $fs-1, 0, $padX, $ty+36, $cGray, $fontR,
         'Plateforme de Surveillance  ·  Rapport automatique 72h  ·  Généré le '.now()->format('d/m/Y à H:i'));
 
-    // ── Sortie PNG ────────────────────────────────────────────────────────
     $filename = 'rapport_72h_'.date('Y-m-d_H-i').'.png';
     return response()->stream(function() use ($img) {
-        imagepng($img, null, 6); // compression 6/9 — bon ratio taille/qualité
+        imagepng($img, null, 6);
         imagedestroy($img);
     }, 200, [
         'Content-Type'        => 'image/png',
@@ -751,7 +713,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
     $data = $rows->map(fn($r) => (array)$r)->toArray();
     $fn   = $type.'_'.$debut.'_'.$fin;
 
-    // Column-letter helper (A, B, …, Z, AA, AB …)
     $xlCol = function(int $n): string {
         $s = ''; $n++;
         while ($n > 0) { $n--; $s = chr(65 + ($n % 26)).$s; $n = intdiv($n, 26); }
@@ -759,13 +720,11 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
     };
     $xlEsc = fn($v) => htmlspecialchars((string)$v, ENT_XML1|ENT_SUBSTITUTE, 'UTF-8');
 
-    // ── JSON ──────────────────────────────────────────────────────────────
     if ($format === 'json') {
         return response()->json($data)
             ->header('Content-Disposition', "attachment; filename=\"{$fn}.json\"");
     }
 
-    // ── XML ───────────────────────────────────────────────────────────────
     if ($format === 'xml') {
         $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<export type=\"{$type}\" debut=\"{$debut}\" fin=\"{$fin}\" total=\"".count($data)."\">\n";
         foreach ($data as $row) {
@@ -780,7 +739,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         return response($xml, 200, ['Content-Type'=>'application/xml','Content-Disposition'=>"attachment; filename=\"{$fn}.xml\""]);
     }
 
-    // ── XLS (Excel 97-2003 TSV) ───────────────────────────────────────────
     if ($format === 'xls') {
         $out = "\xEF\xBB\xBF";
         if (!empty($data)) {
@@ -791,7 +749,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         return response($out,200,['Content-Type'=>'application/vnd.ms-excel','Content-Disposition'=>"attachment; filename=\"{$fn}.xls\""]);
     }
 
-    // ── XLSX (Office Open XML) ────────────────────────────────────────────
     if ($format === 'xlsx') {
         $tmp = tempnam(sys_get_temp_dir(), 'xlsx_');
         $zip = new \ZipArchive();
@@ -843,7 +800,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         ]);
     }
 
-    // ── TXT ───────────────────────────────────────────────────────────────
     if ($format === 'txt') {
         $out  = "=== Plateforme de Surveillance — Export : {$type} ===\n";
         $out .= "Période  : {$debut} au {$fin}\n";
@@ -866,7 +822,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         return response($out,200,['Content-Type'=>'text/plain; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.txt\""]);
     }
 
-    // ── SQL ───────────────────────────────────────────────────────────────
     if ($format === 'sql') {
         $out  = "-- Plateforme de Surveillance — SQL Export\n-- Table   : {$type}\n";
         $out .= "-- Période : {$debut} au {$fin}\n-- Généré  : ".date('Y-m-d H:i:s')."\n-- Total   : ".count($data)." lignes\n\n";
@@ -880,7 +835,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         return response($out,200,['Content-Type'=>'application/sql','Content-Disposition'=>"attachment; filename=\"{$fn}.sql\""]);
     }
 
-    // ── DOCX (Word Open XML) ──────────────────────────────────────────────
     if ($format === 'docx') {
         $rows500 = array_slice($data, 0, 500);
         $tbl = '';
@@ -943,7 +897,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         ]);
     }
 
-    // ── HTML (downloadable styled report) ────────────────────────────────
     if ($format === 'html') {
         $hdr  = !empty($data) ? '<tr>'.implode('',array_map(fn($k)=>'<th>'.htmlspecialchars($k).'</th>',array_keys($data[0]))).'</tr>' : '';
         $body = implode('',array_map(fn($row)=>'<tr>'.implode('',array_map(fn($v)=>'<td>'.htmlspecialchars((string)$v).'</td>',$row)).'</tr>',$data));
@@ -961,7 +914,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         return response($html,200,['Content-Type'=>'text/html;charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.html\""]);
     }
 
-    // ── ZIP (bundle: CSV + JSON + HTML + README) ──────────────────────────
     if ($format === 'zip') {
         $csv = !empty($data) ? implode(',',array_keys($data[0]))."\n" : '';
         foreach ($data as $row)
@@ -986,7 +938,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         return response($content,200,['Content-Type'=>'application/zip','Content-Disposition'=>"attachment; filename=\"{$fn}_bundle.zip\""]);
     }
 
-    // ── CSV (default) ─────────────────────────────────────────────────────
     $csv = '';
     if (!empty($data)) {
         $csv .= implode(',', array_keys($data[0]))."\n";
@@ -996,7 +947,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
     return response($csv,200,['Content-Type'=>'text/csv','Content-Disposition'=>"attachment; filename=\"{$fn}.csv\""]);
 });
 
-// ── Backup complet ZIP ─────────────────────────────────────────────────────
 Route::get('/rapports/backup', function () {
     if (!session('user')) return redirect('/login');
 

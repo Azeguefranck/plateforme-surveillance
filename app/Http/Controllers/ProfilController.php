@@ -81,7 +81,6 @@ class ProfilController extends Controller
 
         session(['user' => DB::table('users')->where('id', $user->id)->first()]);
 
-        // Envoyer le nouveau mot de passe par email
         try {
             $prenom = $user->prenom ?? $user->name ?? 'Utilisateur';
             $nom    = $user->nom    ?? '';

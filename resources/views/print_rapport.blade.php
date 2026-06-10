@@ -71,7 +71,6 @@ tbody tr:nth-child(even) td{background:#f7f9fc}
 </div>
 
 <script>
-// Auto open print dialog after page is ready
 window.onload = function() { setTimeout(function() { window.print(); }, 600); };
 </script>
 </body>
