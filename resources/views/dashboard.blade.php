@@ -86,7 +86,7 @@
 </div>
 
 <div class="no-data-banner" id="no-data-banner">
-  ⚠ Aucun Arduino connecté — Aucune donnée en temps réel
+  <i class="fa-solid fa-triangle-exclamation"></i> Aucun Arduino connecté — Aucune donnée en temps réel
 </div>
 
 <div id="salle-panels"></div>
@@ -146,7 +146,7 @@ function getPanel(sid, nom) {
          <div class="gauge-card ok" id="card-pir-${sid}"
               style="display:flex;flex-direction:column;justify-content:center;align-items:center">
            <div class="gauge-label">Mouvement</div>
-           <div style="font-size:42px;margin:10px 0">🚶</div>
+           <div style="font-size:42px;margin:10px 0"><i class="fa-solid fa-person-walking"></i></div>
            <div class="pir-badge pir-ok" id="pir-badge-${sid}">AUCUN MOUVEMENT</div>
          </div>
        </div>

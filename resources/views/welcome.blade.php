@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Accueil</title>
-
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 <style>
 
 body{
@@ -143,14 +143,14 @@ h2,h3{font-size:clamp(14px,4vw,22px)!important}
 
 Plateforme intelligente de surveillance des salles serveurs :
 
-✔ Température  
-✔ Humidité  
-✔ Gaz  
-✔ Puissance électrique  
-✔ Alertes temps réel  
-✔ Alertes Email
-✔ Caméras IP  
-✔ Rapports automatiques  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Température  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Humidité  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Gaz  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Puissance électrique  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Alertes temps réel  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Alertes Email
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Caméras IP  
+<i class="fa-solid fa-check" style="color:#39ff14"></i>Rapports automatiques  
 
 </p>
 

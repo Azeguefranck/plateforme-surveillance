@@ -1,26 +1,11 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-
-public function up(): void
+// Table password_resets déjà créée sous le nom password_reset_tokens
+// dans 0001_01_01_000000_create_users_table.php — no-op pour éviter le doublon.
+return new class extends Migration
 {
-Schema::create('password_resets', function (Blueprint $table) {
-
-$table->id();
-$table->string('email');
-$table->string('token');
-$table->timestamps();
-
-});
-}
-
-public function down(): void
-{
-Schema::dropIfExists('password_resets');
-}
-
+    public function up(): void {}
+    public function down(): void {}
 };

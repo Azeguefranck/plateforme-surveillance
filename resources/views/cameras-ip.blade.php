@@ -432,7 +432,7 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
 <!-- Confirm delete -->
 <div class="confirm-overlay" id="confirmDlg">
   <div class="confirm-box">
-    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-icon"><i class="fa-solid fa-trash"></i></div>
     <div class="confirm-title">Supprimer cette caméra ?</div>
     <div class="confirm-msg">Cette action est irréversible. La configuration de la caméra sera définitivement supprimée.</div>
     <div class="confirm-btns">
@@ -472,7 +472,7 @@ const TYPE_LABELS = {
 /* ─── Toast ───────────────────────────────────── */
 function toast(msg, type, dur) {
   type = type||'s'; dur = dur||3500;
-  const icons = {s:'✓', e:'✗', w:'⚠', i:'ℹ'};
+  const icons = {s:'<i class="fa-solid fa-check"></i>', e:'<i class="fa-solid fa-xmark"></i>', w:'<i class="fa-solid fa-triangle-exclamation"></i>', i:'<i class="fa-solid fa-circle-info"></i>'};
   const t = document.createElement('div');
   t.className = 'toast ' + type;
   t.innerHTML = '<span>'+icons[type]+'</span><span style="flex:1">'+msg+'</span>';

@@ -965,14 +965,14 @@ function openDetail(id) {
 function confirmDel(id) {
   if (typeof confirmDlg === 'function') {
     confirmDlg('Supprimer cet équipement ?','Cet équipement sera définitivement supprimé. Cette action est irréversible.',
-      {type:'danger',icon:'🖥️',confirmText:'Supprimer'}).then(ok => { if (ok) document.getElementById('del-'+id).submit(); });
+      {type:'danger',icon:'<i class="fa-solid fa-desktop"></i>',confirmText:'Supprimer'}).then(ok => { if (ok) document.getElementById('del-'+id).submit(); });
   } else if (confirm('Supprimer cet équipement ?')) {
     document.getElementById('del-'+id).submit();
   }
 }
 
 /* ── Capteurs live par équipement ─────────────── */
-const LS_S = { temperature:{warn:35,crit:40}, humidite:{warn:75,crit:85}, gaz:{warn:300,crit:500} };
+const LS_S = { temperature:{warn:28,crit:32}, humidite:{warn:75,crit:85}, gaz:{warn:400,crit:600} };
 function lsClass(cap, v) { return v >= LS_S[cap].crit ? 'crit' : v >= LS_S[cap].warn ? 'warn' : ''; }
 
 function pollEquipLive() {
@@ -989,12 +989,12 @@ function pollEquipLive() {
         const pir = d.pir == 1 || d.pir === true;
         const set = (id, txt, cls) => {
           const el = document.getElementById(id);
-          if (el) { el.textContent = txt; el.className = 'ls-dot' + (cls ? ' ' + cls : ''); }
+          if (el) { el.innerHTML = txt; el.className = 'ls-dot' + (cls ? ' ' + cls : ''); }
         };
         set('ls-t-' + eid, t + '°C',   lsClass('temperature', t));
         set('ls-h-' + eid, h + '%',    lsClass('humidite',    h));
         set('ls-g-' + eid, g + 'ppm',  lsClass('gaz',         g));
-        set('ls-p-' + eid, pir ? '🚶 MVT' : '', pir ? 'pir' : '');
+        set('ls-p-' + eid, pir ? '<i class="fa-solid fa-person-walking"></i> MVT' : '', pir ? 'pir' : '');
       });
     })
     .catch(() => {});

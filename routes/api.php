@@ -6,11 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\GeoController;
 
-// ── Routes géographie (proxy GeoNames) ───────────────────────────────────────
-Route::get('/geo/states/{country}',               [GeoController::class, 'states']);
-Route::get('/geo/cities/{country}',               [GeoController::class, 'cities']);
-Route::get('/geo/state-cities/{country}/{state}', [GeoController::class, 'stateCities']);
-Route::get('/geo/subcities/{country}/{city}',     [GeoController::class, 'subcities']);
+// Routes géographiques — proxy GeoNames dans routes/web.php (getPays, getRegions, etc.)
 
 
 // ── Métadonnées fixes des capteurs (risques & solutions) ─────────────────────
@@ -501,7 +497,7 @@ Route::post('/capteurs', function (Request $request) {
             DB::table('alertes')->insert([
                 'type'       => 'pir',
                 'message'    => 'Mouvement détecté dans la salle serveurs',
-                'niveau'     => 'warning',
+                'niveau'     => 'critique',
                 'valeur'     => 'Détecté',
                 'salle_id'   => $salleId,
                 'resolu'     => 0,
@@ -620,7 +616,7 @@ Route::get('/alertes-mails', function (Request $request) {
     $page    = max(1, (int) ($request->page     ?? 1));
     $parPage = min(100, (int) ($request->par_page ?? 20));
 
-    $q = DB::table('alertes')->where('niveau', 'critique');
+    $q = DB::table('alertes');
     if ($niveau) $q->where('niveau', $niveau);
     if ($debut)  $q->where('created_at', '>=', $debut . ' 00:00:00');
     if ($fin)    $q->where('created_at', '<=', $fin   . ' 23:59:59');
@@ -630,10 +626,10 @@ Route::get('/alertes-mails', function (Request $request) {
     $today = date('Y-m-d');
 
     $stats = [
-        'total'    => DB::table('alertes')->where('niveau', 'critique')->count(),
+        'total'    => DB::table('alertes')->count(),
         'critique' => DB::table('alertes')->where('niveau', 'critique')->count(),
         'warning'  => DB::table('alertes')->where('niveau', 'warning')->count(),
-        'today'    => DB::table('alertes')->where('niveau', 'critique')->whereDate('created_at', $today)->count(),
+        'today'    => DB::table('alertes')->whereDate('created_at', $today)->count(),
     ];
 
     return response()->json(['data' => $rows, 'total' => $total, 'stats' => $stats]);
@@ -885,8 +881,9 @@ Route::get('/phones', function () {
 });
 
 
-// ── DELETE /api/alerte/{id} — supprime une alerte ────────────────────────────
+// ── DELETE /api/alerte/{id} — supprime une alerte (session requise) ──────────
 Route::delete('/alerte/{id}', function (int $id) {
+    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     DB::table('alertes')->where('id', $id)->delete();
     return response()->json(['success' => true]);
 });

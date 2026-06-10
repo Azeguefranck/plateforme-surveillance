@@ -167,10 +167,10 @@
     <div class="room-live" id="salle-live-{{ $salle->id }}">
         <div class="room-live-title"><i class="fa-solid fa-circle" style="color:var(--neon);font-size:7px;vertical-align:middle;margin-right:4px"></i>Mesures en temps réel</div>
         <div class="room-live-gauges">
-            <span class="rl-chip" id="rl-temp-{{ $salle->id }}">🌡 —°C</span>
-            <span class="rl-chip" id="rl-hum-{{ $salle->id }}">💧 —%</span>
-            <span class="rl-chip" id="rl-gaz-{{ $salle->id }}">💨 — ppm</span>
-            <span class="rl-chip" id="rl-pir-{{ $salle->id }}">🚶 —</span>
+            <span class="rl-chip" id="rl-temp-{{ $salle->id }}"><i class="fa-solid fa-temperature-half"></i> —°C</span>
+            <span class="rl-chip" id="rl-hum-{{ $salle->id }}"><i class="fa-solid fa-droplet"></i> —%</span>
+            <span class="rl-chip" id="rl-gaz-{{ $salle->id }}"><i class="fa-solid fa-wind"></i> — ppm</span>
+            <span class="rl-chip" id="rl-pir-{{ $salle->id }}"><i class="fa-solid fa-person-walking"></i> —</span>
         </div>
     </div>
 
@@ -293,7 +293,7 @@
 
 <script>
 function delSalle(btn, id) {
-    confirmDlg('Supprimer cette salle ?','La salle serveurs sera définitivement supprimée. Toutes ses données associées seront perdues. Cette action est irréversible.',{type:'danger',icon:'🏢',confirmText:'Supprimer la salle'}).then(function(ok) {
+    confirmDlg('Supprimer cette salle ?','La salle serveurs sera définitivement supprimée. Toutes ses données associées seront perdues. Cette action est irréversible.',{type:'danger',icon:'<i class="fa-solid fa-building"></i>',confirmText:'Supprimer la salle'}).then(function(ok) {
         if (ok) { btnLoad(btn); document.getElementById('del-salle-'+id).submit(); }
     });
 }
@@ -314,7 +314,7 @@ function openEdit(id, nom, code, localisation, responsable, capacite, statut, de
 }
 
 /* ── Temps réel : mini-jauges sur chaque carte salle ── */
-const S = { temperature:{warn:35,crit:40}, humidite:{warn:75,crit:85}, gaz:{warn:300,crit:500} };
+const S = { temperature:{warn:28,crit:32}, humidite:{warn:75,crit:85}, gaz:{warn:400,crit:600} };
 
 function niveauClass(capteur, val) {
     if (val >= S[capteur].crit) return 'crit';
@@ -325,7 +325,7 @@ function niveauClass(capteur, val) {
 function majChip(id, text, cls) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = text;
+    el.innerHTML = text;
     el.className   = 'rl-chip' + (cls ? ' ' + cls : '');
 }
 
@@ -341,10 +341,10 @@ function pollSallesLive() {
                 const h = parseFloat(d.humidite)||0;
                 const g = parseInt(d.gaz)||0;
                 const pir = d.pir == 1 || d.pir === true;
-                majChip('rl-temp-' + sid, '🌡 ' + t + '°C',  niveauClass('temperature', t));
-                majChip('rl-hum-'  + sid, '💧 ' + h + '%',   niveauClass('humidite',    h));
-                majChip('rl-gaz-'  + sid, '💨 ' + g + ' ppm',niveauClass('gaz',         g));
-                majChip('rl-pir-'  + sid, pir ? '🚶 MOUVEMENT' : '🚶 RAS', pir ? 'pir-on' : '');
+                majChip('rl-temp-' + sid, '<i class="fa-solid fa-temperature-half"></i> ' + t + '°C',  niveauClass('temperature', t));
+                majChip('rl-hum-'  + sid, '<i class="fa-solid fa-droplet"></i> ' + h + '%',   niveauClass('humidite',    h));
+                majChip('rl-gaz-'  + sid, '<i class="fa-solid fa-wind"></i> ' + g + ' ppm',niveauClass('gaz',         g));
+                majChip('rl-pir-'  + sid, pir ? '<i class="fa-solid fa-person-walking"></i> MOUVEMENT' : '<i class="fa-solid fa-person-walking"></i> RAS', pir ? 'pir-on' : '');
             });
         })
         .catch(() => {});

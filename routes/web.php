@@ -19,6 +19,11 @@ Route::view('/login','login');
 
 Route::post('/login-user',    [AuthController::class, 'login']);
 
+Route::get('/profil',          [ProfilController::class, 'show']);
+Route::post('/profil/update',  [ProfilController::class, 'update']);
+Route::post('/profil/password',[ProfilController::class, 'changePassword']);
+Route::post('/profil/photo',   [ProfilController::class, 'uploadPhoto']);
+
 
 
 
@@ -154,7 +159,7 @@ $genWordRapport = function (int $heures) {
     $critiques = $rows->filter(fn($r) => $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600)->count();
     $warnings  = $rows->filter(fn($r) =>
         !($r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600) &&
-        ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300)
+        ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400)
     )->count();
     $pirOui    = $rows->filter(fn($r) => $r->pir_detecte)->count();
 
@@ -235,14 +240,14 @@ $genWordRapport = function (int $heures) {
 
     foreach ($rows as $ri => $r) {
         $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
-        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
+        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400);
         $dataTable->addRow(400);
         $bg    = ['bgColor' => $isCrit ? 'FFEBEE' : ($isWarn ? 'FFF3E0' : ($ri%2===0 ? 'FFFFFF' : 'F5F5F5'))];
         $nTxt  = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
         $nClr  = $isCrit ? 'C62828'   : ($isWarn ? 'E65100'  : '1B5E20');
         $tClr  = $r->temperature >= 32 ? 'C62828' : ($r->temperature >= 28 ? 'E65100' : '1B1B1B');
         $hClr  = $r->humidite    >= 85 ? 'C62828' : ($r->humidite    >= 75 ? 'E65100' : '1B1B1B');
-        $gClr  = $r->gaz         >= 600? 'C62828' : ($r->gaz         >= 300? 'E65100' : '1B1B1B');
+        $gClr  = $r->gaz         >= 600? 'C62828' : ($r->gaz         >= 400? 'E65100' : '1B1B1B');
         $pClr  = $r->pir_detecte ? 'C62828' : '555555';
         $fN    = ['name'=>'Times New Roman','size'=>12];
         $fC    = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
@@ -289,13 +294,13 @@ Route::get('/rapports/rapport-24h/word', function () {
     $critiques = $allRows->filter(fn($r) => $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600)->count();
     $warnings  = $allRows->filter(fn($r) =>
         !($r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600) &&
-        ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300)
+        ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400)
     )->count();
     $pirOui    = $allRows->filter(fn($r) => $r->pir_detecte)->count();
 
     // Filtrer : WARNING / CRITIQUE / PIR uniquement
     $rows = $allRows->filter(fn($r) =>
-        $r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300 || $r->pir_detecte
+        $r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400 || $r->pir_detecte
     )->values();
 
     // Si trop de lignes, garder CRITIQUE + PIR seulement
@@ -390,14 +395,14 @@ Route::get('/rapports/rapport-24h/word', function () {
 
     $addRow = function($tbl, $r, $num) use ($colDef) {
         $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
-        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
+        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400);
         $tbl->addRow(280);
         $bg   = ['bgColor' => $isCrit ? 'FFEBEE' : ($isWarn ? 'FFF3E0' : ($num%2===0 ? 'FFFFFF' : 'F5F5F5'))];
         $nTxt = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
         $nClr = $isCrit ? 'C62828'   : ($isWarn ? 'E65100'  : '1B5E20');
         $tClr = $r->temperature >= 32 ? 'C62828' : ($r->temperature >= 28 ? 'E65100' : '1B1B1B');
         $hClr = $r->humidite    >= 85 ? 'C62828' : ($r->humidite    >= 75 ? 'E65100' : '1B1B1B');
-        $gClr = $r->gaz         >= 600? 'C62828' : ($r->gaz         >= 300? 'E65100' : '1B1B1B');
+        $gClr = $r->gaz         >= 600? 'C62828' : ($r->gaz         >= 400? 'E65100' : '1B1B1B');
         $pClr = $r->pir_detecte ? 'C62828' : '777777';
         $fN   = ['name'=>'Times New Roman','size'=>9];
         $fC   = ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];
@@ -524,7 +529,7 @@ Route::get('/rapports/rapport-72h/png', function () {
     $critiques = 0; $warnings = 0; $pirOui = 0;
     foreach ($rows as $r) {
         if ($r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600) $critiques++;
-        elseif ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300) $warnings++;
+        elseif ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400) $warnings++;
         if ($r->pir_detecte) $pirOui++;
     }
     $stats = [
@@ -635,7 +640,7 @@ Route::get('/rapports/rapport-72h/png', function () {
     // Lignes de données
     foreach ($rows as $ri => $r) {
         $isCrit = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
-        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
+        $isWarn = !$isCrit && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400);
 
         $rowBg = $isCrit ? $cRedBg : ($isWarn ? $cOrgBg : ($ri%2===0 ? $cWhite : $cXLGray));
         imagefilledrectangle($img, $padX, $ty, $W-$padX, $ty+$rowH-1, $rowBg);
@@ -643,7 +648,7 @@ Route::get('/rapports/rapport-72h/png', function () {
 
         $tClr = $r->temperature >= 32 ? $cRed    : ($r->temperature >= 28 ? $cOrange : $cBlack);
         $hClr = $r->humidite    >= 85 ? $cRed    : ($r->humidite    >= 75 ? $cOrange : $cBlack);
-        $gClr = $r->gaz         >= 600? $cRed    : ($r->gaz         >= 300? $cOrange : $cBlack);
+        $gClr = $r->gaz         >= 600? $cRed    : ($r->gaz         >= 400? $cOrange : $cBlack);
         $pClr = $r->pir_detecte        ? $cRed    : $cGray;
         $nTxt = $isCrit ? 'CRITIQUE' : ($isWarn ? 'WARNING' : 'NORMAL');
         $nClr = $isCrit ? $cRed      : ($isWarn ? $cOrange  : $cGreen);

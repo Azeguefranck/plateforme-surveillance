@@ -15,12 +15,9 @@ return new class extends Migration
             $table->float('temperature')->nullable();
             $table->float('humidite')->nullable();
             $table->float('gaz')->nullable();
-            $table->float('courant')->nullable();
-            $table->float('puissance')->nullable();
-            $table->float('tension')->nullable();
-            $table->boolean('pir')->default(false);
-            $table->integer('rssi')->nullable();
+            $table->boolean('pir_detecte')->default(false);
             $table->unsignedBigInteger('salle_id')->nullable();
+            $table->unsignedBigInteger('equipement_id')->nullable();
             $table->timestamps();
         });
     }

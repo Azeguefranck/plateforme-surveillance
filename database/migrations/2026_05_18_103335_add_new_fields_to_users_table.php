@@ -9,29 +9,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-
-            $table->string('telephone')->nullable();
-
-            $table->string('profession')->nullable();
-
-            $table->string('role')->default('utilisateur');
-
-            $table->string('statut')->default('attente');
-
+            if (!Schema::hasColumn('users', 'telephone'))
+                $table->string('telephone')->nullable();
+            if (!Schema::hasColumn('users', 'profession'))
+                $table->string('profession')->nullable();
+            if (!Schema::hasColumn('users', 'role'))
+                $table->string('role')->default('utilisateur');
+            if (!Schema::hasColumn('users', 'statut'))
+                $table->string('statut')->default('en_attente');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-
-            $table->dropColumn([
-                'telephone',
-                'profession',
-                'role',
-                'statut'
-            ]);
-
+            $cols = ['telephone', 'profession', 'role', 'statut'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('users', $col)) $table->dropColumn($col);
+            }
         });
     }
 };

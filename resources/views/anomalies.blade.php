@@ -104,7 +104,7 @@ var SOLUTIONS = {
         critique: 'URGENT : Intrusion possible. Prevenir la securite immediatement.'
     }
 };
-var ICONS = { temperature:'🌡️', humidite:'💧', gaz:'☁️', pir:'🚨' };
+var ICONS = { temperature:'<i class="fa-solid fa-temperature-half"></i>', humidite:'<i class="fa-solid fa-droplet"></i>', gaz:'<i class="fa-solid fa-wind"></i>', pir:'<i class="fa-solid fa-bell"></i>' };
 
 function loadAnomalies() {
     var grid = document.getElementById('anomaliesGrid');
@@ -174,7 +174,7 @@ function loadAnomalies() {
         renderAnomalies(alertes);
     }).catch(function(err) {
         var grid = document.getElementById('anomaliesGrid');
-        if (grid) grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Erreur de chargement. Veuillez actualiser.</p></div>';
+        if (grid) grid.innerHTML = '<div class="empty-state"><div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div><p>Erreur de chargement. Veuillez actualiser.</p></div>';
     });
 }
 
@@ -183,7 +183,7 @@ function renderAnomalies(alertes) {
     if (!grid) return;
 
     if (!alertes || alertes.length === 0) {
-        grid.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Aucune anomalie détectée.<br>Tous les systèmes sont opérationnels.</p></div>';
+        grid.innerHTML = '<div class="empty-state"><div class="icon"><i class="fa-solid fa-circle-check"></i></div><p>Aucune anomalie détectée.<br>Tous les systèmes sont opérationnels.</p></div>';
         return;
     }
 
@@ -207,7 +207,7 @@ function renderAnomalies(alertes) {
         var solution = (sKey && SOLUTIONS[sKey] && SOLUTIONS[sKey][niveau])
             ? SOLUTIONS[sKey][niveau]
             : 'Analyser et résoudre l\'anomalie. Contacter l\'équipe technique si nécessaire.';
-        var icon = sKey ? (ICONS[sKey] || '⚠️') : '⚠️';
+        var icon = sKey ? (ICONS[sKey] || '<i class="fa-solid fa-triangle-exclamation"></i>') : '<i class="fa-solid fa-triangle-exclamation"></i>';
         var isResolved = (a.resolu == 1);
         var shortMsg = msg.length > 70 ? msg.substring(0, 70) + '...' : msg;
 
@@ -251,7 +251,7 @@ function supprimerAnom(btn, id) {
     confirmDlg(
         'Supprimer cette anomalie ?',
         'Cette anomalie sera définitivement retirée de l\'historique.',
-        { type:'danger', icon:'🗑️', confirmText:'Supprimer' }
+        { type:'danger', icon:'<i class="fa-solid fa-trash"></i>', confirmText:'Supprimer' }
     ).then(function(ok) {
         if (!ok) return;
         btnLoad(btn);

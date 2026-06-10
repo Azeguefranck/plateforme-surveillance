@@ -154,15 +154,15 @@ try {
             <td><span class="badge badge-{{ $u->validation_status }}" id="badge_{{ $u->id }}">{{ str_replace('_',' ',$u->validation_status) }}</span></td>
             <td style="color:#555;font-size:11px;white-space:nowrap">{{ \Carbon\Carbon::parse($u->created_at)->format('d/m/Y H:i') }}</td>
             <td class="actions-cell" id="actions_{{ $u->id }}">
-                <button class="btn btn-green" title="Valider" onclick="changeStatut(this,{{ $u->id }},'valide')" {{ $u->validation_status === 'valide' ? 'disabled' : '' }}>✓ Valider</button>
-                <button class="btn btn-warn"  title="Refuser"  onclick="changeStatut(this,{{ $u->id }},'refuse')" {{ $u->validation_status === 'refuse' ? 'disabled' : '' }}>✗ Refuser</button>
-                <button class="btn btn-red"   title="Bloquer"  onclick="changeStatut(this,{{ $u->id }},'bloque')" {{ $u->validation_status === 'bloque' ? 'disabled' : '' }}>🚫 Bloquer</button>
+                <button class="btn btn-green" title="Valider" onclick="changeStatut(this,{{ $u->id }},'valide')" {{ $u->validation_status === 'valide' ? 'disabled' : '' }}><i class="fa-solid fa-check"></i> Valider</button>
+                <button class="btn btn-warn"  title="Refuser"  onclick="changeStatut(this,{{ $u->id }},'refuse')" {{ $u->validation_status === 'refuse' ? 'disabled' : '' }}><i class="fa-solid fa-xmark"></i> Refuser</button>
+                <button class="btn btn-red"   title="Bloquer"  onclick="changeStatut(this,{{ $u->id }},'bloque')" {{ $u->validation_status === 'bloque' ? 'disabled' : '' }}><i class="fa-solid fa-ban"></i> Bloquer</button>
                 @if($u->validation_status === 'bloque')
                 <button class="btn btn-blue" title="Débloquer" onclick="changeStatut(this,{{ $u->id }},'en_attente')">↩ Débloquer</button>
                 @else
-                <button class="btn btn-gray" title="Attente"   onclick="changeStatut(this,{{ $u->id }},'en_attente')" {{ $u->validation_status === 'en_attente' ? 'disabled' : '' }}>⏳ Attente</button>
+                <button class="btn btn-gray" title="Attente"   onclick="changeStatut(this,{{ $u->id }},'en_attente')" {{ $u->validation_status === 'en_attente' ? 'disabled' : '' }}><i class="fa-solid fa-clock"></i> Attente</button>
                 @endif
-                <button class="btn btn-gray" title="Supprimer" onclick="supprimerUser(this,{{ $u->id }})">✕</button>
+                <button class="btn btn-gray" title="Supprimer" onclick="supprimerUser(this,{{ $u->id }})"><i class="fa-solid fa-trash"></i></button>
             </td>
         </tr>
         @empty
@@ -178,8 +178,8 @@ function changeStatut(btn, userId, status) {
     var needsConfirm = status === 'refuse' || status === 'bloque';
     if (needsConfirm) {
         var cfgs = {
-            refuse: {title:'Refuser cet utilisateur ?', msg:'L\'utilisateur sera refusé et ne pourra plus accéder à la plateforme de surveillance.', type:'warning', icon:'✗', confirmText:'Refuser'},
-            bloque: {title:'Bloquer cet utilisateur ?', msg:'L\'accès de cet utilisateur sera immédiatement et définitivement bloqué.', type:'danger', icon:'🚫', confirmText:'Bloquer'}
+            refuse: {title:'Refuser cet utilisateur ?', msg:'L\'utilisateur sera refusé et ne pourra plus accéder à la plateforme de surveillance.', type:'warning', icon:'<i class="fa-solid fa-xmark"></i>', confirmText:'Refuser'},
+            bloque: {title:'Bloquer cet utilisateur ?', msg:'L\'accès de cet utilisateur sera immédiatement et définitivement bloqué.', type:'danger', icon:'<i class="fa-solid fa-ban"></i>', confirmText:'Bloquer'}
         };
         var cfg = cfgs[status];
         confirmDlg(cfg.title, cfg.msg, {type:cfg.type, icon:cfg.icon, confirmText:cfg.confirmText}).then(function(ok) {
@@ -225,7 +225,7 @@ function _doChangeStatut(btn, userId, status) {
 }
 
 function supprimerUser(btn, userId) {
-    confirmDlg('Supprimer cet utilisateur ?', 'Cet utilisateur perdra définitivement l\'accès à la plateforme. Cette action est irréversible.',{type:'danger',icon:'👤',confirmText:'Supprimer l\'utilisateur'}).then(function(ok) {
+    confirmDlg('Supprimer cet utilisateur ?', 'Cet utilisateur perdra définitivement l\'accès à la plateforme. Cette action est irréversible.',{type:'danger',icon:'<i class="fa-solid fa-user"></i>',confirmText:'Supprimer l\'utilisateur'}).then(function(ok) {
         if (!ok) return;
         btnLoad(btn);
         csrfFetch('/user/'+userId, {method:'DELETE'})

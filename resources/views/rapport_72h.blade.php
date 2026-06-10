@@ -86,7 +86,7 @@ tbody td{padding:8px 12px;border-top:1px solid #0d1a35;font-size:11px}
         $warnings  = $rows->filter(fn($r) =>
             ($r->temperature >= 28 && $r->temperature < 32) ||
             ($r->humidite    >= 75 && $r->humidite    < 85) ||
-            ($r->gaz         >= 300 && $r->gaz        < 600)
+            ($r->gaz         >= 400 && $r->gaz        < 600)
         )->count();
         $pirOui   = $rows->filter(fn($r) => $r->pir_detecte)->count();
     @endphp
@@ -126,7 +126,7 @@ tbody td{padding:8px 12px;border-top:1px solid #0d1a35;font-size:11px}
             @foreach($rows as $r)
                 @php
                     $isCritique = $r->temperature >= 32 || $r->humidite >= 85 || $r->gaz >= 600;
-                    $isWarning  = !$isCritique && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 300);
+                    $isWarning  = !$isCritique && ($r->temperature >= 28 || $r->humidite >= 75 || $r->gaz >= 400);
                     $rowClass   = $isCritique ? 'row-critique' : ($isWarning ? 'row-warning' : ($r->pir_detecte ? 'row-pir' : ''));
                     $niveau     = $isCritique ? 'critique' : ($isWarning ? 'warning' : 'normal');
                 @endphp
@@ -139,7 +139,7 @@ tbody td{padding:8px 12px;border-top:1px solid #0d1a35;font-size:11px}
                     <td style="color:{{ $r->humidite >= 85 ? '#ff5733' : ($r->humidite >= 75 ? '#ffd633' : '#33b5ff') }}">
                         {{ $r->humidite ?? '—' }}
                     </td>
-                    <td style="color:{{ $r->gaz >= 600 ? '#ff5733' : ($r->gaz >= 300 ? '#ffd633' : '#ccc') }}">
+                    <td style="color:{{ $r->gaz >= 600 ? '#ff5733' : ($r->gaz >= 400 ? '#ffd633' : '#ccc') }}">
                         {{ $r->gaz ?? '—' }}
                     </td>
                     <td class="{{ $r->pir_detecte ? 'pir-oui' : 'pir-non' }}">

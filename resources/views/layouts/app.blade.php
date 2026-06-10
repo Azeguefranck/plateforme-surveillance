@@ -413,7 +413,7 @@ updateDateTime();
   <div class="_cbox" id="_cboxEl">
     <div class="_cbox-top"></div>
     <div class="_cbox-head">
-      <div class="_cico" id="_cico">⚠️</div>
+      <div class="_cico" id="_cico"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <div class="_ctitl" id="_ctitle">Confirmation requise</div>
       <p class="_cmsg" id="_cmsg">Êtes-vous sûr de vouloir effectuer cette action ?</p>
     </div>
@@ -431,7 +431,7 @@ updateDateTime();
 /* ── Notifications toast ── */
 function notify(msg, type, dur) {
     type = type||'s'; dur = dur||3600;
-    var icons={s:'✓',e:'✗',w:'⚠',i:'ℹ'};
+    var icons={s:'<i class="fa-solid fa-check"></i>',e:'<i class="fa-solid fa-xmark"></i>',w:'<i class="fa-solid fa-triangle-exclamation"></i>',i:'<i class="fa-solid fa-circle-info"></i>'};
     var t=document.createElement('div');
     t.className='_t '+type;
     t.innerHTML='<span>'+icons[type]+'</span><span style="flex:1">'+msg+'</span><span onclick="_dismiss(this.parentNode)" style="opacity:.45;font-size:17px;margin-left:4px;line-height:1">×</span>';
@@ -467,16 +467,16 @@ function confirmDlg(title, msg, opts) {
         _cdlgBusy = true;
         opts = opts || {};
         var type = opts.type || 'danger';
-        var icoMap = {danger:'🗑️',warning:'⚠️',success:'✅',info:'ℹ️',logout:'🔒',user:'👤',reset:'🔄',stop:'⏹️',valide:'✔️',refuse:'✗',bloque:'🚫'};
+        var icoMap = {danger:'<i class="fa-solid fa-trash"></i>',warning:'<i class="fa-solid fa-triangle-exclamation"></i>',success:'<i class="fa-solid fa-circle-check" style="color:#33ff88"></i>',info:'<i class="fa-solid fa-circle-info"></i>',logout:'<i class="fa-solid fa-lock"></i>',user:'<i class="fa-solid fa-user"></i>',reset:'<i class="fa-solid fa-rotate"></i>',stop:'<i class="fa-solid fa-stop"></i>',valide:'<i class="fa-solid fa-check"></i>',refuse:'<i class="fa-solid fa-xmark"></i>',bloque:'<i class="fa-solid fa-ban"></i>'};
         var clrMap = {danger:'#ff5733',warning:'#ffd633',success:'#33ff88',info:'#33b5ff',logout:'#ff9933',user:'#ff5733',reset:'#ffd633',stop:'#ff5733',valide:'#33ff88',refuse:'#ffd633',bloque:'#ff5733'};
         var rgbMap = {danger:'255,87,51',warning:'255,214,51',success:'51,255,136',info:'51,181,255',logout:'255,153,51',user:'255,87,51',reset:'255,214,51',stop:'255,87,51',valide:'51,255,136',refuse:'255,214,51',bloque:'255,87,51'};
-        var icon = opts.icon  || icoMap[type] || '⚠️';
+        var icon = opts.icon  || icoMap[type] || '<i class="fa-solid fa-triangle-exclamation"></i>';
         var clr  = clrMap[type] || clrMap.danger;
         var rgb  = rgbMap[type] || rgbMap.danger;
         var box  = document.getElementById('_cboxEl');
         box.style.setProperty('--dc', clr);
         box.style.setProperty('--dr', rgb);
-        document.getElementById('_cico').textContent   = icon;
+        document.getElementById('_cico').innerHTML   = icon;
         document.getElementById('_ctitle').textContent = title || 'Confirmation requise';
         document.getElementById('_cmsg').textContent   = msg   || 'Êtes-vous sûr de vouloir effectuer cette action ?';
         document.getElementById('_cok').textContent    = opts.confirmText || 'Confirmer';
@@ -526,7 +526,7 @@ function doLogout() {
     confirmDlg(
         'Se déconnecter ?',
         'Vous allez quitter la plateforme de surveillance des salles serveurs. Votre session active sera fermée.',
-        {type:'logout', icon:'🔒', confirmText:'Se déconnecter', cancelText:'Rester connecté'}
+        {type:'logout', icon:'<i class="fa-solid fa-lock"></i>', confirmText:'Se déconnecter', cancelText:'Rester connecté'}
     ).then(function(ok) {
         if (ok) {
             notify('Déconnexion en cours…', 'w', 2000);

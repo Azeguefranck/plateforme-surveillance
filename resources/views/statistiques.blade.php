@@ -74,14 +74,14 @@ canvas{max-height:200px}
 <div class="charts-grid">
     <div class="chart-card">
         <div class="chart-header">
-            <div class="chart-title">🌡️ Température / Heure</div>
+            <div class="chart-title"><i class="fa-solid fa-temperature-half"></i> Température / Heure</div>
             <div class="chart-meta" id="chartMeta1">24 dernières heures · seuils critiques</div>
         </div>
         <canvas id="chartTemperature"></canvas>
     </div>
     <div class="chart-card">
         <div class="chart-header">
-            <div class="chart-title">💧 Humidité / Heure</div>
+            <div class="chart-title"><i class="fa-solid fa-droplet"></i> Humidité / Heure</div>
             <div class="chart-meta" id="chartMeta2">24 dernières heures · stabilité</div>
         </div>
         <canvas id="chartHumidite"></canvas>
@@ -89,7 +89,7 @@ canvas{max-height:200px}
 </div>
 <div class="chart-card" style="margin-bottom:24px">
     <div class="chart-header">
-        <div class="chart-title">☁️ Gaz / Qualité Air / Heure</div>
+        <div class="chart-title"><i class="fa-solid fa-wind"></i> Gaz / Qualité Air / Heure</div>
         <div class="chart-meta" id="chartMeta3">24 dernières heures · fumée · pollution · seuils</div>
     </div>
     <canvas id="chartGaz" style="max-height:180px"></canvas>
@@ -272,10 +272,10 @@ function buildCharts(rows, live) {
               borderColor: '#cc88ff', backgroundColor: 'rgba(204,136,255,.06)',
               borderWidth: 1.5, fill: true, tension: 0.4,
               pointRadius: 0, spanGaps: true },
-            { label: 'Seuil critique 500 ppm', data: Array(n).fill(500),
+            { label: 'Seuil critique 600 ppm', data: Array(n).fill(600),
               borderColor: '#ff5733', borderDash:[7,4], borderWidth:1.5,
               pointRadius:0, fill:false },
-            { label: 'Seuil warning 300 ppm', data: Array(n).fill(300),
+            { label: 'Seuil warning 400 ppm', data: Array(n).fill(400),
               borderColor: '#ffd633', borderDash:[4,3], borderWidth:1,
               pointRadius:0, fill:false },
         ]},

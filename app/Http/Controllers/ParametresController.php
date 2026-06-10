@@ -17,9 +17,9 @@ class ParametresController extends Controller
     public function defaults(): array
     {
         return [
-            'temperature' => ['warning' => 35.0,  'critique' => 40.0],
+            'temperature' => ['warning' => 28.0,  'critique' => 32.0],
             'humidite'    => ['warning' => 75.0,  'critique' => 85.0],
-            'gaz'         => ['warning' => 300.0, 'critique' => 500.0],
+            'gaz'         => ['warning' => 400.0, 'critique' => 600.0],
             'pir'         => ['actif' => 1],
         ];
     }

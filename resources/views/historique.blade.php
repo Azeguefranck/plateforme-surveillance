@@ -322,7 +322,7 @@ function updateStats() {
     if (currentTab === 'alertes') {
         document.getElementById('hAlerts').textContent = allRows.filter(r => r.niveau === 'critique').length;
     } else {
-        const warn = allRows.filter(r => r.temperature > 35 || r.humidite > 75 || r.gaz > 300).length;
+        const warn = allRows.filter(r => r.temperature >= 28 || r.humidite >= 75 || r.gaz >= 400).length;
         document.getElementById('hAlerts').textContent = warn;
     }
 }
@@ -398,13 +398,13 @@ function renderTable() {
     page.forEach(r => {
         const t = new Date(r.created_at).toLocaleString('fr-FR');
         if (currentTab === 'alertes') {
-            html += `<tr><td style="color:#555;font-size:11px">${t}</td><td>${r.message||'—'}</td><td><span class="badge badge-${r.niveau}">${r.niveau||'—'}</span></td><td style="color:var(--warn)">${r.valeur??'—'}</td><td style="color:${r.lu?'var(--neon)':'#555'}">${r.lu?'✓':'○'}</td></tr>`;
+            html += `<tr><td style="color:#555;font-size:11px">${t}</td><td>${r.message||'—'}</td><td><span class="badge badge-${r.niveau}">${r.niveau||'—'}</span></td><td style="color:var(--warn)">${r.valeur??'—'}</td><td style="color:${r.lu?'var(--neon)':'#555'}">${r.lu?'<i class="fa-solid fa-check"></i>':'○'}</td></tr>`;
         } else {
             html += `<tr>
                 <td style="color:#555;font-size:11px">${t}</td>
-                <td style="color:${r.temperature>40?'var(--danger)':r.temperature>35?'var(--warn)':'var(--neon)'}">${r.temperature??'—'}</td>
-                <td style="color:${r.humidite>85?'var(--danger)':r.humidite>75?'var(--warn)':'var(--blue)'}">${r.humidite??'—'}</td>
-                <td style="color:${r.gaz>500?'var(--danger)':r.gaz>300?'var(--warn)':'#ccc'}">${r.gaz??'—'}</td>
+                <td style="color:${r.temperature>=32?'var(--danger)':r.temperature>=28?'var(--warn)':'var(--neon)'}">${r.temperature??'—'}</td>
+                <td style="color:${r.humidite>=85?'var(--danger)':r.humidite>=75?'var(--warn)':'var(--blue)'}">${r.humidite??'—'}</td>
+                <td style="color:${r.gaz>=600?'var(--danger)':r.gaz>=400?'var(--warn)':'#ccc'}">${r.gaz??'—'}</td>
                 <td style="color:${r.pir?'var(--danger)':'var(--neon)'}">${r.pir?'OUI':'NON'}</td>
             </tr>`;
         }

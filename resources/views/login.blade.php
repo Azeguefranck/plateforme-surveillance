@@ -179,17 +179,17 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
     @php
       $err = session('error');
       $cls = str_contains($err, 'attente') ? 'alert-warn' : (str_contains($err, 'refusé') ? 'alert-error' : 'alert-error');
-      $ico = str_contains($err, 'attente') ? '⏳' : (str_contains($err, 'refusé') ? '❌' : '⚠️');
+      $ico = str_contains($err, 'attente') ? '<i class="fa-solid fa-clock"></i>' : (str_contains($err, 'refusé') ? '<i class="fa-solid fa-circle-xmark"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>');
     @endphp
     <div class="alert-box {{ $cls }}">
-      <span>{{ $ico }}</span>
+      <span>{!! $ico !!}</span>
       <span>{{ $err }}</span>
     </div>
   @endif
 
   @if(session('success'))
     <div class="alert-box alert-success">
-      <span>✅</span>
+      <span><i class="fa-solid fa-circle-check"></i></span>
       <span>{{ session('success') }}</span>
     </div>
   @endif
@@ -201,7 +201,7 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
       <label>Mot de passe</label>
       <div class="pw-wrap">
         <input type="password" name="mot_de_passe" id="pw-input" placeholder="••••••••" required>
-        <button type="button" class="pw-eye" onclick="this.previousElementSibling.type==='password'?(this.previousElementSibling.type='text',this.textContent='🙈'):(this.previousElementSibling.type='password',this.textContent='👁')">👁</button>
+        <button type="button" class="pw-eye" onclick="var i=this.previousElementSibling;if(i.type==='password'){i.type='text';this.innerHTML='<i class=\'fa-solid fa-eye-slash\'></i>';}else{i.type='password';this.innerHTML='<i class=\'fa-solid fa-eye\'></i>';}"><i class="fa-solid fa-eye"></i></button>
       </div>
     </div>
 

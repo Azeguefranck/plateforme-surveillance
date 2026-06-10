@@ -309,26 +309,26 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
 {{-- ── Header ── --}}
 <div class="profil-header">
-  <h1>👤 Mon <span>Profil</span></h1>
+  <h1><i class="fa-solid fa-user"></i> Mon <span>Profil</span></h1>
   <div class="breadcrumb"><a href="/dashboard">Dashboard</a> / Mon Profil</div>
 </div>
 
 {{-- ── Flash messages ── --}}
 @if(session('success_profil'))
-  <div class="flash flash-success">✅ {{ session('success_profil') }}</div>
+  <div class="flash flash-success"><i class="fa-solid fa-circle-check" style="color:#33ff88"></i> {{ session('success_profil') }}</div>
 @endif
 @if(session('success_password'))
-  <div class="flash flash-success">🔐 {{ session('success_password') }}</div>
+  <div class="flash flash-success"><i class="fa-solid fa-lock"></i> {{ session('success_password') }}</div>
 @endif
 @if(session('success_photo'))
-  <div class="flash flash-success">📷 {{ session('success_photo') }}</div>
+  <div class="flash flash-success"><i class="fa-solid fa-camera"></i> {{ session('success_photo') }}</div>
 @endif
 @if(session('error_password'))
-  <div class="flash flash-error">❌ {{ session('error_password') }}</div>
+  <div class="flash flash-error"><i class="fa-solid fa-circle-xmark" style="color:#ff5733"></i> {{ session('error_password') }}</div>
 @endif
 @if($errors->any())
   @foreach($errors->all() as $err)
-    <div class="flash flash-error">⚠️ {{ $err }}</div>
+    <div class="flash flash-error"><i class="fa-solid fa-triangle-exclamation" style="color:#ffd633"></i> {{ $err }}</div>
   @endforeach
 @endif
 
@@ -367,7 +367,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     <form action="/profil/photo" method="POST" enctype="multipart/form-data" id="form-photo">
       @csrf
       <label class="btn-photo">
-        📷 Modifier la photo
+        <i class="fa-solid fa-camera"></i> Modifier la photo
         <input type="file" name="photo_profil" accept="image/*" id="photo-input" onchange="previewPhoto(this);document.getElementById('form-photo').submit()">
       </label>
     </form>
@@ -425,7 +425,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="form-grid-3">
         {{-- Pays --}}
         <div class="field">
-          <label>🌍 Pays</label>
+          <label><i class="fa-solid fa-earth-africa"></i> Pays</label>
           <input type="hidden" name="pays"     id="p_pays_val"    value="{{ old('pays',    $u->pays    ?? '') }}">
           <input type="hidden" name="iso_pays" id="p_iso_val"     value="{{ old('iso_pays',$u->iso_pays?? '') }}">
           <select class="geo-sel" id="p_pays_sel">
@@ -435,7 +435,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         </div>
         {{-- Région --}}
         <div class="field">
-          <label>🌐 Région / Province / État</label>
+          <label><i class="fa-solid fa-globe"></i> Région / Province / État</label>
           <select class="geo-sel" name="region" id="p_region_sel" disabled>
             <option value="">— Choisir un pays d'abord —</option>
           </select>
@@ -443,7 +443,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         </div>
         {{-- Département --}}
         <div class="field">
-          <label>🏛️ Département / District</label>
+          <label><i class="fa-solid fa-building-columns"></i> Département / District</label>
           <select class="geo-sel" name="departement" id="p_dept_sel" disabled>
             <option value="">— Choisir une région d'abord —</option>
           </select>
@@ -451,7 +451,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         </div>
         {{-- Arrondissement --}}
         <div class="field">
-          <label>🏘️ Arrondissement / Commune</label>
+          <label><i class="fa-solid fa-house-chimney"></i> Arrondissement / Commune</label>
           <input type="hidden" name="arrondissement" id="p_h_arrond" value="{{ old('arrondissement', $u->arrondissement ?? '') }}">
           <select class="geo-sel" id="p_arrond_sel" style="display:none">
             <option value="">— Sélectionner —</option>
@@ -461,7 +461,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         </div>
         {{-- Ville --}}
         <div class="field">
-          <label>🏙️ Ville / Résidence</label>
+          <label><i class="fa-solid fa-city"></i> Ville / Résidence</label>
           <select class="geo-sel" name="ville_residence" id="p_ville_sel" disabled>
             <option value="">— Choisir un département d'abord —</option>
           </select>
@@ -492,7 +492,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       </div>
 
       <div class="btn-actions">
-        <button type="submit" class="btn-primary">💾 Enregistrer les modifications</button>
+        <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les modifications</button>
       </div>
     </form>
   </div>
@@ -507,7 +507,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
   {{-- ── Changer le mot de passe ── --}}
   <div class="card">
-    <div class="card-title">🔐 Sécurité du compte</div>
+    <div class="card-title"><i class="fa-solid fa-lock"></i> Sécurité du compte</div>
 
     <form action="/profil/password" method="POST">
       @csrf
@@ -516,7 +516,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         <label>Mot de passe actuel</label>
         <div class="pw-wrap">
           <input type="password" name="ancien_mdp" id="pw-old" placeholder="••••••••" required>
-          <button type="button" class="pw-eye" onclick="togglePw('pw-old',this)">👁</button>
+          <button type="button" class="pw-eye" onclick="togglePw('pw-old',this)"><i class="fa-solid fa-eye"></i></button>
         </div>
       </div>
 
@@ -524,7 +524,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         <label>Nouveau mot de passe</label>
         <div class="pw-wrap">
           <input type="password" name="nouveau_mdp" id="pw-new" placeholder="Min. 8 caractères" required minlength="8" oninput="updateStrength(this.value)">
-          <button type="button" class="pw-eye" onclick="togglePw('pw-new',this)">👁</button>
+          <button type="button" class="pw-eye" onclick="togglePw('pw-new',this)"><i class="fa-solid fa-eye"></i></button>
         </div>
         <div class="pw-strength">
           <div class="pw-bar" id="b1"></div>
@@ -540,63 +540,63 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         <label>Confirmer le nouveau mot de passe</label>
         <div class="pw-wrap">
           <input type="password" name="nouveau_mdp_confirmation" id="pw-conf" placeholder="Répéter le mot de passe" required minlength="8">
-          <button type="button" class="pw-eye" onclick="togglePw('pw-conf',this)">👁</button>
+          <button type="button" class="pw-eye" onclick="togglePw('pw-conf',this)"><i class="fa-solid fa-eye"></i></button>
         </div>
       </div>
 
       <div class="section-sep"></div>
 
       <div style="font-size:12px;color:#5a6a99;margin-bottom:16px;line-height:1.6">
-        🛡 Le mot de passe doit contenir au moins 8 caractères.<br>
+        <i class="fa-solid fa-shield-halved"></i> Le mot de passe doit contenir au moins 8 caractères.<br>
         Recommandé : majuscules, chiffres, caractères spéciaux.
       </div>
 
-      <button type="submit" class="btn-danger">🔑 Changer le mot de passe</button>
+      <button type="submit" class="btn-danger"><i class="fa-solid fa-key"></i> Changer le mot de passe</button>
     </form>
   </div>
 
   {{-- ── Sécurité avancée ── --}}
   <div class="card">
-    <div class="card-title">🛡 Sécurité avancée</div>
+    <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Sécurité avancée</div>
 
     <div class="sec-list">
       <div class="sec-row">
-        <div class="sec-ico">🌐</div>
+        <div class="sec-ico"><i class="fa-solid fa-globe"></i></div>
         <div class="sec-content">
           <div class="sec-key">Adresse IP</div>
           <div class="sec-val" id="user-ip">Chargement…</div>
         </div>
       </div>
       <div class="sec-row">
-        <div class="sec-ico">💻</div>
+        <div class="sec-ico"><i class="fa-solid fa-laptop"></i></div>
         <div class="sec-content">
           <div class="sec-key">Appareil</div>
           <div class="sec-val" id="user-device">—</div>
         </div>
       </div>
       <div class="sec-row">
-        <div class="sec-ico">🧭</div>
+        <div class="sec-ico"><i class="fa-solid fa-compass"></i></div>
         <div class="sec-content">
           <div class="sec-key">Navigateur</div>
           <div class="sec-val" id="user-browser">—</div>
         </div>
       </div>
       <div class="sec-row">
-        <div class="sec-ico">🕐</div>
+        <div class="sec-ico"><i class="fa-solid fa-clock"></i></div>
         <div class="sec-content">
           <div class="sec-key">Dernière activité</div>
           <div class="sec-val" id="user-activity">—</div>
         </div>
       </div>
       <div class="sec-row">
-        <div class="sec-ico">🔗</div>
+        <div class="sec-ico"><i class="fa-solid fa-link"></i></div>
         <div class="sec-content">
           <div class="sec-key">Statut connexion</div>
           <div class="sec-val online">● Session active</div>
         </div>
       </div>
       <div class="sec-row">
-        <div class="sec-ico">📅</div>
+        <div class="sec-ico"><i class="fa-solid fa-calendar-days"></i></div>
         <div class="sec-content">
           <div class="sec-key">Compte créé le</div>
           <div class="sec-val">{{ $date_inscription }}</div>
@@ -626,13 +626,13 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
   {{-- ── Activités récentes ── --}}
   <div class="card">
-    <div class="card-title">📋 Activités récentes</div>
+    <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Activités récentes</div>
     <div class="card-scroll">
       <div class="timeline" id="timeline">
 
         {{-- Connexion actuelle --}}
         <div class="tl-item">
-          <div class="tl-dot g">🔑</div>
+          <div class="tl-dot g"><i class="fa-solid fa-key"></i></div>
           <div class="tl-body">
             <div class="tl-msg">Connexion réussie à la plateforme</div>
             <div class="tl-time" id="tl-now">—</div>
@@ -642,12 +642,12 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         {{-- Alertes depuis la DB --}}
         @forelse($alertes as $alerte)
           @php
-            $ico   = $alerte->niveau === 'critique' ? '🔴' : ($alerte->niveau === 'warning' ? '🟡' : '🟢');
+            $ico   = $alerte->niveau === 'critique' ? '<i class="fa-solid fa-circle" style="color:#ff5733"></i>' : ($alerte->niveau === 'warning' ? '<i class="fa-solid fa-circle" style="color:#ffd633"></i>' : '<i class="fa-solid fa-circle" style="color:#33ff88"></i>');
             $cls   = $alerte->niveau === 'critique' ? 'r' : ($alerte->niveau === 'warning' ? 'y' : 'g');
             $date  = \Carbon\Carbon::parse($alerte->created_at)->format('d/m/Y H:i');
           @endphp
           <div class="tl-item">
-            <div class="tl-dot {{ $cls }}">{{ $ico }}</div>
+            <div class="tl-dot {{ $cls }}">{!! $ico !!}</div>
             <div class="tl-body">
               <div class="tl-msg">{{ $alerte->message }}</div>
               <div class="tl-time">{{ $date }}</div>
@@ -655,7 +655,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
           </div>
         @empty
           <div class="tl-item">
-            <div class="tl-dot b">📊</div>
+            <div class="tl-dot b"><i class="fa-solid fa-chart-bar"></i></div>
             <div class="tl-body">
               <div class="tl-msg">Aucune alerte enregistrée pour le moment</div>
               <div class="tl-time">Système en attente de données capteurs</div>
@@ -665,7 +665,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
         {{-- Inscription --}}
         <div class="tl-item">
-          <div class="tl-dot b">✅</div>
+          <div class="tl-dot b"><i class="fa-solid fa-circle-check"></i></div>
           <div class="tl-body">
             <div class="tl-msg">Compte créé et validé</div>
             <div class="tl-time">{{ $date_inscription }}</div>
@@ -678,31 +678,31 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
   {{-- ── Préférences notifications ── --}}
   <div class="card">
-    <div class="card-title">🔔 Préférences notifications</div>
+    <div class="card-title"><i class="fa-solid fa-bell"></i> Préférences notifications</div>
 
     <div class="switch-list">
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">📧</span> Alertes par email</div>
+        <div class="switch-label"><span class="switch-ico"><i class="fa-solid fa-envelope"></i></span> Alertes par email</div>
         <label class="toggle"><input type="checkbox" id="notif-email" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">🌡</span> Alertes température</div>
+        <div class="switch-label"><span class="switch-ico"><i class="fa-solid fa-temperature-half"></i></span> Alertes température</div>
         <label class="toggle"><input type="checkbox" id="notif-temp" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">💨</span> Alertes gaz / qualité air</div>
+        <div class="switch-label"><span class="switch-ico"><i class="fa-solid fa-wind"></i></span> Alertes gaz / qualité air</div>
         <label class="toggle"><input type="checkbox" id="notif-gaz" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">🚶</span> Alertes mouvement PIR</div>
+        <div class="switch-label"><span class="switch-ico"><i class="fa-solid fa-person-walking"></i></span> Alertes mouvement PIR</div>
         <label class="toggle"><input type="checkbox" id="notif-pir" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">📱</span> Alertes SMS</div>
+        <div class="switch-label"><span class="switch-ico"><i class="fa-solid fa-mobile-screen-button"></i></span> Alertes SMS</div>
         <label class="toggle"><input type="checkbox" id="notif-sms" onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
       <div class="switch-row">
-        <div class="switch-label"><span class="switch-ico">🔴</span> Alertes anomalies critiques</div>
+        <div class="switch-label"><span class="switch-ico"><i class="fa-solid fa-circle" style="color:#ff5733"></i></span> Alertes anomalies critiques</div>
         <label class="toggle"><input type="checkbox" id="notif-anomalie" checked onchange="saveNotif()"><span class="toggle-slider"></span></label>
       </div>
     </div>
@@ -737,8 +737,8 @@ function previewPhoto(input) {
 // ── Toggle visibility mot de passe ─────────────────────
 function togglePw(id, btn) {
   const el = document.getElementById(id);
-  if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
-  else                        { el.type = 'password'; btn.textContent = '👁'; }
+  if (el.type === 'password') { el.type = 'text'; btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>'; }
+  else                        { el.type = 'password'; btn.innerHTML = '<i class="fa-solid fa-eye"></i>'; }
 }
 
 // ── Indicateur force mot de passe ──────────────────────

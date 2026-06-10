@@ -10,16 +10,17 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
 
-            $table->string('pays')->nullable();
-            $table->string('region')->nullable();
-            $table->string('departement')->nullable();
-            $table->string('statut_matrimonial')->nullable();
-            $table->string('telephone')->nullable();
-            $table->string('profession')->nullable();
+            if (!Schema::hasColumn('users', 'pays'))              $table->string('pays')->nullable();
+            if (!Schema::hasColumn('users', 'region'))            $table->string('region')->nullable();
+            if (!Schema::hasColumn('users', 'departement'))       $table->string('departement')->nullable();
+            if (!Schema::hasColumn('users', 'statut_matrimonial'))$table->string('statut_matrimonial')->nullable();
+            if (!Schema::hasColumn('users', 'telephone'))         $table->string('telephone')->nullable();
+            if (!Schema::hasColumn('users', 'profession'))        $table->string('profession')->nullable();
 
-            $table->enum('validation_status',
-            ['en_attente','valide','refuse','bloque'])
-            ->default('en_attente');
+            if (!Schema::hasColumn('users', 'validation_status'))
+                $table->enum('validation_status',
+                ['en_attente','valide','refuse','bloque'])
+                ->default('en_attente');
 
         });
     }

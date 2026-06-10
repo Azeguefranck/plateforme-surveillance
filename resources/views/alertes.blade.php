@@ -208,7 +208,7 @@ function lireAlerte(btn, id) {
 }
 
 function supprimerAlerte(btn, id) {
-    confirmDlg('Supprimer cette alerte ?','Cette alerte sera définitivement supprimée de la base de données. Cette action est irréversible.',{type:'danger',icon:'🗑️',confirmText:'Supprimer'}).then(function(ok){
+    confirmDlg('Supprimer cette alerte ?','Cette alerte sera définitivement supprimée de la base de données. Cette action est irréversible.',{type:'danger',icon:'<i class="fa-solid fa-trash"></i>',confirmText:'Supprimer'}).then(function(ok){
         if (!ok) return;
         btnLoad(btn);
         csrfFetch('/alerte/'+id, {method:'DELETE'})
@@ -232,7 +232,7 @@ function marquerToutLu() {
 }
 
 function viderAlertes() {
-    confirmDlg('Vider toutes les alertes ?','L\'ensemble des alertes sera définitivement supprimé de la base de données. Cette action est irréversible et ne peut pas être annulée.',{type:'danger',icon:'⚠️',confirmText:'Tout vider',cancelText:'Annuler'}).then(function(ok){
+    confirmDlg('Vider toutes les alertes ?','L\'ensemble des alertes sera définitivement supprimé de la base de données. Cette action est irréversible et ne peut pas être annulée.',{type:'danger',icon:'<i class="fa-solid fa-triangle-exclamation"></i>',confirmText:'Tout vider',cancelText:'Annuler'}).then(function(ok){
         if (!ok) return;
         csrfFetch('/alertes/vider', {method:'POST'})
             .then(function(r){return r.json();})

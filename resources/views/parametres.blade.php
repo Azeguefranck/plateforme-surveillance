@@ -5,9 +5,9 @@
 @php
 $s = $seuils;
 $def = [
-    'temperature' => ['warning'=>35,   'critique'=>40,   'unite'=>'°C',  'max'=>100,  'ico'=>'🌡', 'label'=>'Température',   'color'=>'#ff5733', 'desc'=>'Surchauffe des serveurs'],
-    'humidite'    => ['warning'=>75,   'critique'=>85,   'unite'=>'%',   'max'=>100,  'ico'=>'💧', 'label'=>'Humidité',       'color'=>'#33b5ff', 'desc'=>'Condensation et corrosion'],
-    'gaz'         => ['warning'=>300,  'critique'=>500,  'unite'=>'ppm', 'max'=>1000, 'ico'=>'💨', 'label'=>'Gaz / Air',      'color'=>'#ffd633', 'desc'=>'Fuite dangereuse, risque incendie'],
+    'temperature' => ['warning'=>28,   'critique'=>32,   'unite'=>'°C',  'max'=>100,  'ico'=>'<i class="fa-solid fa-temperature-half"></i>', 'label'=>'Température',   'color'=>'#ff5733', 'desc'=>'Surchauffe des serveurs'],
+    'humidite'    => ['warning'=>75,   'critique'=>85,   'unite'=>'%',   'max'=>100,  'ico'=>'<i class="fa-solid fa-droplet"></i>', 'label'=>'Humidité',       'color'=>'#33b5ff', 'desc'=>'Condensation et corrosion'],
+    'gaz'         => ['warning'=>400,  'critique'=>600,  'unite'=>'ppm', 'max'=>1000, 'ico'=>'<i class="fa-solid fa-wind"></i>', 'label'=>'Gaz / Air',      'color'=>'#ffd633', 'desc'=>'Fuite dangereuse, risque incendie'],
 ];
 $fieldMap = [
     'temperature' => ['w'=>'temp_warning',  'c'=>'temp_critique'],
@@ -222,16 +222,16 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
 
 
 <div class="p-header">
-  <h1>⚙️ <span>Paramètres</span> Système</h1>
+  <h1><i class="fa-solid fa-gear"></i> <span>Paramètres</span> Système</h1>
   <div class="breadcrumb"><a href="/dashboard">Dashboard</a> / Paramètres</div>
 </div>
 
 @if(session('success_seuils'))
-  <div class="flash flash-ok">✅ {{ session('success_seuils') }}</div>
+  <div class="flash flash-ok"><i class="fa-solid fa-circle-check" style="color:#33ff88"></i> {{ session('success_seuils') }}</div>
 @endif
 @if($errors->any())
   @foreach($errors->all() as $err)
-    <div class="flash flash-err">⚠️ {{ $err }}</div>
+    <div class="flash flash-err"><i class="fa-solid fa-triangle-exclamation" style="color:#ffd633"></i> {{ $err }}</div>
   @endforeach
 @endif
 
@@ -240,7 +240,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
      SEUILS CAPTEURS
 ════════════════════════════════════════ --}}
 <div class="card">
-  <div class="card-title">📡 Seuils d'alerte capteurs</div>
+  <div class="card-title"><i class="fa-solid fa-satellite-dish"></i> Seuils d'alerte capteurs</div>
 
   <form action="/parametres/seuils" method="POST">
     @csrf
@@ -256,7 +256,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       @endphp
       <div class="sc">
         <div class="sc-head">
-          <div class="sc-ico">{{ $meta['ico'] }}</div>
+          <div class="sc-ico">{!! $meta['ico'] !!}</div>
           <div class="sc-info">
             <div class="sc-name">{{ $meta['label'] }} <span class="unite-tag">{{ $meta['unite'] }}</span></div>
             <div class="sc-desc">{{ $meta['desc'] }}</div>
@@ -267,13 +267,13 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         </div>
         <div class="sc-fields">
           <div class="sc-field">
-            <label class="lbl-warn">⚠ Avertissement</label>
+            <label class="lbl-warn"><i class="fa-solid fa-triangle-exclamation"></i> Avertissement</label>
             <input type="number" name="{{ $fw }}" value="{{ $wVal }}"
               step="0.1" min="0" max="{{ $meta['max'] }}"
               class="input-warn" required>
           </div>
           <div class="sc-field">
-            <label class="lbl-crit">🔴 Critique</label>
+            <label class="lbl-crit"><i class="fa-solid fa-circle" style="color:#ff5733"></i> Critique</label>
             <input type="number" name="{{ $fc }}" value="{{ $cVal }}"
               step="0.1" min="0" max="{{ $meta['max'] }}"
               class="input-crit" required>
@@ -289,7 +289,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     {{-- PIR --}}
     <div class="pir-card">
       <div class="pir-left">
-        <div class="pir-ico">🚶</div>
+        <div class="pir-ico"><i class="fa-solid fa-person-walking"></i></div>
         <div>
           <div class="pir-name">Détecteur PIR <span class="unite-tag">mouvement</span></div>
           <div class="pir-desc">Alerte intrusion — Surveillance active de la salle</div>
@@ -302,7 +302,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
     </div>
 
     <div style="display:flex;justify-content:flex-end;margin-top:22px">
-      <button type="submit" class="btn-save">💾 Sauvegarder les seuils</button>
+      <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Sauvegarder les seuils</button>
     </div>
 
   </form>
@@ -313,60 +313,60 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
      CONFIGURATION SYSTÈME
 ════════════════════════════════════════ --}}
 <div class="card">
-  <div class="card-title">🔧 Configuration système</div>
+  <div class="card-title"><i class="fa-solid fa-wrench"></i> Configuration système</div>
 
   <div class="cfg-grid">
     <div class="cfg-item">
-      <div class="cfg-ico">📧</div>
+      <div class="cfg-ico"><i class="fa-solid fa-envelope"></i></div>
       <div>
         <div class="cfg-key">Email administrateur</div>
         <div class="cfg-val">franckazegue0007@gmail.com</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">📱</div>
+      <div class="cfg-ico"><i class="fa-solid fa-mobile-screen-button"></i></div>
       <div>
         <div class="cfg-key">Email administrateur</div>
         <div class="cfg-val">franckazegue0007@gmail.com</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">⏱</div>
+      <div class="cfg-ico"><i class="fa-solid fa-clock"></i></div>
       <div>
         <div class="cfg-key">Intervalle envoi Arduino</div>
         <div class="cfg-val">10 secondes</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">🔄</div>
+      <div class="cfg-ico"><i class="fa-solid fa-rotate"></i></div>
       <div>
         <div class="cfg-key">Actualisation dashboard</div>
         <div class="cfg-val">1 seconde (AJAX temps réel)</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">🌐</div>
+      <div class="cfg-ico"><i class="fa-solid fa-globe"></i></div>
       <div>
         <div class="cfg-key">SMTP Gmail</div>
         <div class="cfg-val green">● Configuré</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">🔒</div>
+      <div class="cfg-ico"><i class="fa-solid fa-lock"></i></div>
       <div>
         <div class="cfg-key">Validation comptes</div>
         <div class="cfg-val green">● Activée</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">📡</div>
+      <div class="cfg-ico"><i class="fa-solid fa-satellite-dish"></i></div>
       <div>
         <div class="cfg-key">Capteurs actifs</div>
         <div class="cfg-val">DHT22, MQ135, PIR</div>
       </div>
     </div>
     <div class="cfg-item">
-      <div class="cfg-ico">🚀</div>
+      <div class="cfg-ico"><i class="fa-solid fa-rocket"></i></div>
       <div>
         <div class="cfg-key">Version plateforme</div>
         <div class="cfg-val">Plateforme de Surveillance v2.0</div>
@@ -383,7 +383,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
   <div class="card-title" style="justify-content:space-between;display:flex;align-items:center">
     <span style="display:flex;align-items:center;gap:8px">
       <span style="content:'';width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,#33ff88,#33b5ff);display:inline-block"></span>
-      📊 Statut en temps réel
+      <i class="fa-solid fa-chart-bar"></i> Statut en temps réel
     </span>
     <span style="font-size:11px;color:#5a6a99;font-weight:400;letter-spacing:0;text-transform:none">Mise à jour auto — 10s</span>
   </div>

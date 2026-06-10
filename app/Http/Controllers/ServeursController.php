@@ -30,10 +30,10 @@ class ServeursController extends Controller
             $q = fn() => DB::table('serveurs')->when($salleId, fn($q) => $q->where('salle_id', (int)$salleId));
             $stats = [
                 'total'       => $q()->count(),
-                'actif'       => $q()->where('statut','actif')->count(),
+                'actif'       => $q()->where('statut','en_ligne')->count(),
                 'maintenance' => $q()->where('statut','maintenance')->count(),
-                'panne'       => $q()->whereIn('statut',['en_panne','critique'])->count(),
-                'hors_ligne'  => $q()->whereIn('statut',['hors_ligne','deconnecte','inactif'])->count(),
+                'panne'       => $q()->where('statut','hors_ligne')->count(),
+                'hors_ligne'  => $q()->where('statut','hors_ligne')->count(),
             ];
         } catch (\Exception $e) {}
 
@@ -97,7 +97,7 @@ class ServeursController extends Controller
             'rack'                   => $r->rack,
             'position_rack'          => $r->position_rack,
             'localisation_physique'  => $r->localisation_physique,
-            'statut'                 => $r->statut ?? 'actif',
+            'statut'                 => $r->statut ?? 'en_ligne',
             'criticite'              => $r->criticite ?? 'normale',
             'systeme_exploitation'   => $r->systeme_exploitation,
             'version_os'             => $r->version_os,

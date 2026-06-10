@@ -233,7 +233,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
     <div class="reg-body">
 
       @if($errors->any())
-        <div class="flash flash-err">❌ {{ $errors->first() }}</div>
+        <div class="flash flash-err"><i class="fa-solid fa-circle-xmark"></i> {{ $errors->first() }}</div>
       @endif
 
       <form action="/register-user" method="POST" enctype="multipart/form-data" id="regForm" novalidate>
@@ -247,11 +247,11 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
         {{-- ══ STEP 1 : IDENTITÉ ══ --}}
         <div class="step-pane active" id="pane1">
-          <div class="pane-title">👤 Identité personnelle</div>
+          <div class="pane-title"><i class="fa-solid fa-user"></i> Identité personnelle</div>
           <div class="pane-sub">Vos informations de base</div>
           <div class="fg">
             <div class="photo-zone" onclick="document.getElementById('photoInput').click()">
-              <div class="photo-preview" id="photoPrev">📷</div>
+              <div class="photo-preview" id="photoPrev"><i class="fa-solid fa-camera"></i></div>
               <div class="photo-info">
                 <div class="photo-title">Photo de profil (optionnel)</div>
                 <div class="photo-sub">Cliquez pour choisir · JPG, PNG · Max 2 Mo</div>
@@ -329,7 +329,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
         {{-- ══ STEP 2 : LOCALISATION ══ --}}
         <div class="step-pane" id="pane2">
-          <div class="pane-title">🌍 Localisation géographique</div>
+          <div class="pane-title"><i class="fa-solid fa-earth-africa"></i> Localisation géographique</div>
           <div class="pane-sub">Votre pays, région et adresse</div>
           <div class="fg">
             {{-- Pays — Cameroun uniquement --}}
@@ -351,7 +351,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
             </div>
             {{-- [NOUVEAU] Niveau 2 : Région (Tom Select ou texte libre) --}}
             <div class="fld">
-              <label class="flbl">🌐 Région / Province / État</label>
+              <label class="flbl"><i class="fa-solid fa-globe"></i> Région / Province / État</label>
               <div class="loader" id="regLoader"><div class="spin"></div> Chargement des régions...</div>
               <select id="select-region" placeholder="— Choisir un pays d'abord —"></select>
               <input class="finp" id="txt-region" type="text" placeholder="Saisir la région..." style="display:none">
@@ -360,7 +360,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
             </div>
             {{-- [NOUVEAU] Niveau 3 : Département (Tom Select ou texte libre) --}}
             <div class="fld">
-              <label class="flbl">🏛️ Département / District / Comté</label>
+              <label class="flbl"><i class="fa-solid fa-building-columns"></i> Département / District / Comté</label>
               <div class="loader" id="deptLoader"><div class="spin"></div> Chargement...</div>
               <select id="select-dept" placeholder="— Choisir une région d'abord —"></select>
               <input class="finp" id="txt-dept" type="text" placeholder="Saisir le département..." style="display:none">
@@ -369,7 +369,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
             </div>
             {{-- [NOUVEAU] Niveau 4 : Arrondissement (Tom Select ou texte libre) --}}
             <div class="fld">
-              <label class="flbl">🏘️ Arrondissement / Commune</label>
+              <label class="flbl"><i class="fa-solid fa-house-chimney"></i> Arrondissement / Commune</label>
               <div class="loader" id="arrondLoader"><div class="spin"></div> Chargement...</div>
               <select id="select-arr" placeholder="— Choisir un département d'abord —"></select>
               <input class="finp" id="txt-arr" type="text" placeholder="Saisir l'arrondissement..." style="display:none">
@@ -378,7 +378,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
             </div>
             {{-- Niveau 5 : Ville / Résidence (saisie libre) --}}
             <div class="fld">
-              <label class="flbl">🏙️ Ville / Résidence</label>
+              <label class="flbl"><i class="fa-solid fa-city"></i> Ville / Résidence</label>
               <input class="finp" type="text" name="ville_residence" id="h_ville" placeholder="Ex: Yaoundé, Douala, Paris..." value="{{ old('ville_residence') }}">
             </div>
             {{-- Quartier --}}
@@ -400,7 +400,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
         {{-- ══ STEP 3 : PROFESSIONNEL ══ --}}
         <div class="step-pane" id="pane3">
-          <div class="pane-title">💼 Informations professionnelles</div>
+          <div class="pane-title"><i class="fa-solid fa-briefcase"></i> Informations professionnelles</div>
           <div class="pane-sub">Votre activité et votre rôle</div>
           <div class="fg">
             <div class="fld">
@@ -414,12 +414,12 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
             <div class="fld f-full">
               <label class="flbl">Rôle sur la plateforme</label>
               <select class="finp" name="role" id="role_sel">
-                <option value="utilisateur"    {{ old('role','utilisateur')=='utilisateur'   ?'selected':'' }}>👤 Utilisateur standard</option>
-                <option value="technicien"     {{ old('role')=='technicien'   ?'selected':'' }}>🔧 Technicien</option>
-                <option value="superviseur"    {{ old('role')=='superviseur'  ?'selected':'' }}>📊 Superviseur</option>
-                <option value="administrateur" {{ old('role')=='administrateur'?'selected':'' }}>🛡️ Administrateur</option>
-                <option value="prestataire"    {{ old('role')=='prestataire'  ?'selected':'' }}>🏢 Prestataire</option>
-                <option value="invite"         {{ old('role')=='invite'       ?'selected':'' }}>👁️ Invité (lecture seule)</option>
+                <option value="utilisateur"    {{ old('role','utilisateur')=='utilisateur'   ?'selected':'' }}>Utilisateur standard</option>
+                <option value="technicien"     {{ old('role')=='technicien'   ?'selected':'' }}>Technicien</option>
+                <option value="superviseur"    {{ old('role')=='superviseur'  ?'selected':'' }}>Superviseur</option>
+                <option value="administrateur" {{ old('role')=='administrateur'?'selected':'' }}>Administrateur</option>
+                <option value="prestataire"    {{ old('role')=='prestataire'  ?'selected':'' }}>Prestataire</option>
+                <option value="invite"         {{ old('role')=='invite'       ?'selected':'' }}>Invité (lecture seule)</option>
               </select>
             </div>
           </div>
@@ -431,7 +431,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
         {{-- ══ STEP 4 : COMPTE ══ --}}
         <div class="step-pane" id="pane4">
-          <div class="pane-title">🔐 Informations de connexion</div>
+          <div class="pane-title"><i class="fa-solid fa-lock"></i> Informations de connexion</div>
           <div class="pane-sub">Votre email et mot de passe sécurisé</div>
           <div class="fg col1">
             <div class="fld">
@@ -445,7 +445,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
               <div class="eye-wrap">
                 <input class="finp" type="password" name="password" id="password"
                        placeholder="Minimum 8 caractères" oninput="checkPwd(this.value)" autocomplete="new-password">
-                <button type="button" class="eye-btn" onclick="toggleEye('password',this)">👁</button>
+                <button type="button" class="eye-btn" onclick="toggleEye('password',this)"><i class="fa-solid fa-eye"></i></button>
               </div>
               <div class="pwd-bars">
                 <div class="pwd-bar" id="pb1"></div><div class="pwd-bar" id="pb2"></div>
@@ -459,7 +459,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
               <div class="eye-wrap">
                 <input class="finp" type="password" name="password_confirmation" id="pwdConf"
                        placeholder="Répéter le mot de passe" oninput="checkMatch()" autocomplete="new-password">
-                <button type="button" class="eye-btn" onclick="toggleEye('pwdConf',this)">👁</button>
+                <button type="button" class="eye-btn" onclick="toggleEye('pwdConf',this)"><i class="fa-solid fa-eye"></i></button>
               </div>
               <div class="err-msg" id="matchErr"></div>
             </div>
@@ -472,10 +472,10 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
 
         {{-- ══ STEP 5 : CONFIRMATION ══ --}}
         <div class="step-pane" id="pane5">
-          <div class="pane-title">✅ Confirmation</div>
+          <div class="pane-title"><i class="fa-solid fa-circle-check"></i> Confirmation</div>
           <div class="pane-sub">Vérifiez vos informations avant de soumettre</div>
           <div class="conf-badge">
-            <div class="conf-badge-icon">🔔</div>
+            <div class="conf-badge-icon"><i class="fa-solid fa-bell"></i></div>
             <div class="conf-badge-text">
               Votre compte sera soumis à <strong>validation par l'administrateur</strong>.<br>
               Un email de confirmation sera envoyé à l'adresse indiquée.
@@ -483,7 +483,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
           </div>
           <div class="recap-grid" id="recapGrid">
             <div class="recap-avatar">
-              <div class="recap-avatar-img" id="recapAvatarImg">👤</div>
+              <div class="recap-avatar-img" id="recapAvatarImg"><i class="fa-solid fa-user"></i></div>
               <div><div class="recap-name" id="recapName">—</div><div class="recap-role" id="recapRole">—</div></div>
             </div>
             <div class="recap-item"><div class="recap-label">Email</div><div class="recap-val" id="r_email">—</div></div>
@@ -505,7 +505,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
           </div>
           <div class="nav-row">
             <button type="button" class="btn btn-prev" onclick="goStep(4)">← Modifier</button>
-            <button type="submit" class="btn btn-submit">🚀 Créer mon compte</button>
+            <button type="submit" class="btn btn-submit"><i class="fa-solid fa-rocket"></i> Créer mon compte</button>
           </div>
         </div>
 
@@ -664,7 +664,7 @@ function buildRecap(){
   var prevImg=document.getElementById('photoPrev');
   var rImg=document.getElementById('recapAvatarImg');
   if(prevImg.querySelector('img')){rImg.innerHTML=prevImg.querySelector('img').outerHTML;}
-  else{rImg.textContent=(prenom.charAt(0)+nom.charAt(0)).toUpperCase()||'👤';}
+  else{rImg.textContent=(prenom.charAt(0)+nom.charAt(0)).toUpperCase()||'';if(!rImg.textContent)rImg.innerHTML='<i class="fa-solid fa-user"></i>';}
 }
 
 /* ── Password ────────────────────────────────────── */
@@ -685,8 +685,8 @@ function checkMatch(){
   var p2=document.getElementById('pwdConf').value;
   var e=document.getElementById('matchErr');
   if(!p2){e.textContent='';return;}
-  if(p1===p2){e.style.color='#39ff14';e.textContent='✅ Identiques';}
-  else{e.style.color='#ff5050';e.textContent='❌ Ne correspondent pas';}
+  if(p1===p2){e.style.color='#39ff14';e.innerHTML='<i class="fa-solid fa-circle-check"></i> Identiques';}
+  else{e.style.color='#ff5050';e.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Ne correspondent pas';}
 }
 function checkEmail(v){
   var e=document.getElementById('emailErr');
@@ -696,7 +696,7 @@ function checkEmail(v){
 function toggleEye(id,btn){
   var i=document.getElementById(id);
   i.type=i.type==='password'?'text':'password';
-  btn.textContent=i.type==='text'?'🙈':'👁';
+  btn.innerHTML=i.type==='text'?'<i class="fa-solid fa-eye-slash"></i>':'<i class="fa-solid fa-eye"></i>';
 }
 function previewPhoto(inp){
   if(!inp.files||!inp.files[0]) return;

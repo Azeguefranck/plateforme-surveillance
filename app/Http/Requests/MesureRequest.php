@@ -12,18 +12,21 @@ class MesureRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            //
+            'temperature'   => 'sometimes|numeric|between:-50,100',
+            'humidite'      => 'sometimes|numeric|between:0,100',
+            'gaz'           => 'sometimes|numeric|min:0',
+            'pir'           => 'sometimes|boolean',
+            'salle_id'      => 'sometimes|integer|min:1',
+            'equipement_id' => 'sometimes|nullable|integer|min:1',
         ];
     }
 }

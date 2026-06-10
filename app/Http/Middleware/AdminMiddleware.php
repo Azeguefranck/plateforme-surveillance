@@ -15,6 +15,14 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $user = session('user');
+        if (!$user) {
+            return redirect('/login');
+        }
+        $user = (object)(array)$user;
+        if (($user->role ?? '') !== 'admin' && ($user->role ?? '') !== 'superadmin') {
+            abort(403, 'Accès réservé aux administrateurs.');
+        }
         return $next($request);
     }
 }

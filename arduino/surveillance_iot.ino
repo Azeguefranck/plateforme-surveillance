@@ -28,16 +28,16 @@
 #define SIM900_PWR    9
 
 // ── Config réseau ─────────────────────────────────────────
-const char APN[]        = "internet";          // APN opérateur
-const char SERVER_HOST[] = "votre-domaine.com"; // remplacer par IP/domaine réel
+const char APN[]        = "orangecm";
+const char SERVER_HOST[] = "lego-sanitizer-hexagram.ngrok-free.dev";
 const int  SERVER_PORT  = 80;
 const char API_PATH[]   = "/api/capteurs";
-const char SMS_NUMERO[] = "+237687988340";
+const char SMS_NUMERO[] = "+237692543407";
 
 // ── Seuils d'alerte ───────────────────────────────────────
-const float TEMP_WARN  = 35.0,  TEMP_CRIT  = 40.0;
+const float TEMP_WARN  = 28.0,  TEMP_CRIT  = 32.0;
 const float HUM_WARN   = 75.0,  HUM_CRIT   = 85.0;
-const float GAZ_WARN   = 300.0, GAZ_CRIT   = 500.0;
+const float GAZ_WARN   = 400.0, GAZ_CRIT   = 600.0;
 const float COUR_WARN  = 10.0,  COUR_CRIT  = 15.0;
 const float PUIS_WARN  = 3000.0, PUIS_CRIT = 5000.0;
 const float TENSION    = 220.0; // tension secteur constante (à mesurer si transformateur)
