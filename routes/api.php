@@ -29,16 +29,6 @@ function getSeuilsMeta(): array
             'risque'   => 'Fuite de gaz dangereux, risque d\'incendie ou d\'explosion',
             'solution' => 'Évacuer la salle, couper l\'alimentation, appeler les secours',
         ],
-        'courant' => [
-            'unite'    => 'A',
-            'risque'   => 'Surcharge électrique, risque de court-circuit ou d\'incendie',
-            'solution' => 'Vérifier les charges connectées, couper les équipements non essentiels',
-        ],
-        'puissance' => [
-            'unite'    => 'W',
-            'risque'   => 'Consommation excessive, surchauffe alimentation, coupure onduleur',
-            'solution' => 'Réduire la charge électrique, vérifier l\'onduleur et les barrettes d\'alimentation',
-        ],
     ];
 }
 endif;
@@ -64,8 +54,6 @@ function getSeuilsValeurs(): array
         'temperature' => ['warning' => 28,   'critique' => 32],
         'humidite'    => ['warning' => 75,   'critique' => 85],
         'gaz'         => ['warning' => 400,  'critique' => 600],
-        'courant'     => ['warning' => 10,   'critique' => 15],
-        'puissance'   => ['warning' => 1000, 'critique' => 1500],
         'pir'         => ['actif' => 1],
     ];
     return $cache;
@@ -417,8 +405,6 @@ Route::post('/capteurs', function (Request $request) {
     $humidite     = (float) ($request->humidite      ?? 0);
     $gaz          = (float) ($request->gaz           ?? 0);
     $pir          = (bool)  ($request->pir           ?? false);
-    $courant      = $request->courant   !== null ? (float) $request->courant   : null;
-    $puissance    = $request->puissance !== null ? (float) $request->puissance : null;
     $salleId      = $request->salle_id      ? (int) $request->salle_id      : null;
     $equipementId = $request->equipement_id ? (int) $request->equipement_id : null;
 
@@ -427,8 +413,6 @@ Route::post('/capteurs', function (Request $request) {
         'temperature' => $request->has('temperature') || $request->temperature !== null,
         'humidite'    => $request->has('humidite')    || $request->humidite    !== null,
         'gaz'         => $request->has('gaz')         || $request->gaz         !== null,
-        'courant'     => $courant   !== null,
-        'puissance'   => $puissance !== null,
     ]));
 
     // Enregistrer la mesure en base
@@ -437,8 +421,6 @@ Route::post('/capteurs', function (Request $request) {
         'humidite'      => $humidite,
         'gaz'           => $gaz,
         'pir_detecte'   => $pir ? 1 : 0,
-        'courant'       => $courant,
-        'puissance'     => $puissance,
         'salle_id'      => $salleId,
         'equipement_id' => $equipementId,
         'created_at'    => now(),
@@ -447,8 +429,6 @@ Route::post('/capteurs', function (Request $request) {
 
     $horodatage = now()->format('d/m/Y H:i:s');
     $mesValeurs = compact('temperature', 'humidite', 'gaz');
-    if ($courant   !== null) $mesValeurs['courant']   = $courant;
-    if ($puissance !== null) $mesValeurs['puissance'] = $puissance;
     $alertes    = analyserMesures($mesValeurs, $capteursPresents);
     $seuils     = getSeuilsValeurs();
 
@@ -616,8 +596,6 @@ Route::get('/mesures-live', function () {
                 'humidite'    => (float) ($d['humidite']    ?? 0),
                 'gaz'         => (int)   ($d['gaz']         ?? 0),
                 'pir'         => (bool)  ($d['pir']         ?? false),
-                'courant'     => isset($d['courant'])   ? (float) $d['courant']   : null,
-                'puissance'   => isset($d['puissance']) ? (float) $d['puissance'] : null,
                 'ts'          => $d['ts'] ?? now()->toDateTimeString(),
                 'source'      => 'live',
             ], $enrichir($sid));

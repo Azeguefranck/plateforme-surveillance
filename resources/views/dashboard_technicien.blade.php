@@ -74,26 +74,6 @@
 .pir-det{background:rgba(239,68,68,.1);color:#dc2626;border:1px solid #ef4444;animation:pir-flash .8s infinite}
 @keyframes pir-flash{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* ── Électrique section ── */
-.elec-section{
-  margin-top:12px;padding:14px 16px;border-radius:12px;
-  background:linear-gradient(135deg,rgba(139,92,246,.05),rgba(245,158,11,.05));
-  border:1px solid #e9d5ff;
-  display:none;
-}
-.elec-section.visible{display:block}
-.elec-title{font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-.elec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.elec-card{background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid #ede9fe}
-.elec-val{font-size:20px;font-weight:800;color:#1a2340}
-.elec-val.warn-c{color:#d97706}
-.elec-val.crit-c{color:#dc2626}
-.elec-lbl{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.elec-bar{height:4px;border-radius:2px;background:#ede9fe;margin-top:8px;overflow:hidden}
-.elec-fill{height:100%;border-radius:2px;background:#8b5cf6;transition:width .6s ease}
-.elec-fill.warn-f{background:#f59e0b}
-.elec-fill.crit-f{background:#ef4444}
-
 /* ── Alertes récentes ── */
 .alerts-section{background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-top:16px}
 .alerts-title{font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:12px}
@@ -130,18 +110,14 @@
 
 <script>
 let SEUILS = {
-  temperature: { warn:28,   crit:32,   max:80   },
-  humidite:    { warn:75,   crit:85,   max:100  },
-  gaz:         { warn:400,  crit:600,  max:1000 },
-  courant:     { warn:10,   crit:15,   max:30   },
-  puissance:   { warn:1000, crit:1500, max:3000 },
+  temperature: { warn:28,  crit:32,  max:80   },
+  humidite:    { warn:75,  crit:85,  max:100  },
+  gaz:         { warn:400, crit:600, max:1000 },
 };
 fetch('/api/seuils').then(r=>r.json()).then(s=>{
   if(s.temperature) SEUILS.temperature = { warn:s.temperature.warning, crit:s.temperature.critique, max:80 };
   if(s.humidite)    SEUILS.humidite    = { warn:s.humidite.warning,    crit:s.humidite.critique,    max:100 };
   if(s.gaz)         SEUILS.gaz         = { warn:s.gaz.warning,         crit:s.gaz.critique,         max:1000 };
-  if(s.courant)     SEUILS.courant     = { warn:s.courant.warning,     crit:s.courant.critique,     max:30 };
-  if(s.puissance)   SEUILS.puissance   = { warn:s.puissance.warning,   crit:s.puissance.critique,   max:3000 };
 }).catch(()=>{});
 
 function getPanel(sid, nom) {
@@ -178,21 +154,6 @@ function getPanel(sid, nom) {
            <div style="font-size:38px;margin:10px 0"><i class="fa-solid fa-person-walking"></i></div>
            <div class="pir-badge pir-ok" id="tpir-badge-${sid}">AUCUN MOUVEMENT</div>
          </div>
-       </div>
-       <div class="elec-section" id="telec-${sid}">
-         <div class="elec-title"><i class="fa-solid fa-bolt" style="margin-right:6px"></i>Électrique</div>
-         <div class="elec-grid">
-           <div class="elec-card">
-             <div class="elec-val" id="telec-courant-${sid}">—</div>
-             <div class="elec-lbl">Courant (A)</div>
-             <div class="elec-bar"><div class="elec-fill" id="telec-cf-${sid}" style="width:0%"></div></div>
-           </div>
-           <div class="elec-card">
-             <div class="elec-val" id="telec-puissance-${sid}">—</div>
-             <div class="elec-lbl">Puissance (W)</div>
-             <div class="elec-bar"><div class="elec-fill" id="telec-pf-${sid}" style="width:0%"></div></div>
-           </div>
-         </div>
        </div>`;
     document.getElementById('tech-salle-panels').appendChild(p);
   }
@@ -209,30 +170,6 @@ function majJauge(sid, nom, val) {
   fill.style.width = Math.min(100, (val / s.max) * 100) + '%';
   const lvl = val >= s.crit ? 'crit' : val >= s.warn ? 'warn' : 'ok';
   card.className = 'gauge-card ' + lvl + (val >= s.crit ? ' alerte-critique' : val >= s.warn ? ' alerte-warning' : '');
-}
-
-function majElec(sid, courant, puissance) {
-  const sc = SEUILS.courant;
-  const sp = SEUILS.puissance;
-  const elecDiv = document.getElementById('telec-' + sid);
-  if (!elecDiv) return;
-
-  elecDiv.classList.add('visible');
-
-  const cEl  = document.getElementById('telec-courant-'  + sid);
-  const pEl  = document.getElementById('telec-puissance-' + sid);
-  const cFil = document.getElementById('telec-cf-'       + sid);
-  const pFil = document.getElementById('telec-pf-'       + sid);
-
-  const cLvl = courant   >= sc.crit ? 'crit-c' : courant   >= sc.warn ? 'warn-c' : '';
-  const pLvl = puissance >= sp.crit ? 'crit-c' : puissance >= sp.warn ? 'warn-c' : '';
-  const cFLvl = courant  >= sc.crit ? 'crit-f' : courant   >= sc.warn ? 'warn-f' : '';
-  const pFLvl = puissance>= sp.crit ? 'crit-f' : puissance >= sp.warn ? 'warn-f' : '';
-
-  if (cEl) { cEl.textContent = courant.toFixed(2);   cEl.className = 'elec-val ' + cLvl; }
-  if (pEl) { pEl.textContent = puissance.toFixed(1); pEl.className = 'elec-val ' + pLvl; }
-  if (cFil) { cFil.style.width = Math.min(100, (courant   / sc.max) * 100) + '%'; cFil.className = 'elec-fill ' + cFLvl; }
-  if (pFil) { pFil.style.width = Math.min(100, (puissance / sp.max) * 100) + '%'; pFil.className = 'elec-fill ' + pFLvl; }
 }
 
 function pollMesures() {
@@ -260,9 +197,6 @@ function pollMesures() {
         const pCard = document.getElementById('tcard-pir-'  + sid);
         if (badge) { badge.className = 'pir-badge ' + (pir ? 'pir-det' : 'pir-ok'); badge.textContent = pir ? 'MOUVEMENT DÉTECTÉ' : 'AUCUN MOUVEMENT'; }
         if (pCard) pCard.className = 'gauge-card ' + (pir ? 'crit alerte-critique' : 'ok');
-
-        if (d.courant != null)
-          majElec(sid, parseFloat(d.courant), parseFloat(d.puissance) || 0);
 
         const tsEl = document.getElementById('tts-' + sid);
         if (tsEl) tsEl.textContent = 'Màj ' + new Date().toLocaleTimeString('fr-FR');

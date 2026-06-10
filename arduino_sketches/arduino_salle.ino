@@ -4,10 +4,7 @@
 #define DHT_PIN     4
 #define DHT_TYPE    DHT22
 #define MQ135_PIN   A0
-#define ACS712_PIN  A1
 #define PIR_PIN     5
-#define ACS712_SENS     0.066f
-#define TENSION_SECTEUR 220.0f
 #define BUZZER_PIN  6
 #define LED_R       9
 #define LED_G       10
@@ -24,9 +21,6 @@ float temperature = 0.0;
 float humidite    = 0.0;
 int   gaz         = 0;
 int   pir         = 0;
-float courant     = 0.0;
-float puissance   = 0.0;
-
 #define DEBOUNCE_REQ 3
 int  cntTemp=0, cntHum=0, cntGaz=0;
 bool etatTemp=false, etatHum=false, etatGaz=false;
@@ -181,36 +175,27 @@ void verifierAlertes() {
 
 // Envoie un JSON "live" toutes les 2 s
 void envoyerLive() {
-  char tB[8], hB[8], cB[8], pB[10];
+  char tB[8], hB[8];
   dtostrf(temperature, 4, 1, tB);
   dtostrf(humidite,    4, 1, hB);
-  float v = analogRead(ACS712_PIN) * (5.0f / 1023.0f);
-  courant  = fabsf((v - 2.5f) / ACS712_SENS);
-  puissance = courant * TENSION_SECTEUR;
-  dtostrf(courant,   4, 2, cB);
-  dtostrf(puissance, 6, 1, pB);
 
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"type\":\"live\",\"salle_id\":%d,"
-    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d,"
-    "\"courant\":%s,\"puissance\":%s}",
-    SALLE_ID, tB, hB, gaz, pir, cB, pB);
+    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d}",
+    SALLE_ID, tB, hB, gaz, pir);
 
   Serial.println(jsonBuf);
 }
 
 void envoyerDonnees() {
-  char tB[8], hB[8], cB[8], pB[10];
+  char tB[8], hB[8];
   dtostrf(temperature, 4, 1, tB);
   dtostrf(humidite,    4, 1, hB);
-  dtostrf(courant,     4, 2, cB);
-  dtostrf(puissance,   6, 1, pB);
 
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"type\":\"donnees\",\"salle_id\":%d,"
-    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d,"
-    "\"courant\":%s,\"puissance\":%s}",
-    SALLE_ID, tB, hB, gaz, pir, cB, pB);
+    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d}",
+    SALLE_ID, tB, hB, gaz, pir);
 
   Serial.println(jsonBuf);
 }

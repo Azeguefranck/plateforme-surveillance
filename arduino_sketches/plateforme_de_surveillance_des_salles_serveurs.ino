@@ -5,7 +5,6 @@
 #define DHT_TYPE    DHT22
 
 #define MQ135_PIN   A0
-#define ACS712_PIN  A1
 #define PIR_PIN     5
 
 #define BUZZER_PIN  6
@@ -13,10 +12,6 @@
 #define LED_R       9
 #define LED_G       10
 #define LED_B       11
-
-// ACS712-30A : sensibilité 66 mV/A, offset 2.5 V (Vcc/2)
-#define ACS712_SENS     0.066f
-#define TENSION_SECTEUR 220.0f
 
 DHT dht(DHT_PIN, DHT_TYPE);
 
@@ -34,10 +29,8 @@ bool PIR_ACTIF = true;
 float temperature = 0.0;
 float humidite    = 0.0;
 
-int   gaz      = 0;
-int   pir      = 0;
-float courant  = 0.0;
-float puissance = 0.0;
+int gaz = 0;
+int pir = 0;
 
 #define DEBOUNCE_REQ 3
 
@@ -63,7 +56,7 @@ unsigned long tEmailPir  = 0;
 unsigned long tDernierEnvoi = 0;
 unsigned long tLive = 0;
 
-char jsonBuf[320];
+char jsonBuf[256];
 
 void lireCapteurs();
 void verifierAlertes();
@@ -143,10 +136,6 @@ void loop() {
     gaz = analogRead(MQ135_PIN);
     pir = digitalRead(PIR_PIN);
 
-    float vAcs  = analogRead(ACS712_PIN) * (5.0f / 1023.0f);
-    courant     = fabsf((vAcs - 2.5f) / ACS712_SENS);
-    puissance   = courant * TENSION_SECTEUR;
-
     envoyerLive();
   }
 
@@ -177,10 +166,6 @@ void lireCapteurs() {
 
   gaz = analogRead(MQ135_PIN);
   pir = digitalRead(PIR_PIN);
-
-  float v = analogRead(ACS712_PIN) * (5.0f / 1023.0f);
-  courant  = fabsf((v - 2.5f) / ACS712_SENS);
-  puissance = courant * TENSION_SECTEUR;
 }
 
 void verifierAlertes() {
@@ -287,12 +272,10 @@ void verifierAlertes() {
 
 void envoyerLive() {
 
-  char tB[8], hB[8], cB[8], pB[10];
+  char tB[8], hB[8];
 
   dtostrf(temperature, 4, 1, tB);
   dtostrf(humidite,    4, 1, hB);
-  dtostrf(courant,     4, 2, cB);
-  dtostrf(puissance,   6, 1, pB);
 
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"type\":\"live\","
@@ -300,10 +283,8 @@ void envoyerLive() {
     "\"temperature\":%s,"
     "\"humidite\":%s,"
     "\"gaz\":%d,"
-    "\"pir\":%d,"
-    "\"courant\":%s,"
-    "\"puissance\":%s}",
-    SALLE_ID, tB, hB, gaz, pir, cB, pB
+    "\"pir\":%d}",
+    SALLE_ID, tB, hB, gaz, pir
   );
 
   Serial.println(jsonBuf);
@@ -311,12 +292,10 @@ void envoyerLive() {
 
 void envoyerDonnees() {
 
-  char tB[8], hB[8], cB[8], pB[10];
+  char tB[8], hB[8];
 
   dtostrf(temperature, 4, 1, tB);
   dtostrf(humidite,    4, 1, hB);
-  dtostrf(courant,     4, 2, cB);
-  dtostrf(puissance,   6, 1, pB);
 
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"type\":\"donnees\","
@@ -324,10 +303,8 @@ void envoyerDonnees() {
     "\"temperature\":%s,"
     "\"humidite\":%s,"
     "\"gaz\":%d,"
-    "\"pir\":%d,"
-    "\"courant\":%s,"
-    "\"puissance\":%s}",
-    SALLE_ID, tB, hB, gaz, pir, cB, pB
+    "\"pir\":%d}",
+    SALLE_ID, tB, hB, gaz, pir
   );
 
   Serial.println(jsonBuf);
@@ -375,16 +352,7 @@ void afficherSerie() {
   Serial.print("ppm  ");
 
   Serial.print("PIR:");
-  Serial.print(pir);
-  Serial.print("  ");
-
-  Serial.print("I:");
-  Serial.print(courant);
-  Serial.print("A  ");
-
-  Serial.print("P:");
-  Serial.print(puissance);
-  Serial.println("W");
+  Serial.println(pir);
 }
 
 void ledVerte() {

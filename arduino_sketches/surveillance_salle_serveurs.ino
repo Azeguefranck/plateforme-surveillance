@@ -30,16 +30,11 @@
 #define DHT_PIN     4
 #define DHT_TYPE    DHT22
 #define MQ135_PIN   A0
-#define ACS712_PIN  A1   // capteur de courant ACS712
 #define PIR_PIN     5
 #define BUZZER_PIN  6
 #define LED_R       9
 #define LED_G       10
 #define LED_B       11
-
-// ── ACS712-30A : sensibilité 66 mV/A, offset 2.5 V ──────────
-#define ACS712_SENS  0.066f   // V/A
-#define TENSION_SECTEUR 220.0f  // V (secteur Cameroun)
 
 // ── Seuils d'alerte (ASHRAE TC 9.9) ──────────────────────────
 int SEUIL_TEMP_W = 28, SEUIL_TEMP_C = 32;   // °C
@@ -59,8 +54,6 @@ float temperature = 0.0;
 float humidite    = 0.0;
 int   gaz         = 0;
 int   pir         = 0;
-float courant     = 0.0;   // A
-float puissance   = 0.0;   // W
 
 // ── Anti-rebond alertes ───────────────────────────────────────
 int  cntTemp=0, cntHum=0, cntGaz=0;
@@ -71,7 +64,7 @@ unsigned long tEmailTemp=0, tEmailHum=0, tEmailGaz=0, tEmailPir=0;
 unsigned long tDernierEnvoi=0, tLive=0;
 
 // ── Buffer JSON ───────────────────────────────────────────────
-char jsonBuf[320];
+char jsonBuf[256];
 
 // ── Buzzer non-bloquant avec tone() ──────────────────────────
 // 0=silence  1=warning 440Hz  2=critique 880Hz  3=intrusion 1200Hz
@@ -156,9 +149,6 @@ void loop() {
     tLive = now;
     gaz = analogRead(MQ135_PIN);
     pir = digitalRead(PIR_PIN);
-    float vAcs = analogRead(ACS712_PIN) * (5.0f / 1023.0f);
-    courant   = fabsf((vAcs - 2.5f) / ACS712_SENS);
-    puissance = courant * TENSION_SECTEUR;
     // Relire DHT22 si 2 s se sont écoulées (fréquence max du capteur)
     float t2 = dht.readTemperature();
     float h2 = dht.readHumidity();
@@ -186,9 +176,6 @@ void lireCapteurs() {
   if (!isnan(h)) humidite    = h;
   gaz = analogRead(MQ135_PIN);
   pir = digitalRead(PIR_PIN);
-  float v = analogRead(ACS712_PIN) * (5.0f / 1023.0f);
-  courant  = fabsf((v - 2.5f) / ACS712_SENS);
-  puissance = courant * TENSION_SECTEUR;
 }
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -320,32 +307,26 @@ void gererLED() {
 // ║  ENVOI JSON SÉRIE                                         ║
 // ╚══════════════════════════════════════════════════════════╝
 void envoyerLive() {
-  char tB[8], hB[8], cB[8], pB[10];
+  char tB[8], hB[8];
   dtostrf(temperature, 4, 1, tB);
   dtostrf(humidite,    4, 1, hB);
-  dtostrf(courant,     4, 2, cB);
-  dtostrf(puissance,   6, 1, pB);
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"type\":\"live\","
     "\"salle_id\":%d,\"equipement_id\":%d,"
-    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d,"
-    "\"courant\":%s,\"puissance\":%s}",
-    SALLE_ID, EQUIPEMENT_ID, tB, hB, gaz, pir, cB, pB);
+    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d}",
+    SALLE_ID, EQUIPEMENT_ID, tB, hB, gaz, pir);
   Serial.println(jsonBuf);
 }
 
 void envoyerDonnees() {
-  char tB[8], hB[8], cB[8], pB[10];
+  char tB[8], hB[8];
   dtostrf(temperature, 4, 1, tB);
   dtostrf(humidite,    4, 1, hB);
-  dtostrf(courant,     4, 2, cB);
-  dtostrf(puissance,   6, 1, pB);
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"type\":\"donnees\","
     "\"salle_id\":%d,\"equipement_id\":%d,"
-    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d,"
-    "\"courant\":%s,\"puissance\":%s}",
-    SALLE_ID, EQUIPEMENT_ID, tB, hB, gaz, pir, cB, pB);
+    "\"temperature\":%s,\"humidite\":%s,\"gaz\":%d,\"pir\":%d}",
+    SALLE_ID, EQUIPEMENT_ID, tB, hB, gaz, pir);
   Serial.println(jsonBuf);
 }
 
@@ -370,9 +351,7 @@ void afficherSerie() {
   Serial.print("T:"); Serial.print(temperature); Serial.print("C  ");
   Serial.print("H:"); Serial.print(humidite);    Serial.print("%  ");
   Serial.print("G:"); Serial.print(gaz);          Serial.print("ppm  ");
-  Serial.print("PIR:"); Serial.print(pir);         Serial.print("  ");
-  Serial.print("I:"); Serial.print(courant);      Serial.print("A  ");
-  Serial.print("P:"); Serial.print(puissance);    Serial.println("W");
+  Serial.print("PIR:"); Serial.println(pir);
 }
 
 void ledVerte()  { analogWrite(LED_R,   0); analogWrite(LED_G, 255); analogWrite(LED_B,   0); }

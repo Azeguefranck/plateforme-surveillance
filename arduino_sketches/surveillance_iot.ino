@@ -8,7 +8,6 @@
  *   DHT22    → pin 7  (DATA)
  *   MQ135    → A0     (AOUT)
  *   PIR      → pin 8  (OUT)
- *   ACS712   → A1     (OUT)  — modèle 30A : sensibilité 66 mV/A
  *   SIM900 TX → pin 11 (RX Arduino)
  *   SIM900 RX → pin 10 (TX Arduino)
  *   SIM900 PWR → pin 9 (HIGH 1s pour allumer)
@@ -22,7 +21,6 @@
 #define DHT_TYPE      DHT22
 #define MQ135_PIN     A0
 #define PIR_PIN       8
-#define ACS712_PIN    A1
 #define SIM900_TX     10
 #define SIM900_RX     11
 #define SIM900_PWR    9
@@ -38,9 +36,6 @@ const char SMS_NUMERO[] = "+237692543407";
 const float TEMP_WARN  = 28.0,  TEMP_CRIT  = 32.0;
 const float HUM_WARN   = 75.0,  HUM_CRIT   = 85.0;
 const float GAZ_WARN   = 400.0, GAZ_CRIT   = 600.0;
-const float COUR_WARN  = 10.0,  COUR_CRIT  = 15.0;
-const float PUIS_WARN  = 3000.0, PUIS_CRIT = 5000.0;
-const float TENSION    = 220.0; // tension secteur constante (à mesurer si transformateur)
 
 // ── Intervalles ───────────────────────────────────────────
 const unsigned long ENVOI_INTERVAL    = 10000;  // envoi HTTP toutes les 10s
@@ -52,7 +47,6 @@ SoftwareSerial sim900(SIM900_RX, SIM900_TX);
 unsigned long dernierEnvoi   = 0;
 unsigned long dernierSMSTemp = 0;
 unsigned long dernierSMSGaz  = 0;
-unsigned long dernierSMSCour = 0;
 unsigned long dernierSMSPir  = 0;
 bool          pirPrecedent   = false;
 
@@ -78,8 +72,6 @@ void loop() {
   float temperature = dht.readTemperature();
   float humidite    = dht.readHumidity();
   float gaz         = lireGaz();
-  float courant     = lireCourant();
-  float puissance   = courant * TENSION;
   bool  pir         = digitalRead(PIR_PIN) == HIGH;
 
   if (isnan(temperature)) temperature = 0;
@@ -88,22 +80,19 @@ void loop() {
   Serial.print(F("T=")); Serial.print(temperature);
   Serial.print(F(" H=")); Serial.print(humidite);
   Serial.print(F(" G=")); Serial.print(gaz);
-  Serial.print(F(" I=")); Serial.print(courant);
-  Serial.print(F(" P=")); Serial.print(puissance);
   Serial.print(F(" PIR=")); Serial.println(pir ? F("OUI") : F("NON"));
 
   // Alertes SMS
   unsigned long now = millis();
   verifierAlerteTemp(temperature, now);
   verifierAlerteGaz(gaz, now);
-  verifierAlerteCourant(courant, puissance, now);
   verifierAlertePIR(pir, now);
   pirPrecedent = pir;
 
   // Envoi HTTP toutes les ENVOI_INTERVAL ms
   if (now - dernierEnvoi >= ENVOI_INTERVAL) {
     dernierEnvoi = now;
-    envoyerHTTP(temperature, humidite, gaz, courant, puissance, TENSION, pir);
+    envoyerHTTP(temperature, humidite, gaz, pir);
   }
 
   delay(1000);
@@ -114,20 +103,6 @@ void loop() {
 float lireGaz() {
   int raw = analogRead(MQ135_PIN);
   return map(raw, 0, 1023, 0, 1000);
-}
-
-
-// ── Lecture ACS712 30A ────────────────────────────────────
-float lireCourant() {
-  long somme = 0;
-  for (int i = 0; i < 100; i++) {
-    somme += analogRead(ACS712_PIN);
-    delayMicroseconds(100);
-  }
-  float moy    = somme / 100.0;
-  float volts  = (moy / 1024.0) * 5.0;
-  float courant = (volts - 2.5) / 0.066; // 66 mV/A pour ACS712-30A
-  return abs(courant);
 }
 
 
@@ -168,18 +143,6 @@ void verifierAlerteGaz(float g, unsigned long now) {
   }
 }
 
-void verifierAlerteCourant(float c, float p, unsigned long now) {
-  if (c >= COUR_CRIT && now - dernierSMSCour > ALERTE_COOLDOWN) {
-    dernierSMSCour = now;
-    String msg = "ALERTE CRITIQUE COURANT\n";
-    msg += "Courant: "; msg += c; msg += "A\n";
-    msg += "Puissance: "; msg += p; msg += "W\n";
-    msg += "RISQUE: Court-circuit\n";
-    msg += "ACTION: Reduire charge\nSupServer IoT";
-    envoyerSMS(msg);
-  }
-}
-
 void verifierAlertePIR(bool pir, unsigned long now) {
   if (pir && !pirPrecedent && now - dernierSMSPir > ALERTE_COOLDOWN) {
     dernierSMSPir = now;
@@ -208,17 +171,14 @@ void envoyerSMS(String message) {
 
 
 // ── Envoi HTTP POST via SIM900 ────────────────────────────
-void envoyerHTTP(float temp, float hum, float gaz, float courant, float puis, float tension, bool pir) {
+void envoyerHTTP(float temp, float hum, float gaz, bool pir) {
   Serial.println(F("Envoi HTTP..."));
 
   // Corps JSON
   String body = "{\"temperature\":";
   body += temp;   body += ",\"humidite\":";
   body += hum;    body += ",\"gaz\":";
-  body += gaz;    body += ",\"courant\":";
-  body += courant; body += ",\"puissance\":";
-  body += puis;   body += ",\"tension\":";
-  body += tension; body += ",\"pir\":";
+  body += gaz;    body += ",\"pir\":";
   body += (pir ? "1" : "0");
   body += "}";
 
