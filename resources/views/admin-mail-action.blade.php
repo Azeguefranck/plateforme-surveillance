@@ -152,7 +152,7 @@ body{background:#060c1a;color:#d4dced;min-height:100vh;display:flex;flex-directi
           <i class="fa-solid fa-users"></i> Gérer les utilisateurs
         </a>
         <a href="/login" class="btn-secondary">
-          <i class="fa-solid fa-arrow-right-to-bracket"></i> Se connecter
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> S'authentifier
         </a>
       </div>
 

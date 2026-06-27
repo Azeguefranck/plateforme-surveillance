@@ -483,7 +483,7 @@ h1,h2,h3{font-size:clamp(14px,4vw,20px)!important}
   </div>
 
   <div class="reg-footer">
-    Déjà un compte ? <a href="/login">Se connecter →</a>
+    Déjà un compte ? <a href="/login">S'authentifier →</a>
   </div>
 
 </div>

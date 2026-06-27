@@ -195,7 +195,7 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
       </div>
     </div>
 
-    <button type="submit" class="btn-submit">⊙ Se connecter</button>
+    <button type="submit" class="btn-submit">⊙ S'authentifier</button>
 
   </form>
 

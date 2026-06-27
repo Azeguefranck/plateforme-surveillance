@@ -451,7 +451,7 @@ body{overflow-x:hidden}
 
   <div class="buttons">
     <a href="/login" class="btn btn-login">
-      <span class="btn-ico">⊙</span> Se connecter
+      <span class="btn-ico">⊙</span> S'authentifier
     </a>
   </div>
 
