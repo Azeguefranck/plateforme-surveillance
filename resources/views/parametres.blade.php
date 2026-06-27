@@ -422,4 +422,68 @@ loadStats();
 setInterval(loadStats, 10000);
 </script>
 
+@if((session('user')->role ?? '') === 'administrateur')
+@php $users = DB::table('users')->orderBy('nom')->get(); @endphp
+<div class="card" style="margin-top:28px">
+  <div class="card-title">
+    <i class="fa-solid fa-users"></i> Gestion des utilisateurs
+    <span style="font-size:11px;font-weight:400;color:#556;margin-left:8px">{{ $users->count() }} inscrit(s)</span>
+  </div>
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background:#060f1e">
+        <th style="padding:9px 16px;text-align:left;font-size:10px;color:#3a4a6a;text-transform:uppercase;letter-spacing:.5px">Utilisateur</th>
+        <th style="padding:9px 16px;text-align:left;font-size:10px;color:#3a4a6a;text-transform:uppercase;letter-spacing:.5px">Rôle</th>
+        <th style="padding:9px 16px;text-align:center;font-size:10px;color:#3a4a6a;text-transform:uppercase;letter-spacing:.5px">Actif</th>
+      </tr>
+    </thead>
+    <tbody>
+    @foreach($users as $u)
+    @php $actif = ($u->validation_status ?? '') === 'valide'; @endphp
+    <tr style="border-top:1px solid #1e2f5a">
+      <td style="padding:10px 16px">
+        <div style="font-size:13px;font-weight:600;color:#ccd">{{ $u->prenom ?? '' }} {{ $u->nom ?? '' }}</div>
+        <div style="font-size:11px;color:#3a4a6a">{{ $u->email }}</div>
+      </td>
+      <td style="padding:10px 16px">
+        @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
+        <select onchange="uRole({{ $u->id }},this.value)" style="background:#07102a;border:1px solid #1e2f5a;border-radius:6px;padding:5px 8px;color:#fff;font-size:12px;outline:none;cursor:pointer">
+          <option value="utilisateur" {{ ($u->role??'') === 'utilisateur' ? 'selected':'' }}>Utilisateur</option>
+          <option value="administrateur" {{ ($u->role??'') === 'administrateur' ? 'selected':'' }}>Administrateur</option>
+        </select>
+        @else
+        <span style="font-size:12px;color:#33ff88;font-weight:700">Administrateur</span>
+        @endif
+      </td>
+      <td style="padding:10px 16px;text-align:center">
+        @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
+        <label style="position:relative;display:inline-block;width:40px;height:22px">
+          <input type="checkbox" {{ $actif ? 'checked':'' }} onchange="uToggle({{ $u->id }},this.checked)" style="opacity:0;width:0;height:0">
+          <span style="position:absolute;inset:0;border-radius:22px;cursor:pointer;transition:.3s;background:{{ $actif ? 'rgba(51,255,136,.2)':'#1e2f5a' }};border:1px solid {{ $actif ? '#33ff88':'#2a3a5a' }}">
+            <span style="position:absolute;width:16px;height:16px;bottom:2px;left:{{ $actif ? '20px':'2px' }};border-radius:50%;background:{{ $actif ? '#33ff88':'#3a4a6a' }};transition:.3s"></span>
+          </span>
+        </label>
+        @else
+        <span style="font-size:10px;color:#3a4a6a">—</span>
+        @endif
+      </td>
+    </tr>
+    @endforeach
+    </tbody>
+  </table>
+</div>
+<script>
+function uRole(id,role){
+  csrfFetch('/user/'+id+'/modifier',{method:'POST',body:JSON.stringify({role:role})})
+    .then(r=>r.json()).then(d=>notify(d.success?'Rôle mis à jour.':(d.error||'Erreur.'),d.success?'s':'e'))
+    .catch(()=>notify('Erreur réseau.','e'));
+}
+function uToggle(id,actif){
+  csrfFetch('/user/'+id+'/statut',{method:'POST',body:JSON.stringify({status:actif?'valide':'bloque'})})
+    .then(r=>r.json()).then(d=>notify(d.success?(actif?'Compte activé.':'Compte bloqué.'):(d.error||'Erreur.'),d.success?'s':'e'))
+    .catch(()=>notify('Erreur réseau.','e'));
+}
+</script>
+@endif
+
 @endsection
