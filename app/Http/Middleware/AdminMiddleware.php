@@ -15,7 +15,7 @@ class AdminMiddleware
             return redirect('/login');
         }
         $user = (object)(array)$user;
-        if (($user->role ?? '') !== 'admin' && ($user->role ?? '') !== 'administrateur') {
+        if (($user->role ?? '') !== 'administrateur') {
             abort(403, 'Accès réservé aux administrateurs.');
         }
         return $next($request);

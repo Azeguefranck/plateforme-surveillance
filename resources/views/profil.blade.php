@@ -6,9 +6,9 @@
 $u = is_array($user) ? (object)$user : $user;
 $nom_complet = trim(($u->prenom ?? '') . ' ' . ($u->nom ?? '')) ?: ($u->name ?? 'Utilisateur');
 $role_label  = match($u->role ?? '') {
-    'admin'       => 'Administrateur',
-    'super_admin' => 'Super Admin',
-    default       => ucfirst($u->role ?? 'Utilisateur'),
+    'administrateur' => 'Administrateur',
+    'utilisateur'    => 'Utilisateur',
+    default          => ucfirst($u->role ?? 'Utilisateur'),
 };
 $statut_color = match($u->validation_status ?? '') {
     'valide'    => '#33ff88',

@@ -82,7 +82,7 @@ try {
             <td class="col-role">
                 <select class="role-sel" onchange="changerRole({{ $u->id }}, this.value)" {{ ($u->id == 1 || ($u->role ?? '') === 'administrateur') ? 'disabled' : '' }}>
                     <option value="utilisateur" {{ ($u->role ?? '') === 'utilisateur' ? 'selected' : '' }}>Utilisateur</option>
-                    <option value="admin"       {{ ($u->role ?? '') === 'admin'       ? 'selected' : '' }}>Administrateur</option>
+                    <option value="administrateur" {{ ($u->role ?? '') === 'administrateur' ? 'selected' : '' }}>Administrateur</option>
                 </select>
             </td>
             <td>

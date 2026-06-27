@@ -339,7 +339,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   <a href="/mails"><i class="fa-solid fa-envelope"></i> Mails</a>
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
-  @if($userRole === 'admin' || $userRole === 'administrateur')
+  @if($userRole === 'administrateur')
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
   @endif
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>

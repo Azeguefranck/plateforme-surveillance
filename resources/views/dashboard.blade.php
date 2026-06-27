@@ -228,7 +228,7 @@ setInterval(pollMesuresLive, 3000);
 </script>
 
 @php $role = session('user')->role ?? ''; @endphp
-@if(in_array($role, ['admin','administrateur']))
+@if($role === 'administrateur')
 @php $users = DB::table('users')->orderBy('nom')->get(); @endphp
 <div style="margin-top:40px;background:#0e1a38;border:1px solid #1e2f5a;border-radius:14px;overflow:hidden">
   <div style="padding:14px 20px;background:#07102a;border-bottom:1px solid #1e2f5a;font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px">
@@ -256,7 +256,6 @@ setInterval(pollMesuresLive, 3000);
         <select onchange="uRole({{ $u->id }},this.value)" style="background:#07102a;border:1px solid #1e2f5a;border-radius:6px;padding:5px 8px;color:#fff;font-size:12px;outline:none;cursor:pointer">
           <option value="utilisateur" {{ ($u->role??'') === 'utilisateur' ? 'selected':'' }}>Utilisateur</option>
 
-          <option value="admin"       {{ ($u->role??'') === 'admin'       ? 'selected':'' }}>Admin</option>
         </select>
         @else
         <span style="font-size:12px;color:#33ff88;font-weight:700">Administrateur</span>
