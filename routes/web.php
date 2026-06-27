@@ -158,6 +158,51 @@ Route::post('/user/creer', function (\Illuminate\Http\Request $request) {
     return response()->json(['success' => true, 'message' => "Compte créé. Identifiants envoyés à {$email}."]);
 });
 
+Route::post('/user/{id}/modifier', function (\Illuminate\Http\Request $request, $id) {
+    $target = DB::table('users')->where('id', $id)->first();
+    if (!$target) return response()->json(['error' => 'Utilisateur introuvable.'], 404);
+    if ($target->id == 1 || $target->role === 'superadmin')
+        return response()->json(['error' => 'Impossible de modifier le compte administrateur principal.'], 403);
+    $nom    = trim($request->input('nom', ''));
+    $prenom = trim($request->input('prenom', ''));
+    $email  = trim($request->input('email', ''));
+    $role   = in_array($request->input('role'), ['admin','technicien','utilisateur','invite']) ? $request->input('role') : ($target->role ?? 'utilisateur');
+    if ($email && $email !== $target->email) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+            return response()->json(['error' => 'Adresse email invalide.'], 422);
+        if (DB::table('users')->where('email', $email)->where('id', '!=', $id)->exists())
+            return response()->json(['error' => 'Cet email est déjà utilisé par un autre compte.'], 422);
+    }
+    $data = ['role' => $role, 'updated_at' => now()];
+    if ($nom)   $data['nom']    = $nom;
+    if ($prenom) $data['prenom'] = $prenom;
+    if ($nom || $prenom) $data['name'] = ($prenom ?: $target->prenom) . ' ' . ($nom ?: $target->nom);
+    if ($email) $data['email'] = $email;
+    DB::table('users')->where('id', $id)->update($data);
+    return response()->json(['success' => true, 'message' => 'Compte mis à jour.']);
+});
+
+Route::post('/user/{id}/reset-password', function ($id) {
+    $target = DB::table('users')->where('id', $id)->first();
+    if (!$target) return response()->json(['error' => 'Utilisateur introuvable.'], 404);
+    if ($target->id == 1 || $target->role === 'superadmin')
+        return response()->json(['error' => 'Impossible de réinitialiser le mot de passe de l\'administrateur principal.'], 403);
+    $nouveau = \Illuminate\Support\Str::random(10);
+    DB::table('users')->where('id', $id)->update([
+        'password'   => \Illuminate\Support\Facades\Hash::make($nouveau),
+        'updated_at' => now(),
+    ]);
+    try {
+        Mail::raw(
+            "Bonjour {$target->prenom} {$target->nom},\n\nVotre mot de passe a été réinitialisé par l'administrateur.\n\nNouveau mot de passe : {$nouveau}\n\nAuthentifiez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après connexion.\n\nPlateforme de Surveillance",
+            fn($m) => $m->to($target->email)->subject('Réinitialisation de mot de passe — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {
+        return response()->json(['success' => true, 'message' => 'Mot de passe réinitialisé. (Email non envoyé)', 'warn' => true]);
+    }
+    return response()->json(['success' => true, 'message' => "Nouveau mot de passe envoyé à {$target->email}."]);
+});
+
 Route::delete('/alerte/{id}', function ($id) {
     DB::table('alertes')->where('id', $id)->delete();
     return response()->json(['success' => true]);

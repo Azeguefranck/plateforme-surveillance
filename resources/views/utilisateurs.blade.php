@@ -118,6 +118,44 @@ try {
   </div>
 </div>
 
+<div id="modalModifier" style="display:none;position:fixed;inset:0;background:rgba(2,5,18,.88);backdrop-filter:blur(10px);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:#0a1428;border:1px solid #1e2f5a;border-radius:18px;padding:30px;max-width:440px;width:94%;box-shadow:0 12px 60px rgba(0,0,0,.8)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div style="font-size:16px;font-weight:800;color:#fff"><i class="fa-solid fa-pen" style="color:var(--blue);margin-right:8px"></i>Modifier l'utilisateur</div>
+      <button onclick="fermerModalModifier()" style="background:none;border:none;color:#555;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <input type="hidden" id="m_id">
+    <div id="modifierMsg" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Prénom</label>
+        <input id="m_prenom" type="text" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Nom</label>
+        <input id="m_nom" type="text" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Email</label>
+      <input id="m_email" type="email" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:22px">
+      <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Rôle</label>
+      <select id="m_role" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+        <option value="utilisateur">Utilisateur</option>
+        <option value="technicien">Technicien</option>
+        <option value="admin">Administrateur</option>
+        <option value="invite">Invité</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="fermerModalModifier()" style="flex:1;background:rgba(18,30,68,.65);border:1px solid #1e2f5a;color:#7788aa;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px">Annuler</button>
+      <button id="m_btn" onclick="modifierUtilisateur()" style="flex:2;background:rgba(51,181,255,.1);border:1px solid rgba(51,181,255,.35);color:var(--blue);padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div class="stats-row">
     <div class="scard t"><div class="v">{{ $statCounts['total'] }}</div><div class="l">Total</div></div>
     <div class="scard g"><div class="v">{{ $statCounts['valide'] }}</div><div class="l">Validés</div></div>
@@ -197,6 +235,8 @@ try {
                 @else
                 <button class="btn btn-gray" title="Attente"   onclick="changeStatut(this,{{ $u->id }},'en_attente')" {{ $u->validation_status === 'en_attente' ? 'disabled' : '' }}><i class="fa-solid fa-clock"></i> Attente</button>
                 @endif
+                <button class="btn btn-blue" title="Modifier" onclick="ouvrirModalModifier({{ $u->id }},'{{ addslashes($u->prenom ?? '') }}','{{ addslashes($u->nom ?? '') }}','{{ addslashes($u->email) }}','{{ $u->role ?? 'utilisateur' }}')"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-warn" title="Réinitialiser MDP" onclick="resetMdp(this,{{ $u->id }},'{{ addslashes($u->email) }}')"><i class="fa-solid fa-key"></i></button>
                 <button class="btn btn-gray" title="Supprimer" onclick="supprimerUser(this,{{ $u->id }})"><i class="fa-solid fa-trash"></i></button>
             </td>
         </tr>
@@ -346,5 +386,63 @@ function showCreerMsg(txt, type) {
     el.style.display = 'block';
 }
 document.getElementById('modalCreer').addEventListener('click', function(e){ if(e.target===this) fermerModalCreer(); });
+
+function ouvrirModalModifier(id, prenom, nom, email, role) {
+    document.getElementById('m_id').value     = id;
+    document.getElementById('m_prenom').value = prenom;
+    document.getElementById('m_nom').value    = nom;
+    document.getElementById('m_email').value  = email;
+    document.getElementById('m_role').value   = role;
+    document.getElementById('modifierMsg').style.display = 'none';
+    document.getElementById('modalModifier').style.display = 'flex';
+}
+function fermerModalModifier() {
+    document.getElementById('modalModifier').style.display = 'none';
+}
+function modifierUtilisateur() {
+    var btn    = document.getElementById('m_btn');
+    var id     = document.getElementById('m_id').value;
+    var prenom = document.getElementById('m_prenom').value.trim();
+    var nom    = document.getElementById('m_nom').value.trim();
+    var email  = document.getElementById('m_email').value.trim();
+    var role   = document.getElementById('m_role').value;
+    if (!prenom || !nom || !email) { showModifierMsg('Tous les champs sont obligatoires.','e'); return; }
+    btnLoad(btn, true);
+    csrfFetch('/user/'+id+'/modifier', {method:'POST', body:JSON.stringify({prenom:prenom,nom:nom,email:email,role:role})})
+        .then(function(r){return r.json();})
+        .then(function(d) {
+            btnLoad(btn, false);
+            if (d.success) {
+                showModifierMsg(d.message,'s');
+                setTimeout(function(){ fermerModalModifier(); window.location.reload(); }, 1500);
+            } else {
+                showModifierMsg(d.error||'Erreur.','e');
+            }
+        })
+        .catch(function(){ btnLoad(btn, false); showModifierMsg('Erreur réseau.','e'); });
+}
+function showModifierMsg(txt, type) {
+    var el = document.getElementById('modifierMsg');
+    var colors  = {s:'rgba(51,255,136,.12)',e:'rgba(255,87,51,.12)',w:'rgba(255,214,51,.12)'};
+    var borders = {s:'rgba(51,255,136,.4)',e:'rgba(255,87,51,.4)',w:'rgba(255,214,51,.4)'};
+    var txtc    = {s:'#33ff88',e:'#ff5733',w:'#ffd633'};
+    el.style.background = colors[type]; el.style.border = '1px solid '+borders[type]; el.style.color = txtc[type];
+    el.textContent = txt; el.style.display = 'block';
+}
+function resetMdp(btn, userId, email) {
+    confirmDlg('Réinitialiser le mot de passe ?', 'Un nouveau mot de passe sera généré et envoyé par email à ' + email + '.', {type:'warning', icon:'<i class="fa-solid fa-key"></i>', confirmText:'Réinitialiser'})
+    .then(function(ok) {
+        if (!ok) return;
+        btnLoad(btn, true);
+        csrfFetch('/user/'+userId+'/reset-password', {method:'POST'})
+            .then(function(r){return r.json();})
+            .then(function(d) {
+                btnLoad(btn, false);
+                notify(d.message || d.error, d.success ? (d.warn ? 'w' : 's') : 'e');
+            })
+            .catch(function(){ btnLoad(btn, false); notify('Erreur réseau.','e'); });
+    });
+}
+document.getElementById('modalModifier').addEventListener('click', function(e){ if(e.target===this) fermerModalModifier(); });
 </script>
 @endsection
