@@ -176,18 +176,30 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
-            $admin = DB::table('users')->where('email', 'franckazegue0007@gmail.com')->first();
+            $user = DB::table('users')->where('email', $request->email)->first();
         } catch (\Exception $e) {
             return back()->with('error', '⚠️ Base de données inaccessible. Démarrez MySQL avec : sudo /opt/lampp/lampp startmysql');
         }
 
-        if (!$admin || !Hash::check($request->mot_de_passe, $admin->password)) {
+        if (!$user) {
+            return back()->with('error', 'Aucun compte trouvé avec cet email.');
+        }
+
+        if (!Hash::check($request->mot_de_passe, $user->password)) {
             return back()->with('error', 'Mot de passe incorrect.');
         }
 
-        session(['user' => $admin]);
+        if (($user->validation_status ?? '') === 'en_attente') {
+            return back()->with('error', 'Votre compte est en attente de validation par l\'administrateur.');
+        }
 
-        $role = $admin->role ?? '';
+        if (($user->validation_status ?? '') === 'refuse') {
+            return back()->with('error', 'Votre demande d\'accès a été refusée. Contactez l\'administrateur.');
+        }
+
+        session(['user' => $user]);
+
+        $role = $user->role ?? '';
         if ($role === 'technicien') return redirect('/dashboard-technicien');
         return redirect('/dashboard');
     }

@@ -188,6 +188,11 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
     @csrf
 
     <div class="field">
+      <label>Adresse email</label>
+      <input type="email" name="email" placeholder="votre@email.com" required autocomplete="email">
+    </div>
+
+    <div class="field">
       <label>Mot de passe</label>
       <div class="pw-wrap">
         <input type="password" name="mot_de_passe" id="pw-input" placeholder="••••••••" required>
