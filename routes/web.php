@@ -206,7 +206,7 @@ Route::post('/user/creer', function (\Illuminate\Http\Request $request) {
     $motdepasse  = \Illuminate\Support\Str::random(10);
     $nom         = trim($request->input('nom', ''));
     $prenom      = trim($request->input('prenom', ''));
-    $role        = in_array($request->input('role'), ['admin','utilisateur','invite']) ? $request->input('role') : 'utilisateur';
+    $role        = in_array($request->input('role'), ['admin','utilisateur']) ? $request->input('role') : 'utilisateur';
     DB::table('users')->insert([
         'nom'               => $nom,
         'prenom'            => $prenom,
@@ -237,7 +237,7 @@ Route::post('/user/{id}/modifier', function (\Illuminate\Http\Request $request, 
     $nom    = trim($request->input('nom', ''));
     $prenom = trim($request->input('prenom', ''));
     $email  = trim($request->input('email', ''));
-    $role   = in_array($request->input('role'), ['admin','utilisateur','invite']) ? $request->input('role') : ($target->role ?? 'utilisateur');
+    $role   = in_array($request->input('role'), ['admin','utilisateur']) ? $request->input('role') : ($target->role ?? 'utilisateur');
     if ($email && $email !== $target->email) {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL))
             return response()->json(['error' => 'Adresse email invalide.'], 422);

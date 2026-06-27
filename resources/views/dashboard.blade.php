@@ -257,7 +257,6 @@ setInterval(pollMesuresLive, 3000);
           <option value="utilisateur" {{ ($u->role??'') === 'utilisateur' ? 'selected':'' }}>Utilisateur</option>
 
           <option value="admin"       {{ ($u->role??'') === 'admin'       ? 'selected':'' }}>Admin</option>
-          <option value="invite"      {{ ($u->role??'') === 'invite'      ? 'selected':'' }}>Invité</option>
         </select>
         @else
         <span style="font-size:12px;color:#33ff88;font-weight:700">Super Admin</span>

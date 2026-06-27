@@ -336,9 +336,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
   <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
   <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>
-  @if($userRole !== 'invite')
   <a href="/mails"><i class="fa-solid fa-envelope"></i> Mails</a>
-  @endif
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
   @if($userRole === 'admin' || $userRole === 'superadmin')

@@ -83,7 +83,6 @@ try {
                 <select class="role-sel" onchange="changerRole({{ $u->id }}, this.value)" {{ ($u->id == 1 || ($u->role ?? '') === 'superadmin') ? 'disabled' : '' }}>
                     <option value="utilisateur" {{ ($u->role ?? '') === 'utilisateur' ? 'selected' : '' }}>Utilisateur</option>
                     <option value="admin"       {{ ($u->role ?? '') === 'admin'       ? 'selected' : '' }}>Administrateur</option>
-                    <option value="invite"      {{ ($u->role ?? '') === 'invite'      ? 'selected' : '' }}>Invité</option>
                 </select>
             </td>
             <td>
@@ -133,7 +132,6 @@ try {
       <select id="f_role" style="width:100%;background:#07102a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
         <option value="utilisateur">Utilisateur</option>
         <option value="admin">Administrateur</option>
-        <option value="invite">Invité</option>
       </select>
     </div>
     <p style="font-size:11px;color:#3a4a6a;margin-bottom:18px">Un mot de passe temporaire sera envoyé par email à l'utilisateur.</p>
