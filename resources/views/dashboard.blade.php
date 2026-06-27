@@ -228,7 +228,7 @@ setInterval(pollMesuresLive, 3000);
 </script>
 
 @php $role = session('user')->role ?? ''; @endphp
-@if(in_array($role, ['admin','superadmin']))
+@if(in_array($role, ['admin','administrateur']))
 @php $users = DB::table('users')->orderBy('nom')->get(); @endphp
 <div style="margin-top:40px;background:#0e1a38;border:1px solid #1e2f5a;border-radius:14px;overflow:hidden">
   <div style="padding:14px 20px;background:#07102a;border-bottom:1px solid #1e2f5a;font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px">
@@ -252,18 +252,18 @@ setInterval(pollMesuresLive, 3000);
         <div style="font-size:11px;color:#3a4a6a">{{ $u->email }}</div>
       </td>
       <td style="padding:10px 16px">
-        @if($u->id != 1 && ($u->role ?? '') !== 'superadmin')
+        @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
         <select onchange="uRole({{ $u->id }},this.value)" style="background:#07102a;border:1px solid #1e2f5a;border-radius:6px;padding:5px 8px;color:#fff;font-size:12px;outline:none;cursor:pointer">
           <option value="utilisateur" {{ ($u->role??'') === 'utilisateur' ? 'selected':'' }}>Utilisateur</option>
 
           <option value="admin"       {{ ($u->role??'') === 'admin'       ? 'selected':'' }}>Admin</option>
         </select>
         @else
-        <span style="font-size:12px;color:#33ff88;font-weight:700">Super Admin</span>
+        <span style="font-size:12px;color:#33ff88;font-weight:700">Administrateur</span>
         @endif
       </td>
       <td style="padding:10px 16px;text-align:center">
-        @if($u->id != 1 && ($u->role ?? '') !== 'superadmin')
+        @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
         <label style="position:relative;display:inline-block;width:40px;height:22px">
           <input type="checkbox" {{ $actif ? 'checked':'' }} onchange="uToggle({{ $u->id }},this.checked)" style="opacity:0;width:0;height:0">
           <span class="u-slider" style="position:absolute;inset:0;border-radius:22px;cursor:pointer;transition:.3s;background:{{ $actif ? 'rgba(51,255,136,.2)':'#1e2f5a' }};border:1px solid {{ $actif ? '#33ff88':'#2a3a5a' }}">

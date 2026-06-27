@@ -80,20 +80,20 @@ try {
                 </div>
             </td>
             <td class="col-role">
-                <select class="role-sel" onchange="changerRole({{ $u->id }}, this.value)" {{ ($u->id == 1 || ($u->role ?? '') === 'superadmin') ? 'disabled' : '' }}>
+                <select class="role-sel" onchange="changerRole({{ $u->id }}, this.value)" {{ ($u->id == 1 || ($u->role ?? '') === 'administrateur') ? 'disabled' : '' }}>
                     <option value="utilisateur" {{ ($u->role ?? '') === 'utilisateur' ? 'selected' : '' }}>Utilisateur</option>
                     <option value="admin"       {{ ($u->role ?? '') === 'admin'       ? 'selected' : '' }}>Administrateur</option>
                 </select>
             </td>
             <td>
                 <label class="toggle">
-                    <input type="checkbox" {{ $actif ? 'checked' : '' }} onchange="toggleActif({{ $u->id }}, this.checked)" {{ ($u->id == 1 || ($u->role ?? '') === 'superadmin') ? 'disabled' : '' }}>
+                    <input type="checkbox" {{ $actif ? 'checked' : '' }} onchange="toggleActif({{ $u->id }}, this.checked)" {{ ($u->id == 1 || ($u->role ?? '') === 'administrateur') ? 'disabled' : '' }}>
                     <span class="slider"></span>
                 </label>
             </td>
             <td class="col-date" style="font-size:11px;color:#556">{{ \Carbon\Carbon::parse($u->created_at)->format('d/m/Y') }}</td>
             <td>
-                @if($u->id != 1 && ($u->role ?? '') !== 'superadmin')
+                @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
                 <button class="del-btn" onclick="supprimer({{ $u->id }}, '{{ addslashes(($u->prenom ?? '').' '.($u->nom ?? '')) }}')" title="Supprimer"><i class="fa-solid fa-trash-can"></i></button>
                 @endif
             </td>
