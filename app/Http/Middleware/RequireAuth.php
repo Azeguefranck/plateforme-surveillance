@@ -13,6 +13,14 @@ class RequireAuth
             return redirect('/login')->with('error', 'Veuillez vous authentifier pour accéder à cette page.');
         }
 
+        $fresh = \Illuminate\Support\Facades\DB::table('users')->where('id', session('user')->id)->first();
+        if (!$fresh || $fresh->validation_status === 'bloque') {
+            session()->forget('user');
+            session()->invalidate();
+            return redirect('/login')->with('error', 'Votre compte a été bloqué ou supprimé.');
+        }
+        session(['user' => $fresh]);
+
         return $next($request);
     }
 }
