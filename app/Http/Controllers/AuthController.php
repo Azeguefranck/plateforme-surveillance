@@ -74,19 +74,18 @@ class AuthController extends Controller
             'updated_at'       => now(),
         ]);
 
+        $verifyUrl = ($request->getSchemeAndHttpHost()) . '/verify-email/' . $adminToken;
         try {
             Mail::raw(
                 "Bonjour " . $request->prenom . " " . $request->nom . ",\n\n" .
-                "Votre demande d'inscription a bien été reçue.\n\n" .
-                "Informations enregistrées :\n" .
-                "• Email      : " . $request->email . "\n" .
-                "• Téléphone  : " . $request->telephone . "\n" .
-                "• Pays       : " . $request->pays . "\n\n" .
-                "⏳ Votre compte est en attente de validation par l'administrateur.\n" .
-                "Vous recevrez un email dès que votre compte sera activé.\n\n" .
+                "Votre inscription sur la Plateforme de Surveillance est presque terminée.\n\n" .
+                "Cliquez sur le lien ci-dessous pour confirmer votre adresse email et activer votre compte :\n\n" .
+                $verifyUrl . "\n\n" .
+                "Ce lien est valable 48 heures.\n\n" .
+                "Si vous n'avez pas créé de compte, ignorez cet email.\n\n" .
                 "Plateforme de Surveillance",
                 function ($message) use ($request) {
-                    $message->to($request->email)->subject('Inscription reçue — En attente de validation');
+                    $message->to($request->email)->subject('Confirmez votre email — Plateforme de Surveillance');
                 }
             );
         } catch (\Exception $e) {}
@@ -168,7 +167,7 @@ class AuthController extends Controller
             });
         } catch (\Exception $e) {}
 
-        return redirect('/login')->with('success', 'Inscription envoyée. En attente de validation administrateur.');
+        return redirect('/login')->with('success', 'Inscription réussie ! Un email de confirmation a été envoyé à ' . $request->email . '. Cliquez sur le lien pour activer votre compte.');
     }
 
 

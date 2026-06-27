@@ -17,6 +17,79 @@ Route::view('/login','login');
 
 Route::post('/login-user', [AuthController::class, 'login']);
 
+Route::view('/inscription', 'register');
+Route::post('/inscription', [AuthController::class, 'register']);
+
+Route::get('/verify-email/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    if (!$user) {
+        return redirect('/login')->with('error', 'Lien de vérification invalide ou expiré.');
+    }
+    if ($user->validation_status === 'valide') {
+        return redirect('/login')->with('success', 'Votre compte est déjà activé. Authentifiez-vous.');
+    }
+    DB::table('users')->where('admin_token', $token)->update([
+        'validation_status' => 'valide',
+        'email_verified_at' => now(),
+        'updated_at'        => now(),
+    ]);
+    return redirect('/login')->with('success', 'Email confirmé ! Votre compte est activé. Vous pouvez vous authentifier.');
+});
+
+Route::view('/forgot-password', 'forgot-password');
+Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
+    $email = trim($request->input('email', ''));
+    $user  = DB::table('users')->where('email', $email)->first();
+    if (!$user) {
+        return back()->with('success', 'Si cet email existe, un lien de réinitialisation a été envoyé.');
+    }
+    $token   = bin2hex(random_bytes(32));
+    $expires = now()->addHour();
+    DB::table('users')->where('email', $email)->update([
+        'admin_token'      => $token,
+        'token_expires_at' => $expires,
+        'updated_at'       => now(),
+    ]);
+    $resetUrl = config('app.url') . '/reset-password/' . $token . '?email=' . urlencode($email);
+    try {
+        Mail::raw(
+            "Bonjour {$user->prenom} {$user->nom},\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur ce lien (valable 1 heure) :\n{$resetUrl}\n\nSi vous n'avez pas fait cette demande, ignorez cet email.\n\nPlateforme de Surveillance",
+            fn($m) => $m->to($email)->subject('Réinitialisation de mot de passe — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {}
+    return back()->with('success', 'Si cet email existe, un lien de réinitialisation a été envoyé.');
+});
+
+Route::get('/reset-password/{token}', function ($token, \Illuminate\Http\Request $request) {
+    $email = $request->query('email', '');
+    $user  = DB::table('users')->where('admin_token', $token)->where('email', $email)->first();
+    if (!$user || ($user->token_expires_at && now()->isAfter($user->token_expires_at))) {
+        return redirect('/forgot-password')->with('error', 'Lien expiré ou invalide. Faites une nouvelle demande.');
+    }
+    return view('reset-password', ['token' => $token, 'email' => $email]);
+});
+
+Route::post('/reset-password', function (\Illuminate\Http\Request $request) {
+    $token = $request->input('token');
+    $email = $request->input('email');
+    $pwd   = $request->input('password');
+    $conf  = $request->input('password_confirmation');
+    if (!$pwd || strlen($pwd) < 8)
+        return back()->with('error', 'Le mot de passe doit contenir au moins 8 caractères.')->withInput();
+    if ($pwd !== $conf)
+        return back()->with('error', 'Les mots de passe ne correspondent pas.')->withInput();
+    $user = DB::table('users')->where('admin_token', $token)->where('email', $email)->first();
+    if (!$user || ($user->token_expires_at && now()->isAfter($user->token_expires_at)))
+        return redirect('/forgot-password')->with('error', 'Lien expiré. Faites une nouvelle demande.');
+    DB::table('users')->where('email', $email)->update([
+        'password'         => \Illuminate\Support\Facades\Hash::make($pwd),
+        'admin_token'      => null,
+        'token_expires_at' => null,
+        'updated_at'       => now(),
+    ]);
+    return redirect('/login')->with('success', 'Mot de passe mis à jour. Authentifiez-vous avec votre nouveau mot de passe.');
+});
+
 Route::get('/admin/validate-user/{token}', function ($token) {
     $user = DB::table('users')->where('admin_token', $token)->first();
     if (!$user) return response('<h2 style="color:red;font-family:Arial;text-align:center">Lien invalide ou expiré.</h2>', 404);

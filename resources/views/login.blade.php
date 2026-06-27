@@ -200,13 +200,20 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
       </div>
     </div>
 
+    <div style="text-align:right;margin-bottom:16px">
+      <a href="/forgot-password" style="font-size:12px;color:#8899cc;text-decoration:none">Mot de passe oublié ?</a>
+    </div>
+
     <button type="submit" class="btn-submit">⊙ S'authentifier</button>
 
   </form>
 
   <div class="sep"></div>
 
-  <div class="links">
+  <div class="links" style="text-align:center;font-size:13px;color:#8899cc">
+    Pas encore de compte ? <a href="/inscription" style="color:#33ff88;font-weight:700">S'inscrire</a>
+  </div>
+  <div class="links" style="margin-top:8px">
     <a href="/accueil">← Retour à l'accueil</a>
   </div>
 
