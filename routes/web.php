@@ -13,15 +13,23 @@ use App\Http\Controllers\GeoController;
 
 Route::view('/','accueil');
 Route::view('/accueil','accueil');
-Route::view('/dashboard','dashboard');
-Route::get('/dashboard-technicien', function () {
-    if (!session('user')) return redirect('/login');
-    return view('dashboard_technicien');
-});
 Route::view('/login','login');
 
+Route::post('/login-user', [AuthController::class, 'login']);
 
-Route::post('/login-user',    [AuthController::class, 'login']);
+Route::post('/logout', function () {
+    session()->forget('user');
+    session()->invalidate();
+    session()->regenerateToken();
+    return redirect('/login');
+});
+
+Route::middleware('auth.session')->group(function () {
+
+Route::view('/dashboard','dashboard');
+Route::get('/dashboard-technicien', function () {
+    return view('dashboard_technicien');
+});
 
 Route::get('/profil',          [ProfilController::class, 'show']);
 Route::post('/profil/update',  [ProfilController::class, 'update']);
@@ -38,6 +46,7 @@ Route::view('/historique','historique');
 Route::view('/statistiques','statistiques');
 Route::view('/mails','mails');
 Route::view('/anomalies','anomalies');
+Route::view('/utilisateurs','utilisateurs');
 Route::get('/geo/pays',                        [GeoController::class, 'getPays']);
 Route::get('/geo/regions/{geonameId}',         [GeoController::class, 'getRegions']);
 Route::get('/geo/departements/{geonameId}',    [GeoController::class, 'getDepartements']);
@@ -60,9 +69,7 @@ Route::get('/parametres',         [ParametresController::class, 'show']);
 Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
 Route::view('/rapports','rapports');
 
-
 Route::delete('/user/{id}', function ($id) {
-    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     $target = DB::table('users')->where('id', $id)->first();
     if ($target && ($target->id == 1 || $target->role === 'superadmin'))
         return response()->json(['error' => 'Impossible de supprimer le compte administrateur principal.'], 403);
@@ -71,20 +78,17 @@ Route::delete('/user/{id}', function ($id) {
 });
 
 Route::delete('/alerte/{id}', function ($id) {
-    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     DB::table('alertes')->where('id', $id)->delete();
     return response()->json(['success' => true]);
 });
 
 Route::post('/alertes/vider', function () {
-    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     $n = DB::table('alertes')->count();
     DB::table('alertes')->truncate();
     return response()->json(['success' => true, 'message' => "$n alertes supprimées."]);
 });
 
 Route::get('/serveur/{id}/ping', function ($id) {
-    if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     try {
         $srv = DB::table('serveurs')->where('id', $id)->first();
         if (!$srv) return response()->json(['reachable' => false, 'msg' => 'Serveur introuvable']);
@@ -107,7 +111,6 @@ Route::get('/serveur/{id}/ping', function ($id) {
 });
 
 Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
-    if (!session('user')) return response()->json(['reachable' => false, 'msg' => 'Non autorisé']);
     $ip   = $request->ip_addr ?? '';
     $port = max(1, min(65535, (int)($request->port ?? 80)));
     if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP))
@@ -120,7 +123,6 @@ Route::get('/camera/ping', function (\Illuminate\Http\Request $request) {
 });
 
 Route::get('/rapports/rapport-72h', function () {
-    if (!session('user')) return redirect('/login');
 
     $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
     if (!$latest) {
@@ -139,7 +141,6 @@ Route::get('/rapports/rapport-72h', function () {
 });
 
 $genWordRapport = function (int $heures) {
-    if (!session('user')) return redirect('/login');
 
     $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
     $fin    = $latest ? \Carbon\Carbon::parse($latest) : now();
@@ -273,7 +274,6 @@ $genWordRapport = function (int $heures) {
 };
 
 Route::get('/rapports/rapport-24h/word', function () {
-    if (!session('user')) return redirect('/login');
 
     $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
     $fin    = $latest ? \Carbon\Carbon::parse($latest) : now();
@@ -448,7 +448,6 @@ Route::get('/rapports/rapport-72h/word', function () use ($genWordRapport) {
 });
 
 Route::get('/rapports/rapport-72h/png', function () {
-    if (!session('user')) return redirect('/login');
 
     $latest = DB::table('mesures')->orderByDesc('created_at')->value('created_at');
     $fin    = $latest ? \Carbon\Carbon::parse($latest) : now();
@@ -662,7 +661,6 @@ Route::get('/rapports/rapport-72h/png', function () {
 });
 
 Route::get('/rapports/print', function (\Illuminate\Http\Request $request) {
-    if (!session('user')) return redirect('/login');
     $type  = $request->type  ?? 'mesures';
     $debut = $request->debut ?? now()->subDays(7)->toDateString();
     $fin   = $request->fin   ?? now()->toDateString();
@@ -679,7 +677,6 @@ Route::get('/rapports/print', function (\Illuminate\Http\Request $request) {
 });
 
 Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
-    if (!session('user')) return redirect('/login');
 
     $allowed = ['mesures','alertes','salles','serveurs'];
     $type    = in_array($request->type, $allowed) ? $request->type : 'mesures';
@@ -948,7 +945,6 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
 });
 
 Route::get('/rapports/backup', function () {
-    if (!session('user')) return redirect('/login');
 
     $tmp = tempnam(sys_get_temp_dir(), 'bkp_');
     $zip = new \ZipArchive();
@@ -1001,4 +997,6 @@ Route::get('/rapports/backup', function () {
         'Content-Type'        => 'application/zip',
         'Content-Disposition' => "attachment; filename=\"supserver_backup_{$today}.zip\"",
     ]);
+});
+
 });

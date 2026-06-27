@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<title>Surveillance</title>
+<title>SUPSERVER — Surveillance des salles serveurs</title>
 <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 
 <style>
@@ -346,6 +346,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
   @if($userRole === 'admin' || $userRole === 'superadmin')
+  <a href="/utilisateurs"><i class="fa-solid fa-users"></i> Utilisateurs</a>
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
   @endif
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
@@ -514,7 +515,18 @@ function doLogout() {
     ).then(function(ok) {
         if (ok) {
             notify('Déconnexion en cours…', 'w', 2000);
-            setTimeout(function(){ window.location.href='/login'; }, 700);
+            setTimeout(function(){
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/logout';
+                var tok = document.createElement('input');
+                tok.type = 'hidden';
+                tok.name = '_token';
+                tok.value = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+                form.appendChild(tok);
+                document.body.appendChild(form);
+                form.submit();
+            }, 700);
         }
     });
 }
