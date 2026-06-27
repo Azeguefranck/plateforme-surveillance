@@ -77,7 +77,45 @@ try {
 
 <div class="pg-header">
     <div class="pg-title">Gestion des Utilisateurs</div>
-    <div style="font-size:12px;color:#555">Session : {{ session('user')?->email ?? '—' }}</div>
+    <button class="btn btn-green" onclick="ouvrirModalCreer()"><i class="fa-solid fa-user-plus"></i> Créer un utilisateur</button>
+</div>
+
+<div id="modalCreer" style="display:none;position:fixed;inset:0;background:rgba(2,5,18,.88);backdrop-filter:blur(10px);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:#0a1428;border:1px solid #1e2f5a;border-radius:18px;padding:30px;max-width:440px;width:94%;box-shadow:0 12px 60px rgba(0,0,0,.8)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div style="font-size:16px;font-weight:800;color:#fff"><i class="fa-solid fa-user-plus" style="color:var(--neon);margin-right:8px"></i>Créer un utilisateur</div>
+      <button onclick="fermerModalCreer()" style="background:none;border:none;color:#555;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div id="creerMsg" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Prénom</label>
+        <input id="c_prenom" type="text" placeholder="Prénom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Nom</label>
+        <input id="c_nom" type="text" placeholder="Nom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Adresse email officielle</label>
+      <input id="c_email" type="email" placeholder="prenom.nom@organisation.com" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:22px">
+      <label style="font-size:11px;color:#8899cc;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Rôle</label>
+      <select id="c_role" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+        <option value="utilisateur">Utilisateur</option>
+        <option value="technicien">Technicien</option>
+        <option value="admin">Administrateur</option>
+        <option value="invite">Invité</option>
+      </select>
+    </div>
+    <p style="font-size:11px;color:#3a4a6a;margin-bottom:18px">Un mot de passe temporaire sera généré et envoyé automatiquement à l'adresse email fournie.</p>
+    <div style="display:flex;gap:10px">
+      <button onclick="fermerModalCreer()" style="flex:1;background:rgba(18,30,68,.65);border:1px solid #1e2f5a;color:#7788aa;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px">Annuler</button>
+      <button id="c_btn" onclick="creerUtilisateur()" style="flex:2;background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.35);color:var(--neon);padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px"><i class="fa-solid fa-paper-plane"></i> Créer et envoyer</button>
+    </div>
+  </div>
 </div>
 
 <div class="stats-row">
@@ -262,5 +300,51 @@ function resetFilters() {
     document.getElementById('roleFilter').value = '';
     filterUsers();
 }
+
+function ouvrirModalCreer() {
+    document.getElementById('modalCreer').style.display = 'flex';
+    document.getElementById('creerMsg').style.display = 'none';
+    document.getElementById('c_prenom').value = '';
+    document.getElementById('c_nom').value = '';
+    document.getElementById('c_email').value = '';
+    document.getElementById('c_role').value = 'utilisateur';
+}
+function fermerModalCreer() {
+    document.getElementById('modalCreer').style.display = 'none';
+}
+function creerUtilisateur() {
+    var btn   = document.getElementById('c_btn');
+    var msg   = document.getElementById('creerMsg');
+    var email = document.getElementById('c_email').value.trim();
+    var nom   = document.getElementById('c_nom').value.trim();
+    var prenom= document.getElementById('c_prenom').value.trim();
+    var role  = document.getElementById('c_role').value;
+    if (!email || !nom || !prenom) { showCreerMsg('Tous les champs sont obligatoires.','e'); return; }
+    btnLoad(btn, true);
+    csrfFetch('/user/creer', {method:'POST', body:JSON.stringify({email:email,nom:nom,prenom:prenom,role:role})})
+        .then(function(r){return r.json();})
+        .then(function(d) {
+            btnLoad(btn, false);
+            if (d.success) {
+                showCreerMsg(d.message, d.warn ? 'w' : 's');
+                setTimeout(function(){ fermerModalCreer(); window.location.reload(); }, 2200);
+            } else {
+                showCreerMsg(d.error || 'Erreur.', 'e');
+            }
+        })
+        .catch(function(){ btnLoad(btn, false); showCreerMsg('Erreur réseau.','e'); });
+}
+function showCreerMsg(txt, type) {
+    var el = document.getElementById('creerMsg');
+    var colors = {s:'rgba(51,255,136,.12)',e:'rgba(255,87,51,.12)',w:'rgba(255,214,51,.12)'};
+    var borders = {s:'rgba(51,255,136,.4)',e:'rgba(255,87,51,.4)',w:'rgba(255,214,51,.4)'};
+    var txtc = {s:'#33ff88',e:'#ff5733',w:'#ffd633'};
+    el.style.background = colors[type]||colors.e;
+    el.style.border = '1px solid '+(borders[type]||borders.e);
+    el.style.color = txtc[type]||txtc.e;
+    el.textContent = txt;
+    el.style.display = 'block';
+}
+document.getElementById('modalCreer').addEventListener('click', function(e){ if(e.target===this) fermerModalCreer(); });
 </script>
 @endsection

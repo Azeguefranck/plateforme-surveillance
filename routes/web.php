@@ -17,6 +17,29 @@ Route::view('/login','login');
 
 Route::post('/login-user', [AuthController::class, 'login']);
 
+Route::get('/admin/validate-user/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    if (!$user) return response('<h2 style="color:red;font-family:Arial;text-align:center">Lien invalide ou expiré.</h2>', 404);
+    DB::table('users')->where('admin_token', $token)->update(['validation_status' => 'valide', 'updated_at' => now()]);
+    try { Mail::raw("Bonjour {$user->prenom} {$user->nom},\n\nVotre compte a été validé. Vous pouvez maintenant vous authentifier sur la plateforme.\n\nPlateforme de Surveillance", fn($m) => $m->to($user->email)->subject('Compte validé — Plateforme de Surveillance')); } catch (\Exception $e) {}
+    return response('<h2 style="color:green;font-family:Arial;text-align:center">Compte de ' . htmlspecialchars($user->prenom . ' ' . $user->nom) . ' validé avec succès.</h2>');
+});
+
+Route::get('/admin/refuse-user/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    if (!$user) return response('<h2 style="color:red;font-family:Arial;text-align:center">Lien invalide ou expiré.</h2>', 404);
+    DB::table('users')->where('admin_token', $token)->update(['validation_status' => 'refuse', 'updated_at' => now()]);
+    try { Mail::raw("Bonjour {$user->prenom} {$user->nom},\n\nVotre demande d'accès à la plateforme a été refusée. Contactez l'administrateur pour plus d'informations.\n\nPlateforme de Surveillance", fn($m) => $m->to($user->email)->subject('Demande refusée — Plateforme de Surveillance')); } catch (\Exception $e) {}
+    return response('<h2 style="color:orange;font-family:Arial;text-align:center">Demande de ' . htmlspecialchars($user->prenom . ' ' . $user->nom) . ' refusée.</h2>');
+});
+
+Route::get('/admin/pending-user/{token}', function ($token) {
+    $user = DB::table('users')->where('admin_token', $token)->first();
+    if (!$user) return response('<h2 style="color:red;font-family:Arial;text-align:center">Lien invalide ou expiré.</h2>', 404);
+    DB::table('users')->where('admin_token', $token)->update(['validation_status' => 'en_attente', 'updated_at' => now()]);
+    return response('<h2 style="color:#aaa;font-family:Arial;text-align:center">Demande de ' . htmlspecialchars($user->prenom . ' ' . $user->nom) . ' remise en attente.</h2>');
+});
+
 Route::post('/logout', function () {
     session()->forget('user');
     session()->invalidate();
@@ -75,6 +98,64 @@ Route::delete('/user/{id}', function ($id) {
         return response()->json(['error' => 'Impossible de supprimer le compte administrateur principal.'], 403);
     DB::table('users')->where('id', $id)->delete();
     return response()->json(['success' => true, 'message' => 'Utilisateur supprimé.']);
+});
+
+Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $id) {
+    $status  = $request->input('status');
+    $allowed = ['valide', 'refuse', 'bloque', 'en_attente'];
+    if (!in_array($status, $allowed))
+        return response()->json(['error' => 'Statut invalide.'], 422);
+    $target = DB::table('users')->where('id', $id)->first();
+    if (!$target)
+        return response()->json(['error' => 'Utilisateur introuvable.'], 404);
+    if ($target->id == 1 || $target->role === 'superadmin')
+        return response()->json(['error' => 'Impossible de modifier le compte administrateur principal.'], 403);
+    DB::table('users')->where('id', $id)->update(['validation_status' => $status, 'updated_at' => now()]);
+    $msgs = ['valide' => 'Compte validé.', 'refuse' => 'Compte refusé.', 'bloque' => 'Compte bloqué.', 'en_attente' => 'Compte remis en attente.'];
+    try {
+        $labels = ['valide' => 'validé', 'refuse' => 'refusé', 'bloque' => 'bloqué', 'en_attente' => 'remis en attente'];
+        Mail::raw(
+            "Bonjour {$target->prenom} {$target->nom},\n\nVotre compte sur la Plateforme de Surveillance a été {$labels[$status]}.\n\nContactez l'administrateur pour plus d'informations.\n\nPlateforme de Surveillance",
+            fn($m) => $m->to($target->email)->subject('Mise à jour de votre compte — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {}
+    return response()->json(['success' => true, 'message' => $msgs[$status]]);
+});
+
+Route::post('/user/creer', function (\Illuminate\Http\Request $request) {
+    $email = trim($request->input('email', ''));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        return response()->json(['error' => 'Adresse email invalide.'], 422);
+    $blocked = ['test.com','fake.com','example.com','mailinator.com','yopmail.com','guerrillamail.com','trashmail.com','tempmail.com','10minutemail.com','disposablemail.com','throwaway.email'];
+    $domain = strtolower(substr($email, strpos($email,'@') + 1));
+    if (in_array($domain, $blocked))
+        return response()->json(['error' => 'Adresse email non autorisée. Utilisez une adresse professionnelle ou officielle.'], 422);
+    if (DB::table('users')->where('email', $email)->exists())
+        return response()->json(['error' => 'Un compte avec cet email existe déjà.'], 422);
+    $motdepasse  = \Illuminate\Support\Str::random(10);
+    $nom         = trim($request->input('nom', ''));
+    $prenom      = trim($request->input('prenom', ''));
+    $role        = in_array($request->input('role'), ['admin','technicien','utilisateur','invite']) ? $request->input('role') : 'utilisateur';
+    DB::table('users')->insert([
+        'nom'               => $nom,
+        'prenom'            => $prenom,
+        'name'              => $prenom . ' ' . $nom,
+        'email'             => $email,
+        'password'          => \Illuminate\Support\Facades\Hash::make($motdepasse),
+        'role'              => $role,
+        'validation_status' => 'valide',
+        'created_at'        => now(),
+        'updated_at'        => now(),
+    ]);
+    try {
+        Mail::raw(
+            "Bonjour {$prenom} {$nom},\n\nVotre compte sur la Plateforme de Surveillance a été créé par l'administrateur.\n\nVos identifiants d'authentification :\n  Email       : {$email}\n  Mot de passe: {$motdepasse}\n\nConnectez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après la première connexion.\n\nPlateforme de Surveillance",
+            fn($m) => $m->to($email)->subject('Vos identifiants — Plateforme de Surveillance')
+        );
+    } catch (\Exception $e) {
+        return response()->json(['success' => true, 'message' => 'Compte créé. (Email non envoyé : ' . $e->getMessage() . ')', 'warn' => true]);
+    }
+    return response()->json(['success' => true, 'message' => "Compte créé. Identifiants envoyés à {$email}."]);
 });
 
 Route::delete('/alerte/{id}', function ($id) {

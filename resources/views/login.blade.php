@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Connexion — Plateforme de Surveillance</title>
+<title>Authentification — Plateforme de Surveillance</title>
 <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 <style>
 
@@ -162,7 +162,7 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
 <div class="box">
 
   <div class="box-top">
-    <h1><span>Connexion</span></h1>
+    <h1><span>Authentification</span></h1>
   </div>
 
   @if(session('error'))
