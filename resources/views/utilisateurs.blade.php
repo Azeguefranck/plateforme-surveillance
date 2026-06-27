@@ -82,7 +82,6 @@ try {
             <td class="col-role">
                 <select class="role-sel" onchange="changerRole({{ $u->id }}, this.value)" {{ ($u->id == 1 || ($u->role ?? '') === 'superadmin') ? 'disabled' : '' }}>
                     <option value="utilisateur" {{ ($u->role ?? '') === 'utilisateur' ? 'selected' : '' }}>Utilisateur</option>
-                    <option value="technicien"  {{ ($u->role ?? '') === 'technicien'  ? 'selected' : '' }}>Technicien</option>
                     <option value="admin"       {{ ($u->role ?? '') === 'admin'       ? 'selected' : '' }}>Administrateur</option>
                     <option value="invite"      {{ ($u->role ?? '') === 'invite'      ? 'selected' : '' }}>Invité</option>
                 </select>
@@ -133,7 +132,6 @@ try {
       <label style="font-size:11px;color:#8899cc;display:block;margin-bottom:4px">Rôle</label>
       <select id="f_role" style="width:100%;background:#07102a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
         <option value="utilisateur">Utilisateur</option>
-        <option value="technicien">Technicien</option>
         <option value="admin">Administrateur</option>
         <option value="invite">Invité</option>
       </select>

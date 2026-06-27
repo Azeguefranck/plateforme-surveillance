@@ -255,7 +255,7 @@ setInterval(pollMesuresLive, 3000);
         @if($u->id != 1 && ($u->role ?? '') !== 'superadmin')
         <select onchange="uRole({{ $u->id }},this.value)" style="background:#07102a;border:1px solid #1e2f5a;border-radius:6px;padding:5px 8px;color:#fff;font-size:12px;outline:none;cursor:pointer">
           <option value="utilisateur" {{ ($u->role??'') === 'utilisateur' ? 'selected':'' }}>Utilisateur</option>
-          <option value="technicien"  {{ ($u->role??'') === 'technicien'  ? 'selected':'' }}>Technicien</option>
+
           <option value="admin"       {{ ($u->role??'') === 'admin'       ? 'selected':'' }}>Admin</option>
           <option value="invite"      {{ ($u->role??'') === 'invite'      ? 'selected':'' }}>Invité</option>
         </select>
