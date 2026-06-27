@@ -346,7 +346,6 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
   @if($userRole === 'admin' || $userRole === 'superadmin')
-  <a href="/utilisateurs"><i class="fa-solid fa-users"></i> Utilisateurs</a>
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
   @endif
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
