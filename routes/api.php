@@ -274,7 +274,7 @@ function envoyerSMSAlerte(array $alerte, string $horodatage, ?int $salleId = nul
             if ($noms) $equip = ' Equip:' . implode(',', $noms);
         } catch (\Exception $e) {}
     }
-    $msg = 'SUPSERVER ' . $niv . ': ' . strtoupper($alerte['capteur'])
+    $msg = 'PS ' . $niv . ': ' . strtoupper($alerte['capteur'])
          . '=' . $alerte['valeur'] . $alerte['unite']
          . ' Seuil=' . $alerte['seuil'] . $alerte['unite']
          . $equip . ' ' . $horodatage;
@@ -285,7 +285,7 @@ endif;
 if (!function_exists('envoyerSMSMouvement')) :
 function envoyerSMSMouvement(string $horodatage): void
 {
-    $msg = 'SUPSERVER ALERTE SECURITE: Mouvement detecte dans la salle serveurs! ' . $horodatage;
+    $msg = 'PS ALERTE SECURITE: Mouvement detecte dans la salle serveurs! ' . $horodatage;
     envoyerSMS(collecterPhonesUtilisateurs(), $msg);
 }
 endif;
@@ -350,7 +350,7 @@ function envoyerEmailMouvement(string $horodatage, ?int $salleId): void
         . '<div style="color:#33ff88;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9989; Actions &agrave; entreprendre</div>'
         . '<div style="color:#c7d2ff;font-size:13px;word-break:break-word">V&eacute;rifier imm&eacute;diatement les acc&egrave;s physiques, visionner les cam&eacute;ras de surveillance, pr&eacute;venir le responsable de s&eacute;curit&eacute; et consigner l\'incident.</div>'
         . '</div></div>'
-        . '<div class="f">Plateforme de Surveillance &mdash; Alerte automatique</div>'
+        . '<div class="f">Plateforme Surveillance &mdash; Alerte automatique</div>'
         . '</div></body></html>';
 
     $emailTo = $adminUser->email;
@@ -459,7 +459,7 @@ Route::post('/capteurs', function (Request $request) {
         $newState['email_last'][$cap] = time();
 
         $smsPending[] = ['msg' =>
-            'SUPSERVER ' . ($newNiveau === 'critique' ? 'CRITIQUE' : 'WARNING')
+            'PS ' . ($newNiveau === 'critique' ? 'CRITIQUE' : 'WARNING')
             . ': ' . strtoupper($cap)
             . '=' . $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite']
             . ' Seuil=' . $alertMap[$cap]['seuil'] . $alertMap[$cap]['unite']
@@ -482,7 +482,7 @@ Route::post('/capteurs', function (Request $request) {
                 'updated_at' => now(),
             ]);
             envoyerEmailMouvement($horodatage, $salleId);
-            $smsPending[] = ['msg' => 'SUPSERVER ALERTE SECURITE: Mouvement detecte ! ' . $horodatage];
+            $smsPending[] = ['msg' => 'PS ALERTE SECURITE: Mouvement detecte ! ' . $horodatage];
             $newState['pir_last'] = time();
             $nbAlertes++;
         }

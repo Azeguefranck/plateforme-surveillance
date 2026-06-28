@@ -230,7 +230,7 @@ class AdminController extends Controller
     ' . $btn . '
   </div>
   <div style="background:#070e1c;padding:14px 32px;border-top:1px solid #182640;text-align:center;">
-    <p style="margin:0;color:#3a5070;font-size:12px;">Plateforme de Surveillance — Ne pas répondre à cet email</p>
+    <p style="margin:0;color:#3a5070;font-size:12px;">Plateforme Surveillance — Ne pas répondre à cet email</p>
   </div>
 </div>
 </body>

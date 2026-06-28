@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Authentification — Plateforme de Surveillance</title>
+<title>Authentification — Plateforme Surveillance</title>
 <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 <style>
 

@@ -106,11 +106,11 @@ class ProfilController extends Controller
                 . '<p class="info">Vous pouvez maintenant vous connecter avec ce mot de passe.</p>'
                 . '<div class="warn">&#9888; Si vous n\'&ecirc;tes pas &agrave; l\'origine de cette modification, contactez imm&eacute;diatement l\'administrateur.</div>'
                 . '</div>'
-                . '<div class="f">Plateforme de Surveillance &mdash; Message automatique</div>'
+                . '<div class="f">Plateforme Surveillance &mdash; Message automatique</div>'
                 . '</div></body></html>',
                 function ($mail) use ($user, $prenom, $nom) {
                     $mail->to($user->email)
-                         ->subject('🔐 Nouveau mot de passe — Plateforme de Surveillance');
+                         ->subject('🔐 Nouveau mot de passe — Plateforme Surveillance');
                 }
             );
         } catch (\Exception $e) {}

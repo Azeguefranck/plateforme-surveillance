@@ -37,7 +37,7 @@ tbody tr:nth-child(even) td{background:#f7f9fc}
 <div class="header">
     <h1>{{ $title }}</h1>
     <div class="meta">
-        Plateforme de Surveillance &nbsp;·&nbsp;
+        Plateforme Surveillance &nbsp;·&nbsp;
         Généré le {{ now()->format('d/m/Y à H:i') }} &nbsp;·&nbsp;
         {{ count($data) }} enregistrement(s)
     </div>
@@ -67,7 +67,7 @@ tbody tr:nth-child(even) td{background:#f7f9fc}
 @endif
 
 <div class="footer">
-    Plateforme de Surveillance &nbsp;·&nbsp; {{ now()->format('d/m/Y H:i') }} &nbsp;·&nbsp; {{ count($data) }} enregistrements
+    Plateforme Surveillance &nbsp;·&nbsp; {{ now()->format('d/m/Y H:i') }} &nbsp;·&nbsp; {{ count($data) }} enregistrements
 </div>
 
 <script>

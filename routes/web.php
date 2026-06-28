@@ -53,8 +53,8 @@ Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
     $resetUrl = config('app.url') . '/reset-password/' . $token . '?email=' . urlencode($email);
     try {
         Mail::raw(
-            "Bonjour {$user->prenom} {$user->nom},\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur ce lien (valable 1 heure) :\n{$resetUrl}\n\nSi vous n'avez pas fait cette demande, ignorez cet email.\n\nPlateforme de Surveillance",
-            fn($m) => $m->to($email)->subject('Réinitialisation de mot de passe — Plateforme de Surveillance')
+            "Bonjour {$user->prenom} {$user->nom},\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur ce lien (valable 1 heure) :\n{$resetUrl}\n\nSi vous n'avez pas fait cette demande, ignorez cet email.\n\nPlateforme Surveillance",
+            fn($m) => $m->to($email)->subject('Réinitialisation de mot de passe — Plateforme Surveillance')
         );
     } catch (\Exception $e) {}
     return back()->with('success', 'Si cet email existe, un lien de réinitialisation a été envoyé.');
@@ -94,7 +94,7 @@ Route::get('/admin/validate-user/{token}', function ($token) {
     $user = DB::table('users')->where('admin_token', $token)->first();
     if (!$user) return response('<h2 style="color:red;font-family:Arial;text-align:center">Lien invalide ou expiré.</h2>', 404);
     DB::table('users')->where('admin_token', $token)->update(['validation_status' => 'valide', 'updated_at' => now()]);
-    try { Mail::raw("Bonjour {$user->prenom} {$user->nom},\n\nVotre compte a été validé. Vous pouvez maintenant vous authentifier sur la plateforme.\n\nPlateforme de Surveillance", fn($m) => $m->to($user->email)->subject('Compte validé — Plateforme de Surveillance')); } catch (\Exception $e) {}
+    try { Mail::raw("Bonjour {$user->prenom} {$user->nom},\n\nVotre compte a été validé. Vous pouvez maintenant vous authentifier sur la plateforme.\n\nPlateforme Surveillance", fn($m) => $m->to($user->email)->subject('Compte validé — Plateforme Surveillance')); } catch (\Exception $e) {}
     return response('<h2 style="color:green;font-family:Arial;text-align:center">Compte de ' . htmlspecialchars($user->prenom . ' ' . $user->nom) . ' validé avec succès.</h2>');
 });
 
@@ -102,7 +102,7 @@ Route::get('/admin/refuse-user/{token}', function ($token) {
     $user = DB::table('users')->where('admin_token', $token)->first();
     if (!$user) return response('<h2 style="color:red;font-family:Arial;text-align:center">Lien invalide ou expiré.</h2>', 404);
     DB::table('users')->where('admin_token', $token)->update(['validation_status' => 'refuse', 'updated_at' => now()]);
-    try { Mail::raw("Bonjour {$user->prenom} {$user->nom},\n\nVotre demande d'accès à la plateforme a été refusée. Contactez l'administrateur pour plus d'informations.\n\nPlateforme de Surveillance", fn($m) => $m->to($user->email)->subject('Demande refusée — Plateforme de Surveillance')); } catch (\Exception $e) {}
+    try { Mail::raw("Bonjour {$user->prenom} {$user->nom},\n\nVotre demande d'accès à la plateforme a été refusée. Contactez l'administrateur pour plus d'informations.\n\nPlateforme Surveillance", fn($m) => $m->to($user->email)->subject('Demande refusée — Plateforme Surveillance')); } catch (\Exception $e) {}
     return response('<h2 style="color:orange;font-family:Arial;text-align:center">Demande de ' . htmlspecialchars($user->prenom . ' ' . $user->nom) . ' refusée.</h2>');
 });
 
@@ -186,8 +186,8 @@ Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $i
     try {
         $labels = ['valide' => 'validé', 'refuse' => 'refusé', 'bloque' => 'bloqué', 'en_attente' => 'remis en attente'];
         Mail::raw(
-            "Bonjour {$target->prenom} {$target->nom},\n\nVotre compte sur la Plateforme de Surveillance a été {$labels[$status]}.\n\nContactez l'administrateur pour plus d'informations.\n\nPlateforme de Surveillance",
-            fn($m) => $m->to($target->email)->subject('Mise à jour de votre compte — Plateforme de Surveillance')
+            "Bonjour {$target->prenom} {$target->nom},\n\nVotre compte sur la Plateforme Surveillance a été {$labels[$status]}.\n\nContactez l'administrateur pour plus d'informations.\n\nPlateforme Surveillance",
+            fn($m) => $m->to($target->email)->subject('Mise à jour de votre compte — Plateforme Surveillance')
         );
     } catch (\Exception $e) {}
     return response()->json(['success' => true, 'message' => $msgs[$status]]);
@@ -220,8 +220,8 @@ Route::post('/user/creer', function (\Illuminate\Http\Request $request) {
     ]);
     try {
         Mail::raw(
-            "Bonjour {$prenom} {$nom},\n\nVotre compte sur la Plateforme de Surveillance a été créé par l'administrateur.\n\nVos identifiants d'authentification :\n  Email       : {$email}\n  Mot de passe: {$motdepasse}\n\nConnectez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après la première connexion.\n\nPlateforme de Surveillance",
-            fn($m) => $m->to($email)->subject('Vos identifiants — Plateforme de Surveillance')
+            "Bonjour {$prenom} {$nom},\n\nVotre compte sur la Plateforme Surveillance a été créé par l'administrateur.\n\nVos identifiants d'authentification :\n  Email       : {$email}\n  Mot de passe: {$motdepasse}\n\nConnectez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après la première connexion.\n\nPlateforme Surveillance",
+            fn($m) => $m->to($email)->subject('Vos identifiants — Plateforme Surveillance')
         );
     } catch (\Exception $e) {
         return response()->json(['success' => true, 'message' => 'Compte créé. (Email non envoyé : ' . $e->getMessage() . ')', 'warn' => true]);
@@ -265,8 +265,8 @@ Route::post('/user/{id}/reset-password', function ($id) {
     ]);
     try {
         Mail::raw(
-            "Bonjour {$target->prenom} {$target->nom},\n\nVotre mot de passe a été réinitialisé par l'administrateur.\n\nNouveau mot de passe : {$nouveau}\n\nAuthentifiez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après connexion.\n\nPlateforme de Surveillance",
-            fn($m) => $m->to($target->email)->subject('Réinitialisation de mot de passe — Plateforme de Surveillance')
+            "Bonjour {$target->prenom} {$target->nom},\n\nVotre mot de passe a été réinitialisé par l'administrateur.\n\nNouveau mot de passe : {$nouveau}\n\nAuthentifiez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après connexion.\n\nPlateforme Surveillance",
+            fn($m) => $m->to($target->email)->subject('Réinitialisation de mot de passe — Plateforme Surveillance')
         );
     } catch (\Exception $e) {
         return response()->json(['success' => true, 'message' => 'Mot de passe réinitialisé. (Email non envoyé)', 'warn' => true]);
@@ -457,7 +457,7 @@ $genWordRapport = function (int $heures) {
 
     $footer = $section->addFooter();
     $footer->addPreserveText(
-        'Plateforme de Surveillance  ·  Rapport '.$heures.'h  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
+        'Plateforme Surveillance  ·  Rapport '.$heures.'h  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
         ['name'=>'Times New Roman','size'=>10,'color'=>'888888'],
         ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER]
     );
@@ -627,7 +627,7 @@ Route::get('/rapports/rapport-24h/word', function () {
 
     $footer = $section->addFooter();
     $footer->addPreserveText(
-        'Plateforme de Surveillance  ·  Rapport 24h condensé  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
+        'Plateforme Surveillance  ·  Rapport 24h condensé  ·  Généré le '.now()->format('d/m/Y H:i').'  ·  Page {PAGE}/{NUMPAGES}',
         ['name'=>'Times New Roman','size'=>9,'color'=>'999999'],
         ['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER]
     );
@@ -845,7 +845,7 @@ Route::get('/rapports/rapport-72h/png', function () {
 
     imageline($img, $padX, $ty+14, $W-$padX, $ty+14, $cLGray);
     imagettftext($img, $fs-1, 0, $padX, $ty+36, $cGray, $fontR,
-        'Plateforme de Surveillance  ·  Rapport automatique 72h  ·  Généré le '.now()->format('d/m/Y à H:i'));
+        'Plateforme Surveillance  ·  Rapport automatique 72h  ·  Généré le '.now()->format('d/m/Y à H:i'));
 
     $filename = 'rapport_72h_'.date('Y-m-d_H-i').'.png';
     return response()->stream(function() use ($img) {
@@ -995,7 +995,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
     }
 
     if ($format === 'txt') {
-        $out  = "=== Plateforme de Surveillance — Export : {$type} ===\n";
+        $out  = "=== Plateforme Surveillance — Export : {$type} ===\n";
         $out .= "Période  : {$debut} au {$fin}\n";
         $out .= "Généré   : ".date('d/m/Y H:i:s')."\n";
         $out .= "Total    : ".count($data)." enregistrements\n";
@@ -1012,12 +1012,12 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
                 $out .= "\n";
             }
         }
-        $out .= "\n".str_repeat('─', 70)."\nPlateforme de Surveillance\n";
+        $out .= "\n".str_repeat('─', 70)."\nPlateforme Surveillance\n";
         return response($out,200,['Content-Type'=>'text/plain; charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.txt\""]);
     }
 
     if ($format === 'sql') {
-        $out  = "-- Plateforme de Surveillance — SQL Export\n-- Table   : {$type}\n";
+        $out  = "-- Plateforme Surveillance — SQL Export\n-- Table   : {$type}\n";
         $out .= "-- Période : {$debut} au {$fin}\n-- Généré  : ".date('Y-m-d H:i:s')."\n-- Total   : ".count($data)." lignes\n\n";
         $out .= "SET NAMES 'utf8mb4';\nSET FOREIGN_KEY_CHECKS=0;\n\n";
         foreach ($data as $row) {
@@ -1063,7 +1063,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
              . '<w:t>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' | Total : '.count($data).' | Généré : '.date('d/m/Y H:i').'</w:t></w:r></w:p>'
              . '<w:p/>'.$tbl.'<w:p/>'
              . '<w:p><w:r><w:rPr><w:color w:val="555555"/><w:sz w:val="14"/></w:rPr>'
-             . '<w:t>Plateforme de Surveillance</w:t></w:r></w:p>'
+             . '<w:t>Plateforme Surveillance</w:t></w:r></w:p>'
              . '</w:body></w:document>';
 
         $tmp = tempnam(sys_get_temp_dir(), 'docx_');
@@ -1104,7 +1104,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
               . '<div class="hd"><h1>&#128202; Rapport — '.htmlspecialchars($type).'</h1>'
               . '<p>Période : '.htmlspecialchars($debut).' au '.htmlspecialchars($fin).' &nbsp;·&nbsp; '.count($data).' enregistrements &nbsp;·&nbsp; Généré le '.date('d/m/Y H:i').'</p></div>'
               . (!empty($data) ? '<table><thead>'.$hdr.'</thead><tbody>'.$body.'</tbody></table>' : '<p style="text-align:center;padding:40px;color:#555">Aucune donnée.</p>')
-              . '<div class="ft">Plateforme de Surveillance &nbsp;·&nbsp; '.date('d/m/Y H:i').'</div></body></html>';
+              . '<div class="ft">Plateforme Surveillance &nbsp;·&nbsp; '.date('d/m/Y H:i').'</div></body></html>';
         return response($html,200,['Content-Type'=>'text/html;charset=UTF-8','Content-Disposition'=>"attachment; filename=\"{$fn}.html\""]);
     }
 
@@ -1125,7 +1125,7 @@ Route::get('/rapports/export', function(\Illuminate\Http\Request $request) {
         $zip->addFromString("{$fn}.csv",  $csv);
         $zip->addFromString("{$fn}.json", json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
         $zip->addFromString("{$fn}.html", $html2);
-        $zip->addFromString('README.txt', "Plateforme de Surveillance — Bundle Export\nType: {$type}\nPeriode: {$debut} - {$fin}\nTotal: ".count($data)." records\nGenerated: ".date('Y-m-d H:i:s')."\n");
+        $zip->addFromString('README.txt', "Plateforme Surveillance — Bundle Export\nType: {$type}\nPeriode: {$debut} - {$fin}\nTotal: ".count($data)." records\nGenerated: ".date('Y-m-d H:i:s')."\n");
         $zip->close();
 
         $content = file_get_contents($tmp); @unlink($tmp);
@@ -1149,7 +1149,7 @@ Route::get('/rapports/backup', function () {
 
     $tables = ['mesures', 'alertes', 'salles', 'serveurs'];
     $today  = date('Y-m-d');
-    $summary = "=== Plateforme de Surveillance — Backup complet ===\nDate: ".date('Y-m-d H:i:s')."\n\n";
+    $summary = "=== Plateforme Surveillance — Backup complet ===\nDate: ".date('Y-m-d H:i:s')."\n\n";
 
     foreach ($tables as $tbl) {
         try {

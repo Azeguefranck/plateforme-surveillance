@@ -78,14 +78,14 @@ class AuthController extends Controller
         try {
             Mail::raw(
                 "Bonjour " . $request->prenom . " " . $request->nom . ",\n\n" .
-                "Votre inscription sur la Plateforme de Surveillance est presque terminée.\n\n" .
+                "Votre inscription sur la Plateforme Surveillance est presque terminée.\n\n" .
                 "Cliquez sur le lien ci-dessous pour confirmer votre adresse email et activer votre compte :\n\n" .
                 $verifyUrl . "\n\n" .
                 "Ce lien est valable 48 heures.\n\n" .
                 "Si vous n'avez pas créé de compte, ignorez cet email.\n\n" .
-                "Plateforme de Surveillance",
+                "Plateforme Surveillance",
                 function ($message) use ($request) {
-                    $message->to($request->email)->subject('Confirmez votre email — Plateforme de Surveillance');
+                    $message->to($request->email)->subject('Confirmez votre email — Plateforme Surveillance');
                 }
             );
         } catch (\Exception $e) {}
@@ -157,7 +157,7 @@ class AuthController extends Controller
             . '</div>'
             . '<div class="note">Cliquez sur un bouton pour agir sur cette demande.<br>Une notification email sera automatiquement envoy&eacute;e &agrave; l\'utilisateur.</div>'
             . '</div>'
-            . '<div class="f">Plateforme de Surveillance &mdash; Message automatique &mdash; Ne pas r&eacute;pondre</div>'
+            . '<div class="f">Plateforme Surveillance &mdash; Message automatique &mdash; Ne pas r&eacute;pondre</div>'
             . '</div></body></html>';
 
         try {

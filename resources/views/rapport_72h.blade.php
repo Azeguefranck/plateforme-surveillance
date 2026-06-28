@@ -154,7 +154,7 @@ tbody td{padding:8px 12px;border-top:1px solid #0d1a35;font-size:11px}
     </div>
 
     <div class="footer">
-        Plateforme de Surveillance &nbsp;·&nbsp; Rapport automatique 72h &nbsp;·&nbsp; {{ now()->format('d/m/Y H:i') }}
+        Plateforme Surveillance &nbsp;·&nbsp; Rapport automatique 72h &nbsp;·&nbsp; {{ now()->format('d/m/Y H:i') }}
     </div>
 
 </div>

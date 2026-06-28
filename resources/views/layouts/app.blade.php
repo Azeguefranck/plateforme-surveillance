@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<title>SUPSERVER — Surveillance des salles serveurs</title>
+<title>Plateforme Surveillance — Surveillance des paramètres des équipements d'une salle serveurs</title>
 <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
 
 <style>
@@ -503,7 +503,7 @@ function confirmDlg(title, msg, opts) {
 function doLogout() {
     confirmDlg(
         'Se déconnecter ?',
-        'Vous allez quitter la plateforme de surveillance des salles serveurs. Votre session active sera fermée.',
+        'Vous allez quitter la Plateforme Surveillance. Votre session active sera fermée.',
         {type:'logout', icon:'<i class="fa-solid fa-lock"></i>', confirmText:'Se déconnecter', cancelText:'Rester connecté'}
     ).then(function(ok) {
         if (ok) {

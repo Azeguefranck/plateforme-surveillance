@@ -347,7 +347,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="cfg-ico"><i class="fa-solid fa-rocket"></i></div>
       <div>
         <div class="cfg-key">Version plateforme</div>
-        <div class="cfg-val">Plateforme de Surveillance v2.0</div>
+        <div class="cfg-val">Plateforme Surveillance</div>
       </div>
     </div>
   </div>
