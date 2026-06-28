@@ -214,6 +214,12 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
     Pas encore de compte ? <a href="/inscription" style="color:#33ff88;font-weight:700">S'inscrire</a>
   </div>
 
+  <div style="text-align:center;margin-top:14px">
+    <a href="/accueil" style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#5a6a99;text-decoration:none;transition:.2s" onmouseover="this.style.color='#33ff88'" onmouseout="this.style.color='#5a6a99'">
+      <i class="fa-solid fa-house" style="font-size:12px"></i> Page d'accueil
+    </a>
+  </div>
+
 </div>
 
 </body>
