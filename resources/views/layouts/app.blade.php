@@ -529,7 +529,7 @@ function doLogout() {
 (function () {
   'use strict';
 
-  var CACHE_TTL = 0;
+  var CACHE_TTL = 30000;
   var _cache    = {};
   var _inflight = {};
 
