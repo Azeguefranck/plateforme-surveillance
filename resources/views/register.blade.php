@@ -155,6 +155,13 @@ h1 span{color:#33ff88}
     </div>
   @endif
 
+  @if($errors->any())
+    <div class="alert-box alert-error">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ $errors->first() }}</span>
+    </div>
+  @endif
+
   <form method="POST" action="/inscription">
     @csrf
 

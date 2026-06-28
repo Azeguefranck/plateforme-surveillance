@@ -22,9 +22,9 @@ class AuthController extends Controller
             'nom'      => 'required|string|max:100',
             'prenom'   => 'required|string|max:100',
             'email'    => 'required|email|unique:users,email',
-            'telephone'=> 'required|string|max:30',
+            'telephone'=> 'nullable|string|max:30',
             'password' => 'required|confirmed|min:8',
-            'pays'     => 'required|string',
+            'pays'     => 'nullable|string',
         ]);
 
         $adminToken    = bin2hex(random_bytes(32));
