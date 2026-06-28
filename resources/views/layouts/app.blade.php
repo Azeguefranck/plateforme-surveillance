@@ -332,7 +332,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   @php $userRole = session('user') ? (session('user')->role ?? '') : ''; @endphp
 
   <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-  <a href="/accueil"><i class="fa-solid fa-house"></i> Accueil</a>
+  <a href="/dashboard"><i class="fa-solid fa-house"></i> Accueil</a>
   <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
   <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
   <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>
@@ -340,6 +340,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   <a href="/anomalies"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
   <a href="/salles"><i class="fa-solid fa-warehouse"></i> Salles Serveurs</a>
   @if($userRole === 'administrateur')
+  <a href="/utilisateurs"><i class="fa-solid fa-users"></i> Utilisateurs</a>
   <a href="/parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
   @endif
   <a href="/rapports"><i class="fa-solid fa-file-lines"></i> Rapports</a>
@@ -626,8 +627,10 @@ function doLogout() {
     .then(function (r) {
       var finalUrl = r.url || abs;
       return r.text().then(function (html) {
-        var entry = { html: html, finalUrl: finalUrl, ts: Date.now() };
-        _cache[abs] = entry;
+        var entry = { html: html, finalUrl: finalUrl, absUrl: abs, ts: Date.now() };
+        if (finalUrl.indexOf('/login') === -1) {
+          _cache[abs] = entry;
+        }
         delete _inflight[abs];
         return entry;
       });
@@ -644,7 +647,11 @@ function doLogout() {
   function _swap(entry, push) {
     var finalUrl = entry.finalUrl;
 
-    if (finalUrl.indexOf('/login') !== -1) { location.href = '/login'; return; }
+    if (finalUrl.indexOf('/login') !== -1) {
+      delete _cache[entry.absUrl || finalUrl];
+      location.href = '/login';
+      return;
+    }
 
     var doc    = new DOMParser().parseFromString(entry.html, 'text/html');
     var newBox = doc.getElementById('pjax-content');
@@ -720,13 +727,15 @@ function doLogout() {
   _active(location.pathname);
 
   function _prefetchSidebar() {
-    document.querySelectorAll('.sidebar a').forEach(function (a) {
-      var href = a.getAttribute('href');
-      if (_isInternal(href)) _fetch(href);
+    var links = Array.from(document.querySelectorAll('.sidebar a'))
+      .map(function (a) { return a.getAttribute('href'); })
+      .filter(function (h) { return _isInternal(h); });
+    links.forEach(function (href, i) {
+      setTimeout(function () { _fetch(href); }, i * 400);
     });
   }
 
-  setTimeout(_prefetchSidebar, 200);
+  setTimeout(_prefetchSidebar, 2000);
   setInterval(_prefetchSidebar, 240000);
 
   document.addEventListener('mouseover', function (e) {

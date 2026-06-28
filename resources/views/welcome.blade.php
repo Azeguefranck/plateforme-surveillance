@@ -167,7 +167,7 @@ Plateforme intelligente de surveillance des salles serveurs :
 <div class="right">
 
 <a href="/login" class="btn green">
-SE CONNECTER
+S'AUTHENTIFIER
 </a>
 
 

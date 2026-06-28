@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Connexion</title>
+<title>Authentification — Plateforme Surveillance</title>
 
 <style>
 
@@ -85,7 +85,7 @@ margin-bottom:20px;
 <input type="password" name="password" placeholder="Mot de passe" required>
 
 <button type="submit">
-SE CONNECTER
+S'AUTHENTIFIER
 </button>
 
 </form>

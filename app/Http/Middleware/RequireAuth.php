@@ -17,7 +17,6 @@ class RequireAuth
         $fresh = \Illuminate\Support\Facades\DB::table('users')->where('id', $sessionUser->id ?? 0)->first();
         if (!$fresh || $fresh->validation_status === 'bloque') {
             session()->forget('user');
-            session()->invalidate();
             return redirect('/login')->with('error', 'Votre compte a été bloqué ou supprimé.');
         }
         session(['user' => $fresh]);

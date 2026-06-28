@@ -197,10 +197,6 @@ h1 span{color:#33ff88}
       </div>
     </div>
 
-    <input type="hidden" name="role" value="utilisateur">
-    <input type="hidden" name="telephone" value="">
-    <input type="hidden" name="pays" value="">
-
     <button type="submit" class="btn-submit"><i class="fa-solid fa-paper-plane"></i> S'inscrire</button>
   </form>
 
@@ -208,7 +204,6 @@ h1 span{color:#33ff88}
 
   <div class="links">
     <span style="font-size:13px;color:#8899cc">Déjà un compte ? <a href="/login" style="color:#33ff88;font-weight:700">S'authentifier</a></span>
-    <a href="/accueil">← Retour à l'accueil</a>
   </div>
 
 </div>

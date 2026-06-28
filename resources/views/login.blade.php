@@ -213,9 +213,6 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
   <div class="links" style="text-align:center;font-size:13px;color:#8899cc">
     Pas encore de compte ? <a href="/inscription" style="color:#33ff88;font-weight:700">S'inscrire</a>
   </div>
-  <div class="links" style="margin-top:8px">
-    <a href="/accueil">← Retour à l'accueil</a>
-  </div>
 
 </div>
 

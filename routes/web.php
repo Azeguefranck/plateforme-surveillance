@@ -11,8 +11,12 @@ use App\Http\Controllers\GeoController;
 
 
 
-Route::view('/','accueil');
-Route::view('/accueil','accueil');
+Route::get('/', function () {
+    return session('user') ? redirect('/dashboard') : redirect('/login');
+});
+Route::get('/accueil', function () {
+    return session('user') ? redirect('/dashboard') : redirect('/login');
+});
 Route::view('/login','login');
 
 Route::post('/login-user', [AuthController::class, 'login']);
@@ -144,7 +148,7 @@ Route::view('/historique','historique');
 Route::view('/statistiques','statistiques');
 Route::view('/mails','mails');
 Route::view('/anomalies','anomalies');
-Route::view('/utilisateurs','utilisateurs');
+Route::view('/utilisateurs','utilisateurs')->middleware('admin');
 Route::get('/geo/pays',                        [GeoController::class, 'getPays']);
 Route::get('/geo/regions/{geonameId}',         [GeoController::class, 'getRegions']);
 Route::get('/geo/departements/{geonameId}',    [GeoController::class, 'getDepartements']);
@@ -163,9 +167,11 @@ Route::post('/equipements/{id}',  [ServeursController::class, 'update']);
 Route::redirect('/serveurs',     '/equipements', 301);
 Route::redirect('/serveurs-web', '/equipements', 301);
 Route::redirect('/serveurs-bd',  '/equipements', 301);
-Route::get('/parametres',         [ParametresController::class, 'show']);
-Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils']);
+Route::get('/parametres',         [ParametresController::class, 'show'])->middleware('admin');
+Route::post('/parametres/seuils', [ParametresController::class, 'saveSeuils'])->middleware('admin');
 Route::view('/rapports','rapports');
+
+Route::middleware('admin')->group(function () {
 
 Route::delete('/user/{id}', function ($id) {
     $target = DB::table('users')->where('id', $id)->first();
@@ -224,7 +230,7 @@ Route::post('/user/creer', function (\Illuminate\Http\Request $request) {
     ]);
     try {
         Mail::raw(
-            "Bonjour {$prenom} {$nom},\n\nVotre compte sur la Plateforme Surveillance a été créé par l'administrateur.\n\nVos identifiants d'authentification :\n  Email       : {$email}\n  Mot de passe: {$motdepasse}\n\nConnectez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après la première connexion.\n\nPlateforme Surveillance",
+            "Bonjour {$prenom} {$nom},\n\nVotre compte sur la Plateforme Surveillance a été créé par l'administrateur.\n\nVos identifiants d'authentification :\n  Email       : {$email}\n  Mot de passe: {$motdepasse}\n\nAuthentifiez-vous sur : " . config('app.url') . "/login\nChangez votre mot de passe après la première authentification.\n\nPlateforme Surveillance",
             fn($m) => $m->to($email)->subject('Vos identifiants — Plateforme Surveillance')
         );
     } catch (\Exception $e) {
@@ -277,6 +283,8 @@ Route::post('/user/{id}/reset-password', function ($id) {
     }
     return response()->json(['success' => true, 'message' => "Nouveau mot de passe envoyé à {$target->email}."]);
 });
+
+}); // fin groupe admin
 
 Route::delete('/alerte/{id}', function ($id) {
     DB::table('alertes')->where('id', $id)->delete();

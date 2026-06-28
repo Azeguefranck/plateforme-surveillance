@@ -150,8 +150,8 @@ class AdminController extends Controller
                         '#2fa84f',
                         $user,
                         'Votre accès à la plateforme a été validé par l\'administrateur.',
-                        'Vous pouvez maintenant vous connecter et accéder à votre espace de surveillance.',
-                        'SE CONNECTER',
+                        'Vous pouvez maintenant vous authentifier et accéder à votre espace de surveillance.',
+                        'S\'AUTHENTIFIER',
                         $loginUrl,
                         '#2fa84f',
                         '#060c1a'
