@@ -99,7 +99,7 @@ body{
 
 <nav class="navbar">
   <a class="logo" href="/accueil">SURVEILLANCE</a>
-  <a href="/login" class="btn-nav"><i class="fa-solid fa-arrow-left"></i> Connexion</a>
+  <a href="/login" class="btn-nav"><i class="fa-solid fa-arrow-left"></i> Authentification</a>
 </nav>
 
 <div class="page-center">
@@ -152,7 +152,7 @@ body{
     </form>
 
     <a href="/login" class="back-link">
-      <i class="fa-solid fa-arrow-left"></i> Retour à la connexion
+      <i class="fa-solid fa-arrow-left"></i> Retour à l'authentification
     </a>
 
   </div>

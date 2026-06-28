@@ -553,7 +553,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
       <div class="sec-row">
         <div class="sec-ico"><i class="fa-solid fa-link"></i></div>
         <div class="sec-content">
-          <div class="sec-key">Statut connexion</div>
+          <div class="sec-key">Statut authentification</div>
           <div class="sec-val online">● Session active</div>
         </div>
       </div>
@@ -591,7 +591,7 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
         <div class="tl-item">
           <div class="tl-dot g"><i class="fa-solid fa-key"></i></div>
           <div class="tl-body">
-            <div class="tl-msg">Connexion réussie à la plateforme</div>
+            <div class="tl-msg">Authentification réussie à la plateforme</div>
             <div class="tl-time" id="tl-now">—</div>
           </div>
         </div>

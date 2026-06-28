@@ -216,7 +216,7 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
   <div class="sep"></div>
 
   <div class="links">
-    <a href="/login"><i class="fa-solid fa-arrow-left" style="margin-right:4px"></i>Retour à la connexion</a>
+    <a href="/login"><i class="fa-solid fa-arrow-left" style="margin-right:4px"></i>Retour à l'authentification</a>
   </div>
 
 </div>
