@@ -710,7 +710,7 @@ function updateStrength(v) {
   document.getElementById('pw-label').style.color  = v.length ? colors[s - 1] : '#5a6a99';
 }
 
-const NOTIF_KEY = 'supserver_notifs';
+const NOTIF_KEY = 'plateforme_notifs';
 function saveNotif() {
   const ids = ['notif-email','notif-temp','notif-gaz','notif-power','notif-pir','notif-sms','notif-anomalie'];
   const prefs = {};

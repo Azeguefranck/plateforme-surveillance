@@ -1192,7 +1192,7 @@ Route::get('/rapports/backup', function () {
     $content = file_get_contents($tmp); @unlink($tmp);
     return response($content, 200, [
         'Content-Type'        => 'application/zip',
-        'Content-Disposition' => "attachment; filename=\"supserver_backup_{$today}.zip\"",
+        'Content-Disposition' => "attachment; filename=\"plateforme_backup_{$today}.zip\"",
     ]);
 });
 

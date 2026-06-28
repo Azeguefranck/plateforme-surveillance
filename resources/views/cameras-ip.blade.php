@@ -422,7 +422,7 @@ h1,h2,.page-title{font-size:clamp(14px,4vw,20px)!important}
 <div id="toasts"></div>
 
 <script>
-const STORAGE_KEY = 'supserver_cameras_v2';
+const STORAGE_KEY = 'plateforme_cameras_v2';
 let _deletePendingId = null;
 let _editingId = null;
 
