@@ -728,5 +728,24 @@ function doLogout() {
 
 })();
 </script>
+
+<script>
+(function () {
+  function verifierAuth() {
+    fetch('/auth-check', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (r.status === 401 || r.status === 302 || r.url.indexOf('/login') !== -1) {
+          window.location.href = '/login';
+        }
+        return r.json();
+      })
+      .then(function (d) {
+        if (!d || !d.authenticated) window.location.href = '/login';
+      })
+      .catch(function () {});
+  }
+  setInterval(verifierAuth, 30000);
+})();
+</script>
 </body>
 </html>

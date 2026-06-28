@@ -122,6 +122,10 @@ Route::post('/logout', function () {
 
 Route::middleware('auth.session')->group(function () {
 
+Route::get('/auth-check', function () {
+    return response()->json(['authenticated' => true]);
+});
+
 Route::view('/dashboard','dashboard');
 Route::redirect('/dashboard-technicien', '/dashboard', 301);
 
