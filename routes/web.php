@@ -12,7 +12,7 @@ use App\Http\Controllers\GeoController;
 
 
 Route::get('/', function () {
-    return session('user') ? redirect('/dashboard') : redirect('/login');
+    return session('user') ? redirect('/dashboard') : view('welcome');
 });
 Route::get('/accueil', function () {
     return session('user') ? redirect('/dashboard') : view('welcome');
