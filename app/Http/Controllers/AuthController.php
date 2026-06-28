@@ -63,7 +63,7 @@ class AuthController extends Controller
             'adresse'          => $request->adresse,
             'profession'       => $request->profession,
             'organisation'     => $request->organisation,
-            'role'             => $request->role ?? 'utilisateur',
+            'role'             => 'utilisateur',
             'photo_profil'     => $photoPath,
             'lieu_naissance'   => $request->lieu_naissance,
             'admin_token'      => $adminToken,

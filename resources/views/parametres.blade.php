@@ -424,6 +424,37 @@ setInterval(loadStats, 10000);
 
 @if((session('user')->role ?? '') === 'administrateur')
 @php $users = DB::table('users')->orderBy('nom')->get(); @endphp
+
+<div class="card" style="margin-top:28px">
+  <div class="card-title">
+    <i class="fa-solid fa-user-plus"></i> Créer un compte utilisateur
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;padding:4px 0">
+    <div>
+      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Prénom</label>
+      <input id="cu-prenom" type="text" placeholder="Prénom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+    </div>
+    <div>
+      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Nom</label>
+      <input id="cu-nom" type="text" placeholder="Nom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+    </div>
+    <div>
+      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Email</label>
+      <input id="cu-email" type="email" placeholder="email@domaine.com" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+    </div>
+    <div>
+      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Rôle</label>
+      <select id="cu-role" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+        <option value="utilisateur">Utilisateur</option>
+        <option value="administrateur">Administrateur</option>
+      </select>
+    </div>
+    <button onclick="creerUtilisateur()" style="background:rgba(51,255,136,.12);border:1px solid rgba(51,255,136,.35);border-radius:7px;padding:9px 18px;color:#33ff88;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+      <i class="fa-solid fa-plus"></i> Créer
+    </button>
+  </div>
+</div>
+
 <div class="card" style="margin-top:28px">
   <div class="card-title">
     <i class="fa-solid fa-users"></i> Gestion des utilisateurs
@@ -482,6 +513,26 @@ function uToggle(id,actif){
   csrfFetch('/user/'+id+'/statut',{method:'POST',body:JSON.stringify({status:actif?'valide':'bloque'})})
     .then(r=>r.json()).then(d=>notify(d.success?(actif?'Compte activé.':'Compte bloqué.'):(d.error||'Erreur.'),d.success?'s':'e'))
     .catch(()=>notify('Erreur réseau.','e'));
+}
+function creerUtilisateur(){
+  var prenom=document.getElementById('cu-prenom').value.trim();
+  var nom=document.getElementById('cu-nom').value.trim();
+  var email=document.getElementById('cu-email').value.trim();
+  var role=document.getElementById('cu-role').value;
+  if(!prenom||!nom||!email){notify('Veuillez remplir tous les champs.','e');return;}
+  csrfFetch('/user/creer',{method:'POST',body:JSON.stringify({prenom:prenom,nom:nom,email:email,role:role})})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){
+        notify(d.message,'s');
+        document.getElementById('cu-prenom').value='';
+        document.getElementById('cu-nom').value='';
+        document.getElementById('cu-email').value='';
+        document.getElementById('cu-role').value='utilisateur';
+        setTimeout(()=>location.reload(),1500);
+      } else {
+        notify(d.error||'Erreur.','e');
+      }
+    }).catch(()=>notify('Erreur réseau.','e'));
 }
 </script>
 @endif

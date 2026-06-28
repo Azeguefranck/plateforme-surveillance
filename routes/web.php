@@ -183,7 +183,7 @@ Route::post('/user/{id}/statut', function (\Illuminate\Http\Request $request, $i
     $target = DB::table('users')->where('id', $id)->first();
     if (!$target)
         return response()->json(['error' => 'Utilisateur introuvable.'], 404);
-    if ($target->id == 1 || $target->role === 'administrateur')
+    if ($target->id == 1)
         return response()->json(['error' => 'Impossible de modifier le compte administrateur principal.'], 403);
     DB::table('users')->where('id', $id)->update(['validation_status' => $status, 'updated_at' => now()]);
     $msgs = ['valide' => 'Compte validé.', 'refuse' => 'Compte refusé.', 'bloque' => 'Compte bloqué.', 'en_attente' => 'Compte remis en attente.'];
@@ -236,7 +236,7 @@ Route::post('/user/creer', function (\Illuminate\Http\Request $request) {
 Route::post('/user/{id}/modifier', function (\Illuminate\Http\Request $request, $id) {
     $target = DB::table('users')->where('id', $id)->first();
     if (!$target) return response()->json(['error' => 'Utilisateur introuvable.'], 404);
-    if ($target->id == 1 || $target->role === 'administrateur')
+    if ($target->id == 1)
         return response()->json(['error' => 'Impossible de modifier le compte administrateur principal.'], 403);
     $nom    = trim($request->input('nom', ''));
     $prenom = trim($request->input('prenom', ''));
@@ -260,7 +260,7 @@ Route::post('/user/{id}/modifier', function (\Illuminate\Http\Request $request, 
 Route::post('/user/{id}/reset-password', function ($id) {
     $target = DB::table('users')->where('id', $id)->first();
     if (!$target) return response()->json(['error' => 'Utilisateur introuvable.'], 404);
-    if ($target->id == 1 || $target->role === 'administrateur')
+    if ($target->id == 1)
         return response()->json(['error' => 'Impossible de réinitialiser le mot de passe de l\'administrateur principal.'], 403);
     $nouveau = \Illuminate\Support\Str::random(10);
     DB::table('users')->where('id', $id)->update([
