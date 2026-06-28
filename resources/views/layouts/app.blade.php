@@ -529,7 +529,7 @@ function doLogout() {
 (function () {
   'use strict';
 
-  var CACHE_TTL = 30000;
+  var CACHE_TTL = 300000;
   var _cache    = {};
   var _inflight = {};
 
@@ -719,12 +719,22 @@ function doLogout() {
   history.replaceState({ pjax: location.href }, '', location.href);
   _active(location.pathname);
 
-  setTimeout(function () {
+  function _prefetchSidebar() {
     document.querySelectorAll('.sidebar a').forEach(function (a) {
       var href = a.getAttribute('href');
       if (_isInternal(href)) _fetch(href);
     });
-  }, 800);
+  }
+
+  setTimeout(_prefetchSidebar, 200);
+  setInterval(_prefetchSidebar, 240000);
+
+  document.addEventListener('mouseover', function (e) {
+    var a = e.target.closest('.sidebar a');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (_isInternal(href)) _fetch(href);
+  });
 
 })();
 </script>
