@@ -161,10 +161,6 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
 
 <div class="box">
 
-  <div class="box-top">
-    <h1><span>Authentification</span></h1>
-  </div>
-
   @if(session('error'))
     @php
       $err = session('error');
@@ -204,7 +200,7 @@ h1,h2{font-size:clamp(15px,5vw,24px)!important}
       <a href="/forgot-password" style="font-size:12px;color:#8899cc;text-decoration:none">Mot de passe oublié ?</a>
     </div>
 
-    <button type="submit" class="btn-submit">⊙ S'authentifier</button>
+    <button type="submit" class="btn-submit">⊙ Connexion</button>
 
   </form>
 
