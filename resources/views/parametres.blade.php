@@ -203,6 +203,31 @@ body{background:#060d1f;color:#e0e8ff;font-family:'Segoe UI',Arial,sans-serif}
   .sc-fields{grid-template-columns:1fr}
   .pir-card{flex-direction:column;gap:14px;align-items:flex-start}
 }
+
+.u-search{background:#07102a;border:1px solid #1e2f5a;border-radius:8px;padding:9px 14px;color:#fff;font-size:13px;outline:none;width:260px}
+.u-search:focus{border-color:#33b5ff}
+.table-wrap{background:#0e1a38;border:1px solid #1e2f5a;border-radius:14px;overflow:hidden;margin-top:14px}
+.table-wrap table{width:100%;border-collapse:collapse}
+.table-wrap thead tr{background:#07102a}
+.table-wrap th{padding:11px 16px;text-align:left;font-size:10px;color:#556;text-transform:uppercase;letter-spacing:.5px}
+.table-wrap td{padding:11px 16px;border-top:1px solid #1e2f5a;font-size:13px;color:#ccc;vertical-align:middle}
+.table-wrap tr:hover td{background:rgba(51,181,255,.03)}
+.u-count{font-size:12px;color:#556;padding:10px 16px;border-bottom:1px solid #1e2f5a}
+.u-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1e2f5a,#0b1632);border:1px solid #1e2f5a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#33b5ff;flex-shrink:0}
+.u-info{display:flex;align-items:center;gap:10px}
+.u-name{font-weight:600;color:#fff}
+.u-email{font-size:11px;color:#556;margin-top:1px}
+.u-role-sel{background:#07102a;border:1px solid #1e2f5a;border-radius:6px;padding:5px 8px;color:#fff;font-size:12px;outline:none;cursor:pointer;transition:.2s}
+.u-role-sel:focus{border-color:#33b5ff}
+.u-del{background:none;border:none;color:#3a4a6a;cursor:pointer;font-size:14px;padding:4px 8px;border-radius:6px;transition:.2s}
+.u-del:hover{color:#ff5733;background:rgba(255,87,51,.1)}
+.u-toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.u-toggle input{opacity:0;width:0;height:0}
+.u-slider{position:absolute;inset:0;background:#1e2f5a;border-radius:24px;cursor:pointer;transition:.3s}
+.u-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#556;border-radius:50%;transition:.3s}
+.u-toggle input:checked+.u-slider{background:rgba(51,255,136,.25);border:1px solid #33ff88}
+.u-toggle input:checked+.u-slider:before{transform:translateX(20px);background:#33ff88}
+@media(max-width:640px){.u-email,.col-role,.col-date{display:none}.u-search{width:100%}}
 </style>
 
 
@@ -423,117 +448,182 @@ setInterval(loadStats, 10000);
 </script>
 
 @if((session('user')->role ?? '') === 'administrateur')
-@php $users = DB::table('users')->orderBy('nom')->get(); @endphp
+@php $users = DB::table('users')->orderByDesc('created_at')->get(); @endphp
 
 <div class="card" style="margin-top:28px">
-  <div class="card-title">
-    <i class="fa-solid fa-user-plus"></i> Créer un compte utilisateur
+  <div class="card-title" style="justify-content:space-between;display:flex;align-items:center;flex-wrap:wrap;gap:10px">
+    <span style="display:flex;align-items:center;gap:8px">
+      <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,#33ff88,#33b5ff);display:inline-block"></span>
+      <i class="fa-solid fa-users"></i> Gestion des utilisateurs
+    </span>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input class="u-search" type="text" id="u-search" placeholder="Rechercher…" oninput="uFiltrer()">
+      <button onclick="uOuvrirModal()" style="padding:8px 16px;border:1px solid #33ff88;background:transparent;border-radius:7px;color:#33ff88;font-weight:700;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;gap:5px;transition:.18s" onmouseover="this.style.background='#33ff88';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#33ff88'">
+        <i class="fa-solid fa-user-plus"></i> Ajouter
+      </button>
+    </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;padding:4px 0">
-    <div>
-      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Prénom</label>
-      <input id="cu-prenom" type="text" placeholder="Prénom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+
+  <div class="table-wrap">
+    <div class="u-count" id="u-compteur">{{ $users->count() }} utilisateur(s)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th class="col-role">Rôle</th>
+          <th>Actif</th>
+          <th class="col-date">Inscription</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="u-tbody">
+      @forelse($users as $u)
+      @php $actif = ($u->validation_status ?? '') === 'valide'; @endphp
+      <tr id="urow_{{ $u->id }}" data-search="{{ strtolower(($u->prenom ?? '').' '.($u->nom ?? '').' '.($u->email ?? '')) }}">
+        <td>
+          <div class="u-info">
+            <div class="u-avatar">{{ strtoupper(substr($u->prenom ?? $u->nom ?? '?', 0, 1)) }}</div>
+            <div>
+              <div class="u-name">{{ $u->prenom ?? '' }} {{ $u->nom ?? '—' }}</div>
+              <div class="u-email">{{ $u->email }}</div>
+            </div>
+          </div>
+        </td>
+        <td class="col-role">
+          <select class="u-role-sel" onchange="uRole({{ $u->id }},this.value)" {{ ($u->id == 1 || ($u->role ?? '') === 'administrateur') ? 'disabled' : '' }}>
+            <option value="utilisateur" {{ ($u->role ?? '') === 'utilisateur' ? 'selected' : '' }}>Utilisateur</option>
+            <option value="administrateur" {{ ($u->role ?? '') === 'administrateur' ? 'selected' : '' }}>Administrateur</option>
+          </select>
+        </td>
+        <td>
+          <label class="u-toggle">
+            <input type="checkbox" {{ $actif ? 'checked' : '' }} onchange="uToggle({{ $u->id }},this.checked)" {{ ($u->id == 1 || ($u->role ?? '') === 'administrateur') ? 'disabled' : '' }}>
+            <span class="u-slider"></span>
+          </label>
+        </td>
+        <td class="col-date" style="font-size:11px;color:#556">{{ \Carbon\Carbon::parse($u->created_at)->format('d/m/Y') }}</td>
+        <td>
+          @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
+          <button class="u-del" onclick="uSupprimer({{ $u->id }},'{{ addslashes(($u->prenom ?? '').' '.($u->nom ?? '')) }}')" title="Supprimer"><i class="fa-solid fa-trash-can"></i></button>
+          @endif
+        </td>
+      </tr>
+      @empty
+      <tr><td colspan="5" style="text-align:center;padding:48px;color:#3a4a6a;font-size:13px">Aucun utilisateur enregistré.</td></tr>
+      @endforelse
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{-- Modal ajouter utilisateur --}}
+<div id="u-modal" style="display:none;position:fixed;inset:0;background:rgba(2,5,18,.88);backdrop-filter:blur(8px);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:#0a1428;border:1px solid #1e2f5a;border-radius:16px;padding:28px;max-width:400px;width:94%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:15px;font-weight:800;color:#fff"><i class="fa-solid fa-user-plus" style="color:#33ff88;margin-right:8px"></i>Nouvel utilisateur</div>
+      <button onclick="uFermerModal()" style="background:none;border:none;color:#556;font-size:20px;cursor:pointer">×</button>
     </div>
-    <div>
-      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Nom</label>
-      <input id="cu-nom" type="text" placeholder="Nom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+    <div id="u-modal-msg" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:#8899cc;display:block;margin-bottom:4px">Prénom</label>
+        <input id="u-f-prenom" type="text" placeholder="Prénom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#8899cc;display:block;margin-bottom:4px">Nom</label>
+        <input id="u-f-nom" type="text" placeholder="Nom" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
+      </div>
     </div>
-    <div>
-      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Email</label>
-      <input id="cu-email" type="email" placeholder="email@domaine.com" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;color:#8899cc;display:block;margin-bottom:4px">Email</label>
+      <input id="u-f-email" type="email" placeholder="email@organisation.com" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
     </div>
-    <div>
-      <label style="font-size:10px;color:#5a6a99;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Rôle</label>
-      <select id="cu-role" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 12px;color:#e0e8ff;font-size:13px;outline:none">
+    <div style="margin-bottom:20px">
+      <label style="font-size:11px;color:#8899cc;display:block;margin-bottom:4px">Rôle</label>
+      <select id="u-f-role" style="width:100%;background:#07102a;border:1px solid #1e2f5a;border-radius:7px;padding:9px 11px;color:#fff;font-size:13px;outline:none">
         <option value="utilisateur">Utilisateur</option>
         <option value="administrateur">Administrateur</option>
       </select>
     </div>
-    <button onclick="creerUtilisateur()" style="background:rgba(51,255,136,.12);border:1px solid rgba(51,255,136,.35);border-radius:7px;padding:9px 18px;color:#33ff88;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
-      <i class="fa-solid fa-plus"></i> Créer
-    </button>
+    <p style="font-size:11px;color:#3a4a6a;margin-bottom:18px">Un mot de passe temporaire sera envoyé par email à l'utilisateur.</p>
+    <div style="display:flex;gap:10px">
+      <button onclick="uFermerModal()" style="flex:1;background:rgba(18,30,68,.65);border:1px solid #1e2f5a;color:#7788aa;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px">Annuler</button>
+      <button id="u-f-btn" onclick="uCreer()" style="flex:2;background:rgba(51,255,136,.1);border:1px solid rgba(51,255,136,.35);color:#33ff88;padding:11px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px"><i class="fa-solid fa-paper-plane"></i> Créer</button>
+    </div>
   </div>
 </div>
 
-<div class="card" style="margin-top:28px">
-  <div class="card-title">
-    <i class="fa-solid fa-users"></i> Gestion des utilisateurs
-    <span style="font-size:11px;font-weight:400;color:#556;margin-left:8px">{{ $users->count() }} inscrit(s)</span>
-  </div>
-  <table style="width:100%;border-collapse:collapse">
-    <thead>
-      <tr style="background:#060f1e">
-        <th style="padding:9px 16px;text-align:left;font-size:10px;color:#3a4a6a;text-transform:uppercase;letter-spacing:.5px">Utilisateur</th>
-        <th style="padding:9px 16px;text-align:left;font-size:10px;color:#3a4a6a;text-transform:uppercase;letter-spacing:.5px">Rôle</th>
-        <th style="padding:9px 16px;text-align:center;font-size:10px;color:#3a4a6a;text-transform:uppercase;letter-spacing:.5px">Actif</th>
-      </tr>
-    </thead>
-    <tbody>
-    @foreach($users as $u)
-    @php $actif = ($u->validation_status ?? '') === 'valide'; @endphp
-    <tr style="border-top:1px solid #1e2f5a">
-      <td style="padding:10px 16px">
-        <div style="font-size:13px;font-weight:600;color:#ccd">{{ $u->prenom ?? '' }} {{ $u->nom ?? '' }}</div>
-        <div style="font-size:11px;color:#3a4a6a">{{ $u->email }}</div>
-      </td>
-      <td style="padding:10px 16px">
-        @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
-        <select onchange="uRole({{ $u->id }},this.value)" style="background:#07102a;border:1px solid #1e2f5a;border-radius:6px;padding:5px 8px;color:#fff;font-size:12px;outline:none;cursor:pointer">
-          <option value="utilisateur" {{ ($u->role??'') === 'utilisateur' ? 'selected':'' }}>Utilisateur</option>
-          <option value="administrateur" {{ ($u->role??'') === 'administrateur' ? 'selected':'' }}>Administrateur</option>
-        </select>
-        @else
-        <span style="font-size:12px;color:#33ff88;font-weight:700">Administrateur</span>
-        @endif
-      </td>
-      <td style="padding:10px 16px;text-align:center">
-        @if($u->id != 1 && ($u->role ?? '') !== 'administrateur')
-        <label style="position:relative;display:inline-block;width:40px;height:22px">
-          <input type="checkbox" {{ $actif ? 'checked':'' }} onchange="uToggle({{ $u->id }},this.checked)" style="opacity:0;width:0;height:0">
-          <span style="position:absolute;inset:0;border-radius:22px;cursor:pointer;transition:.3s;background:{{ $actif ? 'rgba(51,255,136,.2)':'#1e2f5a' }};border:1px solid {{ $actif ? '#33ff88':'#2a3a5a' }}">
-            <span style="position:absolute;width:16px;height:16px;bottom:2px;left:{{ $actif ? '20px':'2px' }};border-radius:50%;background:{{ $actif ? '#33ff88':'#3a4a6a' }};transition:.3s"></span>
-          </span>
-        </label>
-        @else
-        <span style="font-size:10px;color:#3a4a6a">—</span>
-        @endif
-      </td>
-    </tr>
-    @endforeach
-    </tbody>
-  </table>
-</div>
 <script>
+function uFiltrer(){
+  var q=document.getElementById('u-search').value.toLowerCase();
+  var rows=document.querySelectorAll('#u-tbody tr[id^="urow_"]');
+  var n=0;
+  rows.forEach(function(r){var show=!q||r.dataset.search.includes(q);r.style.display=show?'':'none';if(show)n++;});
+  document.getElementById('u-compteur').textContent=n+' utilisateur(s)';
+}
 function uRole(id,role){
   csrfFetch('/user/'+id+'/modifier',{method:'POST',body:JSON.stringify({role:role})})
-    .then(r=>r.json()).then(d=>notify(d.success?'Rôle mis à jour.':(d.error||'Erreur.'),d.success?'s':'e'))
-    .catch(()=>notify('Erreur réseau.','e'));
+    .then(function(r){return r.json();})
+    .then(function(d){notify(d.success?'Rôle mis à jour.':(d.error||'Erreur.'),d.success?'s':'e');})
+    .catch(function(){notify('Erreur réseau.','e');});
 }
 function uToggle(id,actif){
   csrfFetch('/user/'+id+'/statut',{method:'POST',body:JSON.stringify({status:actif?'valide':'bloque'})})
-    .then(r=>r.json()).then(d=>notify(d.success?(actif?'Compte activé.':'Compte bloqué.'):(d.error||'Erreur.'),d.success?'s':'e'))
-    .catch(()=>notify('Erreur réseau.','e'));
+    .then(function(r){return r.json();})
+    .then(function(d){notify(d.success?(actif?'Compte activé.':'Compte bloqué.'):(d.error||'Erreur.'),d.success?'s':'e');})
+    .catch(function(){notify('Erreur réseau.','e');});
 }
-function creerUtilisateur(){
-  var prenom=document.getElementById('cu-prenom').value.trim();
-  var nom=document.getElementById('cu-nom').value.trim();
-  var email=document.getElementById('cu-email').value.trim();
-  var role=document.getElementById('cu-role').value;
-  if(!prenom||!nom||!email){notify('Veuillez remplir tous les champs.','e');return;}
+function uSupprimer(id,nom){
+  confirmDlg('Supprimer '+nom.trim()+' ?','Cette action est irréversible.',{type:'danger',confirmText:'Supprimer'})
+  .then(function(ok){
+    if(!ok)return;
+    csrfFetch('/user/'+id,{method:'DELETE'})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.success){
+          var row=document.getElementById('urow_'+id);
+          if(row){row.style.opacity='0';row.style.transition='.3s';setTimeout(function(){row.remove();uFiltrer();},300);}
+          notify('Utilisateur supprimé.','s');
+        }else{notify(d.error||'Erreur.','e');}
+      })
+      .catch(function(){notify('Erreur réseau.','e');});
+  });
+}
+function uOuvrirModal(){
+  document.getElementById('u-modal-msg').style.display='none';
+  document.getElementById('u-f-prenom').value='';
+  document.getElementById('u-f-nom').value='';
+  document.getElementById('u-f-email').value='';
+  document.getElementById('u-f-role').value='utilisateur';
+  document.getElementById('u-modal').style.display='flex';
+}
+function uFermerModal(){document.getElementById('u-modal').style.display='none';}
+function uCreer(){
+  var btn=document.getElementById('u-f-btn');
+  var prenom=document.getElementById('u-f-prenom').value.trim();
+  var nom=document.getElementById('u-f-nom').value.trim();
+  var email=document.getElementById('u-f-email').value.trim();
+  var role=document.getElementById('u-f-role').value;
+  if(!prenom||!nom||!email){uMsgModal('Tous les champs sont obligatoires.','e');return;}
+  btnLoad(btn,true);
   csrfFetch('/user/creer',{method:'POST',body:JSON.stringify({prenom:prenom,nom:nom,email:email,role:role})})
-    .then(r=>r.json()).then(d=>{
-      if(d.success){
-        notify(d.message,'s');
-        document.getElementById('cu-prenom').value='';
-        document.getElementById('cu-nom').value='';
-        document.getElementById('cu-email').value='';
-        document.getElementById('cu-role').value='utilisateur';
-        setTimeout(()=>location.reload(),1500);
-      } else {
-        notify(d.error||'Erreur.','e');
-      }
-    }).catch(()=>notify('Erreur réseau.','e'));
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btnLoad(btn,false);
+      if(d.success){uMsgModal(d.message,'s');setTimeout(function(){uFermerModal();window.location.reload();},1800);}
+      else{uMsgModal(d.error||'Erreur.','e');}
+    })
+    .catch(function(){btnLoad(btn,false);uMsgModal('Erreur réseau.','e');});
 }
+function uMsgModal(txt,type){
+  var el=document.getElementById('u-modal-msg');
+  var bg={s:'rgba(51,255,136,.1)',e:'rgba(255,87,51,.1)',w:'rgba(255,214,51,.1)'};
+  var bd={s:'rgba(51,255,136,.3)',e:'rgba(255,87,51,.3)',w:'rgba(255,214,51,.3)'};
+  var cl={s:'#33ff88',e:'#ff5733',w:'#ffd633'};
+  el.style.background=bg[type];el.style.border='1px solid '+bd[type];el.style.color=cl[type];
+  el.textContent=txt;el.style.display='block';
+}
+document.getElementById('u-modal').addEventListener('click',function(e){if(e.target===this)uFermerModal();});
 </script>
 @endif
 

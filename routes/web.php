@@ -148,7 +148,7 @@ Route::view('/historique','historique');
 Route::view('/statistiques','statistiques');
 Route::view('/mails','mails');
 Route::view('/anomalies','anomalies');
-Route::view('/utilisateurs','utilisateurs')->middleware('admin');
+Route::get('/utilisateurs', fn() => redirect('/parametres'))->middleware('admin');
 Route::get('/geo/pays',                        [GeoController::class, 'getPays']);
 Route::get('/geo/regions/{geonameId}',         [GeoController::class, 'getRegions']);
 Route::get('/geo/departements/{geonameId}',    [GeoController::class, 'getDepartements']);
