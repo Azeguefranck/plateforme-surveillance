@@ -118,60 +118,108 @@ function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = 
         return ($crit !== null && $val >= $crit) ? 'color:' . $couleur . ';font-weight:700' : '';
     };
 
+    // Icônes Font Awesome SVG inline (compatibles tous clients email : Gmail, Apple Mail, Outlook 2019+)
+    $svgWarn  = '<svg style="display:inline-block;vertical-align:middle" width="18" height="18" viewBox="0 0 512 512"><path fill="' . $couleur . '" d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7.2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.5-34.7-19.8s-7-27.8.2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/></svg>';
+    $svgXmark  = '<svg style="display:inline-block;vertical-align:middle" width="18" height="18" viewBox="0 0 512 512"><path fill="' . $couleur . '" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>';
+    $svgH      = $critique ? $svgXmark : $svgWarn;
+    $svgCheck  = '<svg style="display:inline-block;vertical-align:middle" width="14" height="14" viewBox="0 0 512 512"><path fill="#33ff88" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>';
+    $svgTemp   = '<svg style="display:inline-block;vertical-align:middle" width="11" height="14" viewBox="0 0 320 512"><path fill="#8899cc" d="M160 64c0-17.7-14.3-32-32-32s-32 14.3-32 32V264.6C49 284.8 32 309.6 32 336c0 53 43 96 96 96s96-43 96-96c0-26.4-17-51.2-64-71.4V64zm-32 304a32 32 0 1 1 0-64 32 32 0 1 1 0 64z"/></svg>';
+    $svgDrop   = '<svg style="display:inline-block;vertical-align:middle" width="11" height="14" viewBox="0 0 384 512"><path fill="#8899cc" d="M192 512C86 512 0 426 0 320C0 228.8 130.2 57.7 166.6 11.7C172.6 4.2 181.5 0 191 0h1.4c9.5 0 18.4 4.2 24.4 11.7C253.8 57.7 384 228.8 384 320c0 106-86 192-192 192z"/></svg>';
+    $svgWind   = '<svg style="display:inline-block;vertical-align:middle" width="15" height="12" viewBox="0 0 512 512"><path fill="#8899cc" d="M288 32c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32 14.3-32 32s14.3 32 32 32H352c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zm64 352c0 17.7 14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H32c-17.7 0-32 14.3-32 32s14.3 32 32 32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H384c-17.7 0-32 14.3-32 32zM128 512h32c53 0 96-43 96-96s-43-96-96-96H32c-17.7 0-32 14.3-32 32s14.3 32 32 32H160c17.7 0 32 14.3 32 32s-14.3 32-32 32H128c-17.7 0-32 14.3-32 32s14.3 32 32 32z"/></svg>';
+    $svgPIR    = '<svg style="display:inline-block;vertical-align:middle" width="11" height="14" viewBox="0 0 320 512"><path fill="#8899cc" d="M160 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zM126.5 199.3c-1 .4-1.9 .8-2.9 1.2l-8 3.5c-16.4 7.3-29 21.2-34.7 38.2l-2.6 7.8c-5.6 16.8-23.7 25.8-40.5 20.2s-25.8-23.7-20.2-40.5l2.6-7.8c11.4-34.1 36.6-61.9 69.4-76.5l8-3.5c20.8-9.2 43.3-14 66.1-14c44.6 0 84.8 26.8 101.9 67.9L281 232.7l21.4 10.7c15.8 7.9 22.2 27.1 14.3 42.9s-27.1 22.2-42.9 14.3L247 287.3c-10.3-5.2-18.4-13.8-22.8-24.5l-9.6-23-19.3 65.5 49.5 54c5.4 5.9 9.2 13 11.1 20.8l23 92.1c4.3 17.1-6.1 34.5-23.3 38.8s-34.5-6.1-38.8-23.3l-22-88.1-70.7-77.1c-14.8-16.1-20.3-38.6-14.7-59.7l16.9-63.5zM68.7 398l25-62.4c2.1 3 4.5 5.8 7 8.6l40.7 44.4-14.5 36.2c-2.4 6-6 11.5-10.6 16.1L54.6 502.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L68.7 398z"/></svg>';
+    $svgGauge  = '<svg style="display:inline-block;vertical-align:middle" width="15" height="15" viewBox="0 0 512 512"><path fill="' . ($critique ? '#fff' : '#000') . '" d="M0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm320 96c0-26.9-16.5-49.9-40-59.3V88c0-13.3-10.7-24-24-24s-24 10.7-24 24V292.7c-23.5 9.5-40 32.5-40 59.3c0 35.3 28.7 64 64 64s64-28.7 64-64zM144 176a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm-16 80a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM400 144a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/></svg>';
+    $svgChart  = '<svg style="display:inline-block;vertical-align:middle" width="14" height="14" viewBox="0 0 512 512"><path fill="#33b5ff" d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zm96 96c0-17.7 14.3-32 32-32l192 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-192 0c-17.7 0-32-14.3-32-32zm32 64H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H160c-17.7 0-32-14.3-32-32s14.3-32 32-32zm0 96H352c17.7 0 32 14.3 32 32s-14.3 32-32 32H160c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></svg>';
+    $svgSrv    = '<svg style="display:inline-block;vertical-align:middle" width="14" height="12" viewBox="0 0 512 512"><path fill="#8899cc" d="M64 0C28.7 0 0 28.7 0 64V224c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H64zM448 160c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm32 160c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V320zM448 416c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32z"/></svg>';
+    $svgClock  = '<svg style="display:inline-block;vertical-align:middle" width="13" height="13" viewBox="0 0 512 512"><path fill="#8899cc" d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.5 33.3-6.5s4.5-25.9-6.5-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>';
+    $svgDot    = function(string $c): string { return '<svg style="display:inline-block;vertical-align:middle" width="9" height="9" viewBox="0 0 512 512"><path fill="' . $c . '" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512z"/></svg>'; };
+
+    $ctaBg  = $couleur;
+    $ctaFg  = $critique ? '#fff' : '#000';
+
     $html =
-        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
-        . 'body{background:#060d1f;font-family:Arial,sans-serif;margin:0;padding:0}'
-        . '.w{max-width:560px;width:100%;margin:0 auto;background:#060d1f}'
-        . '.h{background:linear-gradient(135deg,#0e0a00,#060d1f);padding:28px 24px;text-align:center;border-bottom:3px solid ' . $couleur . '}'
-        . '.hl{color:' . $couleur . ';font-size:20px;font-weight:900;letter-spacing:1px;margin:0;word-break:break-word}'
-        . '.hs{color:#5a6a99;font-size:10px;margin-top:6px;letter-spacing:1px}'
-        . '.b{background:#0a1428;padding:20px}'
-        . '.badge{display:inline-block;background:rgba(' . $couleurRgb . ',.12);color:' . $couleur . ';border:1px solid ' . $couleur . '55;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:14px}'
-        . 'table{width:100%;border-collapse:collapse;margin:10px 0;table-layout:fixed}'
-        . 'td{padding:9px 10px;font-size:13px;border-bottom:1px solid #0e1c35;word-break:break-word;overflow-wrap:break-word;white-space:normal}'
-        . '.k{color:#8899cc;width:38%;font-weight:600;vertical-align:top}'
+        '<!DOCTYPE html><html lang="fr"><head>'
+        . '<meta charset="UTF-8">'
+        . '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+        . '<meta name="x-apple-disable-message-reformatting">'
+        . '<style>'
+        . 'body{margin:0;padding:0;background:#060d1f;font-family:Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}'
+        . '.ow{width:100%;background:#060d1f}'
+        . '.iw{max-width:560px;margin:0 auto;background:#060d1f}'
+        . '.hd{background:linear-gradient(135deg,#0e0a00,#0a1428);padding:22px 18px;text-align:center;border-bottom:3px solid ' . $couleur . '}'
+        . '.ht{color:' . $couleur . ';font-size:16px;font-weight:900;letter-spacing:.5px;margin:0;word-break:break-word}'
+        . '.hs{color:#5a6a99;font-size:10px;margin-top:5px;letter-spacing:1px;text-transform:uppercase;word-break:break-word}'
+        . '.bd{background:#0a1428;padding:16px 18px}'
+        . '.badge{display:inline-block;background:rgba(' . $couleurRgb . ',.12);color:' . $couleur . ';border:1px solid ' . $couleur . '55;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.8px;margin-bottom:12px}'
+        . 'table.dt{width:100%;border-collapse:collapse;margin:8px 0;table-layout:fixed}'
+        . 'table.dt td{padding:8px 9px;font-size:13px;border-bottom:1px solid #0e1c35;word-break:break-word;overflow-wrap:break-word}'
+        . '.k{color:#8899cc;width:40%;font-weight:600;vertical-align:top}'
         . '.v{color:#c7d2ff}'
-        . '.cta{display:block;margin:18px auto 0;padding:11px 24px;background:' . $couleur . ';color:#fff;font-weight:700;font-size:13px;text-decoration:none;border-radius:8px;text-align:center;max-width:220px}'
-        . '.f{background:#060d1f;padding:12px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35;margin-top:8px;word-break:break-word}'
+        . '.sec{background:#060f28;border:1px solid #1e2f5a;border-radius:8px;padding:12px 13px;margin:12px 0}'
+        . '.sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}'
+        . '.blk{border-left:3px solid ' . $couleur . ';border-radius:4px;padding:10px 12px;margin:10px 0;background:#0e1428}'
+        . '.blk-g{border-left:3px solid #33ff88;border-radius:4px;padding:10px 12px;margin:10px 0;background:#071428}'
+        . '.blk-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}'
+        . '.blk-c{color:#c7d2ff;font-size:13px;line-height:1.5}'
+        . '.cta{display:block;margin:14px auto 0;padding:11px 22px;background:' . $ctaBg . ';color:' . $ctaFg . ';font-weight:700;font-size:13px;text-decoration:none;border-radius:8px;text-align:center;max-width:220px}'
+        . '.ft{background:#060d1f;padding:12px 18px;text-align:center;color:#3a4a6a;font-size:11px;border-top:1px solid #0e1c35;word-break:break-word}'
+        . '@media only screen and (max-width:600px){'
+        . '.iw{width:100%!important}'
+        . '.hd,.bd{padding:14px!important}'
+        . 'table.dt td{font-size:12px!important;padding:7px 8px!important}'
+        . '.ht{font-size:14px!important}'
+        . '}'
         . '</style></head><body>'
-        . '<div class="w"><div class="h">'
-        . '<h1 class="hl">&#9888; SYST&Egrave;ME DE SURVEILLANCE &mdash; ALERTE ' . $niveauLabel . '</h1>'
-        . '<div class="hs">PLATEFORME DE SURVEILLANCE DES PARAM&Egrave;TRES DES &Eacute;QUIPEMENTS D&rsquo;UNE SALLE SERVEURS</div>'
-        . '</div><div class="b">'
-        . '<div><span class="badge">&#9888; CAPTEUR : ' . $capteurNom . '</span></div>'
-        . '<table>'
+        . '<table class="ow" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center">'
+        . '<table class="iw" cellpadding="0" cellspacing="0" role="presentation"><tr><td>'
+
+        . '<div class="hd">'
+        . '<div style="font-size:0;margin-bottom:8px">' . $svgH . '</div>'
+        . '<h1 class="ht">SYST&Egrave;ME DE SURVEILLANCE &mdash; ALERTE ' . $niveauLabel . '</h1>'
+        . '<div class="hs">Plateforme de Surveillance &mdash; Param&egrave;tres des &Eacute;quipements</div>'
+        . '</div>'
+
+        . '<div class="bd">'
+        . '<div><span class="badge">' . $svgWarn . '&thinsp;CAPTEUR&nbsp;: ' . $capteurNom . '</span></div>'
+
+        . '<table class="dt">'
         . '<tr><td class="k">Capteur</td><td class="v">' . $capteurNom . '</td></tr>'
-        . '<tr><td class="k">Valeur mesur&eacute;e</td><td class="v" style="color:' . $couleur . ';font-weight:700;font-size:14px">' . htmlspecialchars($alerte['valeur']) . ' ' . htmlspecialchars($alerte['unite']) . '</td></tr>'
-        . '<tr><td class="k">Seuil d&eacute;pass&eacute;</td><td class="v">' . htmlspecialchars($alerte['seuil']) . ' ' . htmlspecialchars($alerte['unite']) . '</td></tr>'
-        . '<tr><td class="k">Niveau</td><td class="v" style="color:' . $couleur . ';font-weight:700">' . ($critique ? '&#128308; CRITIQUE' : '&#128992; WARNING') . '</td></tr>'
-        . '<tr><td class="k">Date / Heure</td><td class="v">' . htmlspecialchars($horodatage) . '</td></tr>'
-        . ($salleNom ? '<tr><td class="k">Salle</td><td class="v" style="color:#33b5ff;font-weight:700">&#127970; ' . htmlspecialchars($salleNom) . '</td></tr>' : '')
-        . (count($equipNoms) > 0
-            ? '<tr><td class="k" style="vertical-align:top">&#128421; &Eacute;quipements</td><td class="v">' . implode('<br>', array_map('htmlspecialchars', $equipNoms)) . '</td></tr>'
-            : '')
+        . '<tr><td class="k">Valeur mesur&eacute;e</td><td class="v" style="color:' . $couleur . ';font-weight:700;font-size:14px">' . htmlspecialchars($alerte['valeur']) . '&thinsp;' . htmlspecialchars($alerte['unite']) . '</td></tr>'
+        . '<tr><td class="k">Seuil d&eacute;pass&eacute;</td><td class="v">' . htmlspecialchars($alerte['seuil']) . '&thinsp;' . htmlspecialchars($alerte['unite']) . '</td></tr>'
+        . '<tr><td class="k">Niveau</td><td class="v" style="color:' . $couleur . ';font-weight:700">' . $svgDot($couleur) . '&nbsp;' . $niveauLabel . '</td></tr>'
+        . '<tr><td class="k">' . $svgClock . '&nbsp;Date&nbsp;/&nbsp;Heure</td><td class="v">' . htmlspecialchars($horodatage) . '</td></tr>'
+        . ($salleNom ? '<tr><td class="k">Salle</td><td class="v" style="color:#33b5ff;font-weight:700">' . htmlspecialchars($salleNom) . '</td></tr>' : '')
+        . (count($equipNoms) > 0 ? '<tr><td class="k" style="vertical-align:top">' . $svgSrv . '&nbsp;&Eacute;quipements</td><td class="v">' . implode('<br>', array_map('htmlspecialchars', $equipNoms)) . '</td></tr>' : '')
         . '</table>'
+
         . (empty($mesures) ? '' :
-            '<div style="background:#060f28;border:1px solid #1e2f5a;border-radius:8px;padding:14px;margin:16px 0">'
-          . '<div style="color:#33b5ff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">&#128202; Mesures au moment de l\'alerte</div>'
-          . '<table style="margin:0">'
-          . '<tr><td class="k" style="width:50%">&#127777; Temp&eacute;rature</td><td class="v" style="' . $valCouleur('temperature', $mesures['temperature'] ?? 0) . '">' . htmlspecialchars($mesures['temperature'] ?? '—') . ' °C</td></tr>'
-          . '<tr><td class="k">&#128167; Humidit&eacute;</td><td class="v" style="' . $valCouleur('humidite', $mesures['humidite'] ?? 0) . '">' . htmlspecialchars($mesures['humidite'] ?? '—') . ' %</td></tr>'
-          . '<tr><td class="k">&#128168; Gaz / Air</td><td class="v" style="' . $valCouleur('gaz', $mesures['gaz'] ?? 0) . '">' . htmlspecialchars($mesures['gaz'] ?? '—') . ' ppm</td></tr>'
-          . '<tr style="border-bottom:none"><td class="k" style="border-bottom:none">&#128683; D&eacute;tecteur PIR</td><td class="v" style="border-bottom:none;' . (!empty($mesures['pir']) ? 'color:#ff5733;font-weight:700' : 'color:#33ff88') . '">' . (!empty($mesures['pir']) ? '&#128308; Mouvement d&eacute;tect&eacute;' : '&#128994; Aucun mouvement') . '</td></tr>'
-          . '</table></div>'
+              '<div class="sec">'
+            . '<div class="sec-t" style="color:#33b5ff">' . $svgChart . '&nbsp;Mesures au moment de l\'alerte</div>'
+            . '<table class="dt" style="margin:0">'
+            . '<tr><td class="k" style="width:48%">' . $svgTemp . '&nbsp;Temp&eacute;rature</td><td class="v" style="' . $valCouleur('temperature', $mesures['temperature'] ?? 0) . '">' . htmlspecialchars($mesures['temperature'] ?? '—') . '&thinsp;&deg;C</td></tr>'
+            . '<tr><td class="k">' . $svgDrop . '&nbsp;Humidit&eacute;</td><td class="v" style="' . $valCouleur('humidite', $mesures['humidite'] ?? 0) . '">' . htmlspecialchars($mesures['humidite'] ?? '—') . '&thinsp;%</td></tr>'
+            . '<tr><td class="k">' . $svgWind . '&nbsp;Gaz&nbsp;/&nbsp;Air</td><td class="v" style="' . $valCouleur('gaz', $mesures['gaz'] ?? 0) . '">' . htmlspecialchars($mesures['gaz'] ?? '—') . '&thinsp;ppm</td></tr>'
+            . '<tr style="border-bottom:none"><td class="k" style="border-bottom:none">' . $svgPIR . '&nbsp;D&eacute;tecteur PIR</td><td class="v" style="border-bottom:none;' . (!empty($mesures['pir']) ? 'color:#ff5733;font-weight:700' : 'color:#33ff88') . '">' . $svgDot(!empty($mesures['pir']) ? '#ff5733' : '#33ff88') . '&nbsp;' . (!empty($mesures['pir']) ? 'Mouvement d&eacute;tect&eacute;' : 'Aucun mouvement') . '</td></tr>'
+            . '</table></div>'
         )
-        . '<div style="background:#0e1428;border-left:3px solid ' . $couleur . ';border-radius:6px;padding:12px 14px;margin:14px 0">'
-        . '<div style="color:' . $couleur . ';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9888; Risques identifi&eacute;s</div>'
-        . '<div style="color:#c7d2ff;font-size:13px">' . htmlspecialchars($alerte['risque']) . '</div>'
+
+        . '<div class="blk">'
+        . '<div class="blk-t" style="color:' . $couleur . '">' . $svgWarn . '&nbsp;Risques identifi&eacute;s</div>'
+        . '<div class="blk-c">' . htmlspecialchars($alerte['risque']) . '</div>'
         . '</div>'
-        . '<div style="background:#071428;border-left:3px solid #33ff88;border-radius:6px;padding:12px 14px;margin:14px 0">'
-        . '<div style="color:#33ff88;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">&#9989; Actions &agrave; entreprendre</div>'
-        . '<div style="color:#c7d2ff;font-size:13px">' . htmlspecialchars($alerte['solution']) . '</div>'
+
+        . '<div class="blk-g">'
+        . '<div class="blk-t" style="color:#33ff88">' . $svgCheck . '&nbsp;Actions &agrave; entreprendre</div>'
+        . '<div class="blk-c">' . htmlspecialchars($alerte['solution']) . '</div>'
         . '</div>'
-        . '<a class="cta" href="' . htmlspecialchars($platformUrl) . '">&#128064; Voir le tableau de bord</a>'
+
+        . '<a class="cta" href="' . htmlspecialchars($platformUrl) . '">' . $svgGauge . '&nbsp;Voir le tableau de bord</a>'
         . '</div>'
-        . '<div class="f">Syst&egrave;me de Surveillance &mdash; Alerte automatique &mdash; Ne pas r&eacute;pondre &agrave; cet email</div>'
-        . '</div></body></html>';
+
+        . '<div class="ft">Syst&egrave;me de Surveillance &mdash; Alerte automatique &mdash; Ne pas r&eacute;pondre &agrave; cet email</div>'
+
+        . '</td></tr></table>'
+        . '</td></tr></table>'
+        . '</body></html>';
 
     $emailTo   = $adminUser->email;
     $sujetMail = $sujet;

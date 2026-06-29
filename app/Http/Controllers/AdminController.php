@@ -204,37 +204,68 @@ class AdminController extends Controller
 
     private function templateEmail($titre, $couleur, $user, $ligne1, $ligne2, $btnTxt, $btnUrl, $btnBg, $btnColor)
     {
-        $btn = '';
-        if ($btnTxt && $btnUrl) {
-            $btn = '
-<div style="text-align:center;margin:28px 0 0;">
-  <a href="' . $btnUrl . '" style="display:inline-block;padding:14px 34px;background:' . $btnBg . ';color:' . $btnColor . ';text-decoration:none;border-radius:50px;font-weight:bold;font-size:15px;letter-spacing:.5px;">
-    ' . $btnTxt . '
-  </a>
-</div>';
+        $svgCheck = '<svg style="display:inline-block;vertical-align:middle" width="18" height="18" viewBox="0 0 512 512"><path fill="' . $couleur . '" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>';
+        $svgBan   = '<svg style="display:inline-block;vertical-align:middle" width="18" height="18" viewBox="0 0 512 512"><path fill="' . $couleur . '" d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/></svg>';
+        $svgClock = '<svg style="display:inline-block;vertical-align:middle" width="18" height="18" viewBox="0 0 512 512"><path fill="' . $couleur . '" d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.5 33.3-6.5s4.5-25.9-6.5-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>';
+        $svgUser  = '<svg style="display:inline-block;vertical-align:middle" width="16" height="16" viewBox="0 0 448 512"><path fill="' . $couleur . '" d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/></svg>';
+
+        $icoTitre = '';
+        if (str_contains($titre, '✅') || str_contains($titre, 'créé') || str_contains($titre, 'validé')) {
+            $icoTitre = $svgCheck;
+        } elseif (str_contains($titre, '❌') || str_contains($titre, 'refus') || str_contains($titre, 'non accept')) {
+            $icoTitre = $svgBan;
+        } elseif (str_contains($titre, '⏳') || str_contains($titre, 'cours') || str_contains($titre, 'attente')) {
+            $icoTitre = $svgClock;
+        } else {
+            $icoTitre = $svgUser;
         }
 
-        return '
-<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background:#060c1a;font-family:Arial,sans-serif;">
-<div style="max-width:540px;margin:30px auto;background:#0d1a2e;border-radius:16px;overflow:hidden;border:1px solid #182640;">
-  <div style="background:linear-gradient(135deg,#0d1a2e,#112240);padding:26px 32px;border-bottom:3px solid ' . $couleur . ';">
-    <h2 style="margin:0;color:' . $couleur . ';font-size:18px;">' . $titre . '</h2>
-    <p style="margin:5px 0 0;color:#6b7fa0;font-size:12px;">Plateforme Surveillance des Salles Serveurs</p>
-  </div>
-  <div style="padding:28px 32px;">
-    <p style="color:#d4dced;margin-bottom:12px;">Bonjour <strong style="color:white;">' . ($user->nom ?? '') . ' ' . ($user->prenom ?? '') . '</strong>,</p>
-    <p style="color:#a0aec0;line-height:1.7;margin-bottom:10px;">' . $ligne1 . '</p>
-    <p style="color:#6b7fa0;line-height:1.7;font-size:13px;">' . $ligne2 . '</p>
-    ' . $btn . '
-  </div>
-  <div style="background:#070e1c;padding:14px 32px;border-top:1px solid #182640;text-align:center;">
-    <p style="margin:0;color:#3a5070;font-size:12px;">Plateforme Surveillance — Ne pas répondre à cet email</p>
-  </div>
-</div>
-</body>
-</html>';
+        $titrePropre = trim(preg_replace('/[\x{1F300}-\x{1FFFF}]|[\x{2600}-\x{26FF}]|[\x{2700}-\x{27BF}]|✅|❌|⏳/u', '', $titre));
+
+        $btn = '';
+        if ($btnTxt && $btnUrl) {
+            $svgLogin = '<svg style="display:inline-block;vertical-align:middle;margin-right:6px" width="14" height="14" viewBox="0 0 512 512"><path fill="' . $btnColor . '" d="M352 96l64 0c17.7 0 32 14.3 32 32l0 256c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0c53 0 96-43 96-96l0-256c0-53-43-96-96-96l-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm-9.4 182.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L242.7 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128z"/></svg>';
+            $btn = '<div style="text-align:center;margin:24px 0 0">'
+                 . '<a href="' . $btnUrl . '" style="display:inline-block;padding:13px 30px;background:' . $btnBg . ';color:' . $btnColor . ';text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;letter-spacing:.5px">'
+                 . $svgLogin . $btnTxt
+                 . '</a></div>';
+        }
+
+        return '<!DOCTYPE html><html lang="fr"><head>'
+            . '<meta charset="UTF-8">'
+            . '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+            . '<meta name="x-apple-disable-message-reformatting">'
+            . '<style>'
+            . 'body{margin:0;padding:0;background:#060c1a;font-family:Arial,sans-serif;-webkit-text-size-adjust:100%}'
+            . '.ow{width:100%;background:#060c1a}'
+            . '.iw{max-width:520px;margin:0 auto;background:#0d1a2e;border-radius:16px;overflow:hidden;border:1px solid #182640}'
+            . '.hd{background:linear-gradient(135deg,#0d1a2e,#112240);padding:22px 24px;border-bottom:3px solid ' . $couleur . '}'
+            . '.ht{margin:0;color:' . $couleur . ';font-size:16px;font-weight:800;word-break:break-word}'
+            . '.hs{margin:5px 0 0;color:#6b7fa0;font-size:11px}'
+            . '.bd{padding:22px 24px}'
+            . '.ft{background:#070e1c;padding:12px 24px;border-top:1px solid #182640;text-align:center}'
+            . '@media only screen and (max-width:600px){'
+            . '.iw{border-radius:0!important}'
+            . '.hd,.bd{padding:16px!important}'
+            . '.ht{font-size:14px!important}'
+            . '}'
+            . '</style></head><body>'
+            . '<table class="ow" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:20px 10px">'
+            . '<table class="iw" cellpadding="0" cellspacing="0" role="presentation"><tr><td>'
+            . '<div class="hd">'
+            . '<h2 class="ht">' . $icoTitre . '&nbsp;' . htmlspecialchars($titrePropre) . '</h2>'
+            . '<p class="hs">Plateforme Surveillance des Salles Serveurs</p>'
+            . '</div>'
+            . '<div class="bd">'
+            . '<p style="color:#d4dced;margin:0 0 12px">Bonjour&nbsp;<strong style="color:#fff">' . htmlspecialchars(($user->prenom ?? '') . ' ' . ($user->nom ?? '')) . '</strong>,</p>'
+            . '<p style="color:#a0aec0;line-height:1.7;margin:0 0 10px">' . $ligne1 . '</p>'
+            . '<p style="color:#6b7fa0;line-height:1.7;font-size:13px;margin:0">' . $ligne2 . '</p>'
+            . $btn
+            . '</div>'
+            . '<div class="ft"><p style="margin:0;color:#3a5070;font-size:11px">Plateforme Surveillance &mdash; Ne pas r&eacute;pondre &agrave; cet email</p></div>'
+            . '</td></tr></table>'
+            . '</td></tr></table>'
+            . '</body></html>';
     }
 
 }
