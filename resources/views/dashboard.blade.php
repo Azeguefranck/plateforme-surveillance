@@ -8,17 +8,29 @@
   padding:18px 0 24px;flex-wrap:wrap;gap:12px;
 }
 .dash-title{font-size:24px;font-weight:700;letter-spacing:1px;color:#1a2340}
-.dash-live{display:flex;align-items:center;gap:8px;font-size:13px;color:#16a34a;font-weight:600}
+.dash-live{display:flex;align-items:center;gap:8px;font-size:13px;color:#16a34a;font-weight:600;transition:.4s}
+.dash-live.offline{color:#dc2626}
 .dot{width:10px;height:10px;border-radius:50%;background:#16a34a;animation:pulse 1.2s infinite;
-     box-shadow:0 0 8px rgba(22,163,74,.4)}
+     box-shadow:0 0 8px rgba(22,163,74,.4);transition:.4s;flex-shrink:0}
+.dot.offline{background:#dc2626;box-shadow:0 0 8px rgba(220,38,38,.4);animation:none}
 @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
 
 .no-data-banner{
-  display:none;background:rgba(239,68,68,.07);border:1px solid #ef4444;
+  display:none;
+  background:rgba(239,68,68,.07);border:1px solid #ef4444;
   border-radius:12px;padding:14px 20px;margin-bottom:22px;
   text-align:center;color:#dc2626;font-weight:700;font-size:14px;
+  animation:fadeUp .4s ease;
 }
-.no-data-banner.visible{display:block}
+.no-data-banner.visible{display:flex;align-items:center;justify-content:center;gap:10px}
+.salle-panel.offline{opacity:.55;pointer-events:none;position:relative}
+.salle-panel.offline::after{
+  content:'HORS LIGNE';position:absolute;inset:0;border-radius:18px;
+  background:rgba(239,68,68,.04);border:2px dashed #ef444466;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#ef4444;letter-spacing:2px;
+  pointer-events:none;
+}
 
 .salle-panel{
   background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;
@@ -79,11 +91,12 @@
 
 <div class="dash-header">
   <div class="dash-title"><i class="fa-solid fa-gauge-high" style="color:#3b82f6;margin-right:10px"></i>TABLEAU DE BORD EN TEMPS RÉEL</div>
-  <div class="dash-live"><div class="dot"></div>EN DIRECT — <span id="last-update">--</span></div>
+  <div class="dash-live" id="dash-live-badge"><div class="dot" id="live-dot"></div><span id="live-label">EN DIRECT</span> — <span id="last-update">--</span></div>
 </div>
 
 <div class="no-data-banner" id="no-data-banner">
-  <i class="fa-solid fa-triangle-exclamation"></i> Aucun Arduino connecté — Aucune donnée en temps réel
+  <i class="fa-solid fa-plug-circle-xmark"></i>
+  <span>Arduino hors ligne — <span id="offline-since">--</span></span>
 </div>
 
 <div id="salle-panels"></div>
@@ -163,18 +176,42 @@ function majJauge(sid, nom, val) {
   card.className = 'gauge-card ' + lvl + (val >= s.crit ? ' alerte-critique' : val >= s.warn ? ' alerte-warning' : '');
 }
 
+let _offlineSince = null;
+
+function setOnline() {
+  document.getElementById('no-data-banner').classList.remove('visible');
+  document.getElementById('live-dot').classList.remove('offline');
+  document.getElementById('dash-live-badge').classList.remove('offline');
+  document.getElementById('live-label').textContent = 'EN DIRECT';
+  document.querySelectorAll('.salle-panel').forEach(p => p.classList.remove('offline'));
+  _offlineSince = null;
+}
+
+function setOffline() {
+  if (!_offlineSince) _offlineSince = new Date();
+  document.getElementById('no-data-banner').classList.add('visible');
+  document.getElementById('live-dot').classList.add('offline');
+  document.getElementById('dash-live-badge').classList.add('offline');
+  document.getElementById('live-label').textContent = 'HORS LIGNE';
+  document.getElementById('last-update').textContent = '--';
+  document.querySelectorAll('.salle-panel').forEach(p => p.classList.add('offline'));
+
+  const secs = Math.floor((new Date() - _offlineSince) / 1000);
+  const txt  = secs < 60
+    ? 'depuis ' + secs + 's'
+    : 'depuis ' + Math.floor(secs / 60) + 'min ' + (secs % 60) + 's';
+  const el = document.getElementById('offline-since');
+  if (el) el.textContent = txt;
+}
+
 function pollMesuresLive() {
   fetch('/api/mesures-live')
     .then(r => { if (!r.ok) throw 0; return r.json(); })
     .then(data => {
       const keys = Object.keys(data || {});
 
-      if (!keys.length) {
-        document.getElementById('no-data-banner').classList.add('visible');
-        document.getElementById('last-update').textContent = '--';
-        return;
-      }
-      document.getElementById('no-data-banner').classList.remove('visible');
+      if (!keys.length) { setOffline(); return; }
+      setOnline();
 
       keys.forEach(sid => {
         const d = data[sid];
@@ -217,14 +254,12 @@ function pollMesuresLive() {
 
       document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
     })
-    .catch(() => {
-      document.getElementById('no-data-banner').classList.add('visible');
-      document.getElementById('last-update').textContent = '--';
-    });
+    .catch(() => setOffline());
 }
 
 pollMesuresLive();
 setInterval(pollMesuresLive, 3000);
+setInterval(() => { if (_offlineSince) setOffline(); }, 1000);
 </script>
 
 @endsection
