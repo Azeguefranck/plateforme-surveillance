@@ -21,8 +21,16 @@ int SEUIL_TEMP_C = 32;
 int SEUIL_HUM_W  = 75;
 int SEUIL_HUM_C  = 85;
 
-int SEUIL_GAZ_W  = 400;
-int SEUIL_GAZ_C  = 600;
+int SEUIL_GAZ_W  = 600;
+int SEUIL_GAZ_C  = 800;
+
+int gazBase = 0;
+
+#define NIV_NORMAL   0
+#define NIV_WARNING  1
+#define NIV_CRITIQUE 2
+
+int niveauGlobal = NIV_NORMAL;
 
 bool PIR_ACTIF = true;
 
@@ -37,6 +45,8 @@ int pir = 0;
 int cntTemp = 0;
 int cntHum  = 0;
 int cntGaz  = 0;
+int cntPir  = 0;
+bool pirConfirme = false;
 
 bool etatTemp = false;
 bool etatHum  = false;
@@ -58,6 +68,7 @@ unsigned long tLive = 0;
 
 char jsonBuf[250];
 
+int lireGaz();
 void lireCapteurs();
 void verifierAlertes();
 void envoyerLive();
@@ -66,8 +77,14 @@ void envoyerAlerte(const char* cat,const char* niv,const char* msg);
 void afficherSerie();
 
 void ledVerte();
+void ledOrange();
 void ledRouge();
+void ledEteinte();
 void beep(int ms);
+void buzzerFrequence(int freq);
+void buzzerSilence();
+void recalculerNiveau(bool pirActuel);
+void miseAJourIndicateurs(unsigned long now);
 
 void setup() {
 
@@ -91,6 +108,22 @@ void setup() {
 
   delay(2000);
 
+  Serial.println("CALIBRATION GAZ...");
+
+  long somme = 0;
+
+  for (int i = 0; i < 30; i++) {
+    somme += analogRead(MQ135_PIN);
+    delay(200);
+  }
+
+  gazBase = somme / 30;
+
+  Serial.print("GAZ BASE:");
+  Serial.println(gazBase);
+
+  lireCapteurs();
+
   Serial.println("SYSTEME PRET");
 
   beep(100);
@@ -108,7 +141,17 @@ void loop() {
 
     tPirCheck = now;
 
-    if (digitalRead(PIR_PIN) == HIGH && PIR_ACTIF) {
+    bool pirLu = digitalRead(PIR_PIN) == HIGH;
+
+    if (pirLu) {
+      if (cntPir < DEBOUNCE_REQ) cntPir++;
+    } else {
+      cntPir = 0;
+    }
+
+    pirConfirme = cntPir >= DEBOUNCE_REQ;
+
+    if (pirConfirme && PIR_ACTIF) {
 
       if (now - tEmailPir >= PIR_COOLDOWN) {
 
@@ -119,21 +162,19 @@ void loop() {
           "CRITIQUE",
           "Mouvement detecte dans la salle serveurs"
         );
-
-        beep(200);
-        delay(100);
-        beep(200);
-
-        ledRouge();
       }
     }
+
+    recalculerNiveau(pirConfirme);
   }
+
+  miseAJourIndicateurs(now);
 
   if (now - tLive >= LIVE_MS) {
 
     tLive = now;
 
-    gaz = analogRead(MQ135_PIN);
+    gaz = lireGaz();
 
     pir = digitalRead(PIR_PIN);
 
@@ -154,6 +195,15 @@ void loop() {
   }
 }
 
+int lireGaz() {
+
+  int v = analogRead(MQ135_PIN) - gazBase;
+
+  if (v < 0) v = 0;
+
+  return 400 + v;
+}
+
 void lireCapteurs() {
 
   float t = dht.readTemperature();
@@ -165,22 +215,18 @@ void lireCapteurs() {
   if (!isnan(h))
     humidite = h;
 
-  gaz = analogRead(MQ135_PIN);
+  gaz = lireGaz();
 
   pir = digitalRead(PIR_PIN);
 }
 
 void verifierAlertes() {
 
-  bool alerteActive = false;
-
   unsigned long now = millis();
 
   if (temperature >= SEUIL_TEMP_W) {
 
     if (++cntTemp >= DEBOUNCE_REQ) {
-
-      alerteActive = true;
 
       if (!etatTemp || now - tEmailTemp >= EMAIL_COOLDOWN) {
 
@@ -207,8 +253,6 @@ void verifierAlertes() {
 
     if (++cntHum >= DEBOUNCE_REQ) {
 
-      alerteActive = true;
-
       if (!etatHum || now - tEmailHum >= EMAIL_COOLDOWN) {
 
         envoyerAlerte(
@@ -234,8 +278,6 @@ void verifierAlertes() {
 
     if (++cntGaz >= DEBOUNCE_REQ) {
 
-      alerteActive = true;
-
       if (!etatGaz || now - tEmailGaz >= EMAIL_COOLDOWN) {
 
         envoyerAlerte(
@@ -257,21 +299,7 @@ void verifierAlertes() {
     etatGaz = false;
   }
 
-  if (pir == HIGH && PIR_ACTIF)
-    alerteActive = true;
-
-  if (alerteActive) {
-
-    ledRouge();
-
-    beep(150);
-
-  } else {
-
-    ledVerte();
-
-    digitalWrite(BUZZER_PIN, LOW);
-  }
+  recalculerNiveau(pirConfirme);
 }
 
 void envoyerLive() {
@@ -390,9 +418,85 @@ void ledRouge() {
   analogWrite(LED_B,0);
 }
 
+void ledOrange() {
+
+  analogWrite(LED_R,255);
+  analogWrite(LED_G,80);
+  analogWrite(LED_B,0);
+}
+
+void ledEteinte() {
+
+  analogWrite(LED_R,0);
+  analogWrite(LED_G,0);
+  analogWrite(LED_B,0);
+}
+
 void beep(int ms) {
 
   digitalWrite(BUZZER_PIN,HIGH);
   delay(ms);
   digitalWrite(BUZZER_PIN,LOW);
+}
+
+void buzzerFrequence(int freq) {
+
+  tone(BUZZER_PIN, freq);
+}
+
+void buzzerSilence() {
+
+  noTone(BUZZER_PIN);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+void recalculerNiveau(bool pirActuel) {
+
+  int niveau = NIV_NORMAL;
+
+  if ((etatTemp && temperature >= SEUIL_TEMP_C) ||
+      (etatHum  && humidite    >= SEUIL_HUM_C)  ||
+      (etatGaz  && gaz         >= SEUIL_GAZ_C)  ||
+      (pirActuel && PIR_ACTIF)) {
+
+    niveau = NIV_CRITIQUE;
+
+  } else if (etatTemp || etatHum || etatGaz) {
+
+    niveau = NIV_WARNING;
+  }
+
+  niveauGlobal = niveau;
+}
+
+void miseAJourIndicateurs(unsigned long now) {
+
+  static bool ledOn = false;
+  static unsigned long tBlink = 0;
+
+  if (niveauGlobal == NIV_NORMAL) {
+
+    ledVerte();
+    buzzerSilence();
+    return;
+  }
+
+  unsigned long periode = (niveauGlobal == NIV_CRITIQUE) ? 100UL : 250UL;
+
+  if (now - tBlink >= periode) {
+
+    tBlink = now;
+    ledOn = !ledOn;
+  }
+
+  if (niveauGlobal == NIV_WARNING) {
+
+    ledOn ? ledOrange() : ledEteinte();
+    buzzerSilence();
+
+  } else {
+
+    ledOn ? ledRouge() : ledEteinte();
+    buzzerFrequence(1200);
+  }
 }

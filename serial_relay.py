@@ -13,13 +13,11 @@ import os
 API_URL      = "http://localhost:8000/api/capteurs"
 LIVE_FILE    = "/tmp/latest_sensor.json"
 BAUD_RATE    = 9600
-PORTS        = ["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyUSB0", "/dev/ttyUSB1"]
-BOOT_WAIT    = 1.5
-RETRY_DELAY  = 1.5
+PORTS        = ["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/arduino"]
+BOOT_WAIT    = 0.2
+RETRY_DELAY  = 0.5
 
 def _cleanup(signum=None, frame=None):
-    try: os.remove(LIVE_FILE)
-    except OSError: pass
     sys.exit(0)
 signal.signal(signal.SIGTERM, _cleanup)
 signal.signal(signal.SIGINT,  _cleanup)
@@ -150,10 +148,12 @@ def traiter_ligne(line: str):
             "salle_id":    data.get("salle_id", 1),
         }
         ecrire_live(data)
-        ok, _ = post_capteurs(payload)
-        label  = "PIR" if cat == "INTRUSION" else "ALT"
-        status = "OK " if ok else "ERR"
-        print(f"[{label}][{status}] {ts}  {cat} {niv} -> {'email envoyé' if ok else 'ERREUR'}", flush=True)
+        if cat == "INTRUSION":
+            ok, _ = post_capteurs(payload)
+            status = "OK " if ok else "ERR"
+            print(f"[PIR][{status}] {ts}  {cat} {niv} -> {'email envoyé' if ok else 'ERREUR'}", flush=True)
+        else:
+            print(f"[ALT] {ts}  {cat} {niv} (live maj, POST ignoré : déjà couvert par donnees)", flush=True)
 
 
 def run():
@@ -221,9 +221,6 @@ def run():
 
         try: ser.close()
         except Exception: pass
-
-        try: os.remove(LIVE_FILE)
-        except OSError: pass
 
         print(f"[RELAY] Déconnecté — reconnexion dans {RETRY_DELAY}s...", flush=True)
         time.sleep(RETRY_DELAY)
