@@ -227,6 +227,9 @@ function envoyerEmailAlerte(array $alerte, string $horodatage, array $mesures = 
     if (function_exists('pcntl_fork')) {
         $pid = pcntl_fork();
         if ($pid === 0) {
+            pcntl_async_signals(true);
+            pcntl_signal(SIGALRM, function () { posix_kill(getmypid(), SIGKILL); });
+            pcntl_alarm(15);
             try { \Illuminate\Support\Facades\DB::connection()->disconnect(); } catch (\Throwable $e) {}
             try {
                 Mail::html($html, function ($mail) use ($emailTo, $sujetMail) {
@@ -254,31 +257,7 @@ endif;
 if (!function_exists('envoyerSMS')) :
 function envoyerSMS(array $phones, string $msg): void
 {
-    if (empty($phones)) return;
-    $msg = mb_substr($msg, 0, 160);
-
-    $port = null;
-    foreach (['/dev/ttyUSB0', '/dev/ttyUSB1', '/dev/ttyACM0', '/dev/ttyACM1'] as $p) {
-        if (file_exists($p)) { $port = $p; break; }
-    }
-    if (!$port) return;
-
-    try {
-        exec('stty -F ' . escapeshellarg($port) . ' 9600 cs8 -cstopb -parenb raw 2>/dev/null');
-        $fd = @fopen($port, 'r+b');
-        if (!$fd) return;
-        stream_set_blocking($fd, false);
-
-        foreach ($phones as $phone) {
-            $phone = trim($phone);
-            if (strlen($phone) < 6) continue;
-            @fwrite($fd, "AT\r\n");                             usleep(400000);
-            @fwrite($fd, "AT+CMGF=1\r\n");                     usleep(400000);
-            @fwrite($fd, 'AT+CMGS="' . $phone . '"' . "\r\n"); usleep(800000);
-            @fwrite($fd, $msg . chr(26));                       usleep(6000000);
-        }
-        @fclose($fd);
-    } catch (\Exception $e) {}
+    return;
 }
 endif;
 
@@ -406,6 +385,9 @@ function envoyerEmailMouvement(string $horodatage, ?int $salleId): void
     if (function_exists('pcntl_fork')) {
         $pid = pcntl_fork();
         if ($pid === 0) {
+            pcntl_async_signals(true);
+            pcntl_signal(SIGALRM, function () { posix_kill(getmypid(), SIGKILL); });
+            pcntl_alarm(15);
             try { \Illuminate\Support\Facades\DB::connection()->disconnect(); } catch (\Throwable $e) {}
             try {
                 Mail::html($html, function ($mail) use ($emailTo) {
@@ -454,6 +436,15 @@ Route::post('/capteurs', function (Request $request) {
         'updated_at'    => now(),
     ]);
 
+    @file_put_contents('/tmp/latest_sensor.json', json_encode([
+        'temperature' => $temperature,
+        'humidite'    => $humidite,
+        'gaz'         => (int) $gaz,
+        'pir'         => $pir ? 1 : 0,
+        'salle_id'    => $salleId,
+        'ts'          => now()->format('Y-m-d\TH:i:s'),
+    ]));
+
     $horodatage = now()->format('d/m/Y H:i:s');
     $mesValeurs = compact('temperature', 'humidite', 'gaz');
     $alertes    = analyserMesures($mesValeurs, $capteursPresents);
@@ -497,22 +488,23 @@ Route::post('/capteurs', function (Request $request) {
             $nbAlertes++;
         }
 
-        envoyerEmailAlerte($alertMap[$cap], $horodatage, [
-            'temperature' => $temperature,
-            'humidite'    => $humidite,
-            'gaz'         => $gaz,
-            'pir'         => $pir,
-        ], $salleId);
+        if ($newNiveau === 'critique') {
+            envoyerEmailAlerte($alertMap[$cap], $horodatage, [
+                'temperature' => $temperature,
+                'humidite'    => $humidite,
+                'gaz'         => $gaz,
+                'pir'         => $pir,
+            ], $salleId);
 
-        $newState['email_last'][$cap] = time();
+            $newState['email_last'][$cap] = time();
 
-        $smsPending[] = ['msg' =>
-            'PS ' . ($newNiveau === 'critique' ? 'CRITIQUE' : 'WARNING')
-            . ': ' . strtoupper($cap)
-            . '=' . $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite']
-            . ' Seuil=' . $alertMap[$cap]['seuil'] . $alertMap[$cap]['unite']
-            . ' ' . $horodatage,
-        ];
+            $smsPending[] = ['msg' =>
+                'PS CRITIQUE: ' . strtoupper($cap)
+                . '=' . $alertMap[$cap]['valeur'] . $alertMap[$cap]['unite']
+                . ' Seuil=' . $alertMap[$cap]['seuil'] . $alertMap[$cap]['unite']
+                . ' ' . $horodatage,
+            ];
+        }
     }
 
     $PIR_EMAIL_COOLDOWN = 600;
@@ -558,6 +550,8 @@ Route::post('/capteurs', function (Request $request) {
 });
 
 
+Route::middleware('auth.session')->group(function () {
+
 Route::get('/live-data', function () {
     $file     = '/tmp/latest_sensor.json';
     $seuilAge = 6;
@@ -585,7 +579,7 @@ Route::get('/live-data', function () {
 
 
 Route::get('/mesures-live', function () {
-    $seuilAge = 6;
+    $seuilAge = 15;
     $liveFile = '/tmp/latest_sensor.json';
 
     try {
@@ -605,6 +599,7 @@ Route::get('/mesures-live', function () {
 
         $result = [];
 
+        clearstatcache(true, $liveFile);
         if (file_exists($liveFile) && (time() - filemtime($liveFile)) <= $seuilAge) {
             $d   = json_decode(file_get_contents($liveFile), true) ?? [];
             $sid = $d['salle_id'] ?? null;
@@ -620,7 +615,9 @@ Route::get('/mesures-live', function () {
             ], $enrichir($sid));
         }
 
-        return response()->json($result ?: (object) []);
+        return response()->json($result ?: (object) [])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache');
     } catch (\Exception $e) {
         return response()->json((object) [], 500);
     }
@@ -889,4 +886,6 @@ Route::delete('/alerte/{id}', function (int $id) {
     if (!session('user')) return response()->json(['error' => 'Non autorisé'], 401);
     DB::table('alertes')->where('id', $id)->delete();
     return response()->json(['success' => true]);
+});
+
 });

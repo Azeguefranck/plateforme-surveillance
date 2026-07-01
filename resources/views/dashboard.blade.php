@@ -10,9 +10,11 @@
 .dash-title{font-size:24px;font-weight:700;letter-spacing:1px;color:#1a2340}
 .dash-live{display:flex;align-items:center;gap:8px;font-size:13px;color:#16a34a;font-weight:600;transition:.4s}
 .dash-live.offline{color:#dc2626}
+.dash-live.archived{color:#d97706}
 .dot{width:10px;height:10px;border-radius:50%;background:#16a34a;animation:pulse 1.2s infinite;
      box-shadow:0 0 8px rgba(22,163,74,.4);transition:.4s;flex-shrink:0}
 .dot.offline{background:#dc2626;box-shadow:0 0 8px rgba(220,38,38,.4);animation:none}
+.dot.archived{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.4);animation:none}
 @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
 
 .no-data-banner{
@@ -23,6 +25,7 @@
   animation:fadeUp .4s ease;
 }
 .no-data-banner.visible{display:flex;align-items:center;justify-content:center;gap:10px}
+.no-data-banner.archived{background:rgba(245,158,11,.07);border-color:#f59e0b;color:#d97706}
 .salle-panel.offline{opacity:.55;pointer-events:none;position:relative}
 .salle-panel.offline::after{
   content:'HORS LIGNE';position:absolute;inset:0;border-radius:18px;
@@ -95,8 +98,8 @@
 </div>
 
 <div class="no-data-banner" id="no-data-banner">
-  <i class="fa-solid fa-plug-circle-xmark"></i>
-  <span>Arduino hors ligne — <span id="offline-since">--</span></span>
+  <i id="banner-icon" class="fa-solid fa-plug-circle-xmark"></i>
+  <span id="banner-msg">Arduino hors ligne — <span id="offline-since">--</span></span>
 </div>
 
 <div id="salle-panels"></div>
@@ -179,86 +182,138 @@ function majJauge(sid, nom, val) {
 let _offlineSince = null;
 
 function setOnline() {
-  document.getElementById('no-data-banner').classList.remove('visible');
-  document.getElementById('live-dot').classList.remove('offline');
-  document.getElementById('dash-live-badge').classList.remove('offline');
+  const banner = document.getElementById('no-data-banner');
+  banner.classList.remove('visible', 'archived');
+  document.getElementById('live-dot').classList.remove('offline', 'archived');
+  document.getElementById('dash-live-badge').classList.remove('offline', 'archived');
   document.getElementById('live-label').textContent = 'EN DIRECT';
   document.querySelectorAll('.salle-panel').forEach(p => p.classList.remove('offline'));
   _offlineSince = null;
 }
 
+function setArchived(ts) {
+  _offlineSince = null;
+  const banner = document.getElementById('no-data-banner');
+  banner.classList.remove('visible');
+  banner.classList.add('visible', 'archived');
+  document.getElementById('live-dot').classList.remove('offline');
+  document.getElementById('live-dot').classList.add('archived');
+  document.getElementById('dash-live-badge').classList.remove('offline');
+  document.getElementById('dash-live-badge').classList.add('archived');
+  document.getElementById('live-label').textContent = 'HORS DIRECT';
+  document.querySelectorAll('.salle-panel').forEach(p => p.classList.remove('offline'));
+  document.getElementById('banner-icon').className = 'fa-solid fa-clock-rotate-left';
+  const msgEl = document.getElementById('banner-msg');
+  if (ts) {
+    try {
+      const d = new Date((ts + '').replace(' ', 'T'));
+      msgEl.textContent = 'Dernière mesure connue — ' + d.toLocaleString('fr-FR');
+    } catch(e) { msgEl.textContent = 'Dernière mesure connue — ' + ts; }
+  } else {
+    msgEl.textContent = 'Arduino déconnecté — dernière mesure connue';
+  }
+}
+
 function setOffline() {
   if (!_offlineSince) _offlineSince = new Date();
-  document.getElementById('no-data-banner').classList.add('visible');
+  const banner = document.getElementById('no-data-banner');
+  banner.classList.remove('archived');
+  banner.classList.add('visible');
+  document.getElementById('live-dot').classList.remove('archived');
   document.getElementById('live-dot').classList.add('offline');
+  document.getElementById('dash-live-badge').classList.remove('archived');
   document.getElementById('dash-live-badge').classList.add('offline');
   document.getElementById('live-label').textContent = 'HORS LIGNE';
   document.getElementById('last-update').textContent = '--';
   document.querySelectorAll('.salle-panel').forEach(p => p.classList.add('offline'));
-
+  document.getElementById('banner-icon').className = 'fa-solid fa-plug-circle-xmark';
   const secs = Math.floor((new Date() - _offlineSince) / 1000);
   const txt  = secs < 60
     ? 'depuis ' + secs + 's'
     : 'depuis ' + Math.floor(secs / 60) + 'min ' + (secs % 60) + 's';
-  const el = document.getElementById('offline-since');
-  if (el) el.textContent = txt;
+  document.getElementById('banner-msg').textContent = 'Arduino hors ligne — ' + txt;
 }
 
+function afficherDonnees(data) {
+  const keys = Object.keys(data || {});
+  if (!keys.length) { setOffline(); return; }
+
+  const source = (data[keys[0]] || {}).source;
+  if (source === 'db') {
+    setArchived((data[keys[0]] || {}).ts);
+  } else {
+    setOnline();
+  }
+
+  keys.forEach(sid => {
+    const d = data[sid];
+    getPanel(sid, d.salle_nom);
+
+    majJauge(sid, 'temperature', parseFloat(d.temperature) || 0);
+    majJauge(sid, 'humidite',    parseFloat(d.humidite)    || 0);
+    majJauge(sid, 'gaz',         parseInt(d.gaz)           || 0);
+
+    const pir   = d.pir == 1 || d.pir === true || d.pir === 'true';
+    const badge = document.getElementById('pir-badge-'  + sid);
+    const pCard = document.getElementById('card-pir-'   + sid);
+    if (badge) { badge.className = 'pir-badge ' + (pir ? 'pir-det' : 'pir-ok'); badge.textContent = pir ? 'MOUVEMENT DÉTECTÉ' : 'AUCUN MOUVEMENT'; }
+    if (pCard) pCard.className = 'gauge-card ' + (pir ? 'crit alerte-critique' : 'ok');
+
+    const tsEl = document.getElementById('ts-' + sid);
+    if (tsEl) tsEl.textContent = source === 'db'
+      ? 'Archivé ' + new Date((d.ts + '').replace(' ', 'T')).toLocaleTimeString('fr-FR')
+      : 'Màj ' + new Date().toLocaleTimeString('fr-FR');
+
+    const equipsEl = document.getElementById('equips-' + sid);
+    if (equipsEl) {
+      if (d.equipements && d.equipements.length) {
+        const t = parseFloat(d.temperature)||0, h = parseFloat(d.humidite)||0, g = parseInt(d.gaz)||0;
+        const lvl = (t>=SEUILS.temperature.crit||h>=SEUILS.humidite.crit||g>=SEUILS.gaz.crit) ? 'crit'
+                  : (t>=SEUILS.temperature.warn||h>=SEUILS.humidite.warn||g>=SEUILS.gaz.warn) ? 'warn' : 'ok';
+        equipsEl.style.display = '';
+        equipsEl.innerHTML =
+          '<span class="equip-label"><i class="fa-solid fa-server" style="color:#3b82f6;margin-right:3px"></i>Équipements exposés :</span>'
+          + d.equipements.map(e =>
+              `<span class="equip-chip ${lvl}"><i class="fa-solid fa-server" style="font-size:9px;margin-right:3px"></i>${e.nom}</span>`
+            ).join('');
+      } else {
+        equipsEl.style.display = 'none';
+      }
+    }
+  });
+
+  document.querySelectorAll('.salle-panel').forEach(p => {
+    if (!data[p.id.replace('panel-', '')]) p.remove();
+  });
+
+  if (source !== 'db') {
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+  }
+}
+
+let _echecsConsecutifs = 0;
+const ECHECS_AVANT_OFFLINE = 3;
+
 function pollMesuresLive() {
-  fetch('/api/mesures-live')
-    .then(r => { if (!r.ok) throw 0; return r.json(); })
-    .then(data => {
-      const keys = Object.keys(data || {});
-
-      if (!keys.length) { setOffline(); return; }
-      setOnline();
-
-      keys.forEach(sid => {
-        const d = data[sid];
-        getPanel(sid, d.salle_nom);
-
-        majJauge(sid, 'temperature', parseFloat(d.temperature) || 0);
-        majJauge(sid, 'humidite',    parseFloat(d.humidite)    || 0);
-        majJauge(sid, 'gaz',         parseInt(d.gaz)           || 0);
-
-        const pir   = d.pir == 1 || d.pir === true || d.pir === 'true';
-        const badge = document.getElementById('pir-badge-'  + sid);
-        const pCard = document.getElementById('card-pir-'   + sid);
-        if (badge) { badge.className = 'pir-badge ' + (pir ? 'pir-det' : 'pir-ok'); badge.textContent = pir ? 'MOUVEMENT DÉTECTÉ' : 'AUCUN MOUVEMENT'; }
-        if (pCard) pCard.className = 'gauge-card ' + (pir ? 'crit alerte-critique' : 'ok');
-
-        const tsEl = document.getElementById('ts-' + sid);
-        if (tsEl) tsEl.textContent = 'Màj ' + new Date().toLocaleTimeString('fr-FR');
-
-        const equipsEl = document.getElementById('equips-' + sid);
-        if (equipsEl) {
-          if (d.equipements && d.equipements.length) {
-            const t = parseFloat(d.temperature)||0, h = parseFloat(d.humidite)||0, g = parseInt(d.gaz)||0;
-            const lvl = (t>=SEUILS.temperature.crit||h>=SEUILS.humidite.crit||g>=SEUILS.gaz.crit) ? 'crit'
-                      : (t>=SEUILS.temperature.warn||h>=SEUILS.humidite.warn||g>=SEUILS.gaz.warn) ? 'warn' : 'ok';
-            equipsEl.style.display = '';
-            equipsEl.innerHTML =
-              '<span class="equip-label"><i class="fa-solid fa-server" style="color:#3b82f6;margin-right:3px"></i>Équipements exposés :</span>'
-              + d.equipements.map(e =>
-                  `<span class="equip-chip ${lvl}"><i class="fa-solid fa-server" style="font-size:9px;margin-right:3px"></i>${e.nom}</span>`
-                ).join('');
-          } else {
-            equipsEl.style.display = 'none';
-          }
-        }
-      });
-
-      document.querySelectorAll('.salle-panel').forEach(p => {
-        if (!data[p.id.replace('panel-', '')]) p.remove();
-      });
-
-      document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+  fetch('/api/mesures-live', { cache: 'no-store' })
+    .then(r => {
+      if (r.redirected && r.url.includes('/login')) { window.location.href = '/login'; return null; }
+      if (!r.ok) throw 0;
+      return r.json();
     })
-    .catch(() => setOffline());
+    .then(d => {
+      if (!d) return;
+      _echecsConsecutifs = 0;
+      afficherDonnees(d);
+    })
+    .catch(() => {
+      _echecsConsecutifs++;
+      if (_echecsConsecutifs >= ECHECS_AVANT_OFFLINE) setOffline();
+    })
+    .finally(() => setTimeout(pollMesuresLive, 3000));
 }
 
 pollMesuresLive();
-setInterval(pollMesuresLive, 3000);
 setInterval(() => { if (_offlineSince) setOffline(); }, 1000);
 </script>
 
