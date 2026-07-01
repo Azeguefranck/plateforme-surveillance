@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.session' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'admin'         => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+        $middleware->append(\App\Http\Middleware\NgrokHeader::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
     })->create();

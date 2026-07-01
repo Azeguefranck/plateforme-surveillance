@@ -332,7 +332,7 @@ p,span,td,th,li,h1,h2,h3,h4,h5,h6,label,
   @php $userRole = session('user') ? (session('user')->role ?? '') : ''; @endphp
 
   <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-  <a href="/dashboard"><i class="fa-solid fa-house"></i> Accueil</a>
+  <a href="/accueil"><i class="fa-solid fa-house"></i> Accueil</a>
   <a href="/alertes"><i class="fa-solid fa-bell"></i> Alertes</a>
   <a href="/historique"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a>
   <a href="/statistiques"><i class="fa-solid fa-chart-line"></i> Statistiques</a>

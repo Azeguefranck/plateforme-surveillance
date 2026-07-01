@@ -450,9 +450,15 @@ body{overflow-x:hidden}
   </div>
 
   <div class="buttons">
+    @if(session('user'))
+    <a href="/dashboard" class="btn btn-login">
+      <span class="btn-ico">◈</span> Tableau de bord
+    </a>
+    @else
     <a href="/login" class="btn btn-login">
       <span class="btn-ico">⊙</span> S'authentifier
     </a>
+    @endif
   </div>
 
 </div>
