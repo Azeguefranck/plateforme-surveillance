@@ -550,7 +550,12 @@ Route::post('/capteurs', function (Request $request) {
 });
 
 
-Route::middleware('auth.session')->group(function () {
+Route::middleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    'auth.session',
+])->group(function () {
 
 Route::get('/live-data', function () {
     $file     = '/tmp/latest_sensor.json';
@@ -613,6 +618,28 @@ Route::get('/mesures-live', function () {
                 'ts'          => $d['ts'] ?? now()->toDateTimeString(),
                 'source'      => 'live',
             ], $enrichir($sid));
+        }
+
+        if (empty($result)) {
+            $dernieres = DB::table('mesures')
+                ->whereNotNull('salle_id')
+                ->whereIn('id', function ($q) {
+                    $q->selectRaw('MAX(id)')->from('mesures')->whereNotNull('salle_id')->groupBy('salle_id');
+                })
+                ->get();
+
+            foreach ($dernieres as $m) {
+                $key = (string) ($m->salle_id ?? '0');
+                $result[$key] = array_merge([
+                    'salle_id'    => $m->salle_id,
+                    'temperature' => (float) $m->temperature,
+                    'humidite'    => (float) $m->humidite,
+                    'gaz'         => (int) $m->gaz,
+                    'pir'         => (bool) $m->pir_detecte,
+                    'ts'          => (string) $m->created_at,
+                    'source'      => 'db',
+                ], $enrichir($m->salle_id));
+            }
         }
 
         return response()->json($result ?: (object) [])
